@@ -1,6 +1,7 @@
 // Fábricas das entidades e migração do estado salvo.
 // Hierarquia: Projeto (pasta raiz) → Grupos → Terminais.
 import { DOT_COLORS } from '../themes/palette.js';
+import { DEFAULT_AGENT_PROFILES } from '../agents/profiles.js';
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -79,6 +80,7 @@ export function migrate(saved, home) {
     tasks: s.tasks || [],
     taskView: s.taskView || 'off', // 'off' | 'panel' | 'board'
     taskPeriod: s.taskPeriod || '7d', // período da lista de tarefas (tasks/period.js)
+    agentProfiles: s.agentProfiles?.length ? s.agentProfiles : DEFAULT_AGENT_PROFILES(), // agentes ACP (agents/profiles.js)
     sideTab: s.sideTab || 'tasks', // aba do painel lateral: 'tasks' | 'memory'
   };
 }

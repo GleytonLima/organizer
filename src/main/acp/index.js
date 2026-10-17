@@ -2,7 +2,6 @@
 const { ipcMain } = require('electron');
 const { sendToWindow } = require('../window');
 const { AgentSession } = require('./session');
-const { agentList } = require('./agents');
 
 const sessions = new Map(); // terminalId → AgentSession
 
@@ -12,6 +11,7 @@ function session(id) {
   return s;
 }
 
+/** opts: { profile, cwd, resume } (ver session.js). */
 function start(id, opts) {
   sessions.get(id)?.stop();
   const s = new AgentSession(id, opts, (event) => sendToWindow('acp:event', id, event));
@@ -26,7 +26,6 @@ function stop(id) {
 }
 
 function registerAcpIpc() {
-  ipcMain.handle('acp:agents', () => agentList());
   ipcMain.handle('acp:start', (_e, id, opts) => start(id, opts));
   ipcMain.handle('acp:prompt', (_e, id, text) => {
     session(id).prompt(text); // não espera o turno: os eventos chegam por acp:event
@@ -34,6 +33,8 @@ function registerAcpIpc() {
   });
   ipcMain.handle('acp:cancel', (_e, id) => session(id).cancel());
   ipcMain.handle('acp:permission', (_e, id, requestId, optionId) => session(id).answerPermission(requestId, optionId));
+  ipcMain.handle('acp:setMode', (_e, id, modeId) => session(id).setMode(modeId));
+  ipcMain.handle('acp:sessions', (_e, id) => session(id).listSessions());
   ipcMain.on('acp:stop', (_e, id) => stop(id));
 }
 

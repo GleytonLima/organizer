@@ -1,3 +1,4 @@
+import { profileById } from '../agents/profiles.js';
 import { store, commit, findTerm, openTerminals, activeEntry, currentGroup, findGroup } from '../core/store.js';
 import { makeTerminal, uid } from '../core/model.js';
 import { basename, termLabel } from '../core/format.js';
@@ -49,9 +50,10 @@ export function newTerminal(group = currentGroup(), extra = {}) {
   addTerminal(group, { cwd, ...extra });
 }
 
-/** Terminal do tipo "agente": conversa com o agente via ACP (experimento; ver terminals/agent-session.js). */
-export function newAgentTerminal(group = currentGroup(), agent = 'claude') {
-  newTerminal(group, { kind: 'agent', agent, agentLabel: 'Claude Code', name: 'Claude (ACP)' });
+/** Terminal do tipo "agente": conversa com o agente do perfil via ACP (ver terminals/agent-session.js). */
+export function newAgentTerminal(group = currentGroup(), profileId = 'claude') {
+  const profile = profileById(profileId);
+  newTerminal(group, { kind: 'agent', agent: profile.id, name: `${profile.label} (ACP)` });
 }
 
 /** Remove o terminal do estado e escolhe o próximo ativo. Não pergunta nada. */

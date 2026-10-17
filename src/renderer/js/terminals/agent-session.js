@@ -1,55 +1,28 @@
-// Sessão de agente (terminal do tipo "agente"): conversa com o agente via ACP em vez de um pty.
-// Tem a mesma interface das sessões de terminal usada pelo resto do app (host, ready, running,
-// focus, send, readLines, restart, dispose), então lado a lado, sidebar e avisos funcionam igual.
-// Itens da conversa: user | agent | thought | tool | plan | permission | error | turn.
+// Sessão de agente (terminal do tipo "agente"): conversa com o agente do perfil via ACP em vez de
+// um pty. Tem a mesma interface das sessões de terminal usada pelo resto do app (host, ready,
+// running, focus, send, readLines, restart, dispose), então lado a lado, sidebar e avisos funcionam.
+// Guarda o id da sessão no terminal (t.acpSessionId): ao reabrir o app, continua de onde parou.
 import { el } from '../core/dom.js';
-import { notify } from '../core/store.js';
+import { notify, persist } from '../core/store.js';
+import { profileById } from '../agents/profiles.js';
 import { renderAgentView } from '../ui/agent/view.js';
 import { onPrompt, onPermission, onPermissionAnswered, onTurnEnd } from '../actions/agent-tasks.js';
+import { applyUpdate, waitingYou, transcriptText } from './agent-transcript.js';
 
 const STATE_LABEL = { iniciando: 'iniciando…', pronto: 'pronto', trabalhando: 'trabalhando…', encerrado: 'encerrado' };
-
-/** Há um pedido de permissão sem resposta? */
-const waitingYou = (s) => s.items.some((i) => i.type === 'permission' && i.answer === undefined);
-
-/** Aplica um session/update à conversa. */
-function applyUpdate(s, u) {
-  const last = s.items.at(-1);
-  const text = u.content?.type === 'text' ? u.content.text : '';
-  switch (u.sessionUpdate) {
-    case 'agent_message_chunk':
-      if (last?.type === 'agent') last.text += text;
-      else s.items.push({ type: 'agent', text });
-      break;
-    case 'agent_thought_chunk':
-      if (last?.type === 'thought') last.text += text;
-      else s.items.push({ type: 'thought', text });
-      break;
-    case 'tool_call':
-      s.items.push({ type: 'tool', id: u.toolCallId, title: u.title, kind: u.kind || 'other', status: u.status || 'pending' });
-      break;
-    case 'tool_call_update': {
-      const tool = s.items.findLast((i) => i.type === 'tool' && i.id === u.toolCallId);
-      if (tool) Object.assign(tool, u.title && { title: u.title }, u.status && { status: u.status });
-      break;
-    }
-    case 'plan': {
-      const plan = s.items.findLast((i) => i.type === 'plan');
-      if (plan && s.items.indexOf(plan) > s.items.findLastIndex((i) => i.type === 'user')) plan.entries = u.entries;
-      else s.items.push({ type: 'plan', entries: u.entries || [] });
-      break;
-    }
-    default:
-      break; // outros tipos (comandos disponíveis, modo, uso…) não aparecem por enquanto
-  }
-}
 
 function handle(s, ev) {
   if (ev.type === 'state') {
     s.state = ev.state;
     s.exited = ev.state === 'encerrado';
     s.running = ev.state === 'trabalhando' ? { cmd: `${s.label} trabalhando`, since: s.running?.since || Date.now() } : null;
-  } else if (ev.type === 'update') applyUpdate(s, ev.update);
+  } else if (ev.type === 'session') {
+    s.t.acpSessionId = ev.sessionId;
+    if (ev.resumed) s.items.push({ type: 'note', text: 'Sessão anterior retomada.' });
+    persist();
+  } else if (ev.type === 'capabilities') s.caps = ev;
+  else if (ev.type === 'modes') s.modes = { current: ev.current, available: ev.available };
+  else if (ev.type === 'update') applyUpdate(s, ev.update);
   else if (ev.type === 'permission') {
     const item = { type: 'permission', requestId: ev.requestId, title: ev.toolCall?.title || 'Ação do agente', options: ev.options || [], answer: undefined };
     s.items.push(item);
@@ -87,11 +60,16 @@ export function createAgentSession(t, { container, onFocus }) {
   const s = {
     agent: true,
     id: t.id,
-    label: t.agentLabel || 'Agente',
+    t,
     host, head, body,
     items: [],
     state: 'iniciando',
+    modes: null,
+    caps: null,
     exited: false, running: null, lastExit: null,
+    get label() {
+      return profileById(t.agent).label;
+    },
     stateLabel: () => (s.state === 'trabalhando' && waitingYou(s) ? 'aguardando você' : STATE_LABEL[s.state] || s.state),
     /** Envia uma mensagem ao agente (também usado por "responder no terminal de origem"). */
     send(text) {
@@ -105,14 +83,19 @@ export function createAgentSession(t, { container, onFocus }) {
     },
     answer: (requestId, optionId) => api.acp.permission(t.id, requestId, optionId),
     cancel: () => api.acp.cancel(t.id),
+    setMode: (modeId) => api.acp.setMode(t.id, modeId),
+    listSessions: () => api.acp.sessions(t.id),
     focus: () => body.querySelector('textarea')?.focus(),
-    readLines(count = 40) {
-      const text = s.items.map((i) => (i.type === 'user' ? `> ${i.text}` : i.type === 'agent' ? i.text : i.type === 'tool' ? `[${i.status}] ${i.title}` : '')).join('\n');
-      return text.split('\n').slice(-count).join('\n');
-    },
-    restart() {
+    readLines: (count = 40) => transcriptText(s, count),
+    /**
+     * (Re)inicia o agente. `resume`: id da sessão a continuar — padrão, a última deste terminal;
+     * null abre uma sessão nova.
+     */
+    restart({ resume = t.acpSessionId || null } = {}) {
       s.items = [];
-      s.ready = api.acp.start(t.id, { agent: t.agent || 'claude', cwd: t.cwd });
+      s.modes = null;
+      if (!resume) t.acpSessionId = null;
+      s.ready = api.acp.start(t.id, { profile: { ...profileById(t.agent) }, cwd: t.cwd, resume });
       s.render();
     },
     dispose() {

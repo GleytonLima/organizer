@@ -1,10 +1,12 @@
-// Uma sessão de agente via ACP: inicia o processo do agente, abre a sessão na pasta do terminal
-// (com o MCP do Bash Organizer), envia prompts e repassa ao renderer tudo o que acontece:
-//   { type: 'state', state }              iniciando | pronto | trabalhando | encerrado | erro
-//   { type: 'update', update }            session/update (mensagens, ferramentas, plano…)
+// Uma sessão de agente via ACP: inicia o processo do agente (pelo perfil), abre — ou continua — a
+// sessão na pasta do terminal (com o MCP do Bash Organizer), envia prompts e repassa ao renderer:
+//   { type: 'state', state }                 iniciando | pronto | trabalhando | encerrado
+//   { type: 'session', sessionId, resumed }  sessão aberta (o renderer guarda o id para continuar)
+//   { type: 'capabilities', canResume, canList }
+//   { type: 'modes', current, available }    modos de permissão (default, acceptEdits, plan…)
+//   { type: 'update', update }               session/update (mensagens, ferramentas, plano…)
 //   { type: 'permission', requestId, toolCall, options }   o agente pede permissão (Em espera)
-//   { type: 'turn', stopReason }          o turno terminou
-//   { type: 'error', message }
+//   { type: 'turn', stopReason } | { type: 'error', message }
 const { spawn } = require('child_process');
 const fs = require('fs');
 const { app } = require('electron');
@@ -12,17 +14,19 @@ const { RpcPeer } = require('./rpc');
 const { agentCommand, boMcpServer } = require('./agents');
 const { organizerEnv } = require('../pty');
 const { childEnv } = require('../env');
+const { PermissionGate } = require('./permissions');
 
 const PROTOCOL_VERSION = 1;
 
 class AgentSession {
-  constructor(id, { agent, cwd }, emit) {
+  /** opts: { profile, cwd, resume } — `resume`: id de uma sessão anterior para continuar. */
+  constructor(id, { profile = {}, cwd, resume = null }, emit) {
     this.id = id;
-    this.agent = agent;
+    this.profile = profile;
+    this.resume = resume;
     this.cwd = cwd && fs.existsSync(cwd) ? cwd : app.getPath('home');
     this.emit = emit;
-    this.permissions = new Map(); // requestId → resolve
-    this.permissionSeq = 0;
+    this.gate = new PermissionGate(emit);
     this.stderr = '';
   }
 
@@ -31,32 +35,41 @@ class AgentSession {
     this.emit({ type: 'state', state });
   }
 
-  async start() {
-    this.state('iniciando');
-    const cmd = agentCommand(this.agent);
+  spawn() {
+    const cmd = agentCommand(this.profile);
     const env = childEnv({ ...cmd.env, ...organizerEnv(this.id) });
-    this.proc = spawn(cmd.command, cmd.args, { cwd: this.cwd, env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    this.proc = spawn(cmd.command, cmd.args, { cwd: this.cwd, env, shell: cmd.shell, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     this.proc.stderr.on('data', (d) => (this.stderr = (this.stderr + d).slice(-4000)));
+    this.proc.on('error', (err) => this.emit({ type: 'error', message: `Não foi possível executar o agente: ${err.message}` }));
     this.proc.on('exit', (code) => {
       this.rpc?.close('O agente encerrou.');
-      this.cancelPermissions();
+      this.gate.cancelAll();
       if (this.current !== 'encerrado') this.emit({ type: 'error', message: `O agente encerrou (código ${code}). ${this.stderr.trim().split('\n').slice(-3).join(' ')}`.trim() });
       this.state('encerrado');
     });
     this.rpc = new RpcPeer(this.proc.stdout, this.proc.stdin);
     this.rpc.onNotification('session/update', (p) => this.emit({ type: 'update', update: p.update }));
-    this.rpc.onRequest('session/request_permission', (p) => this.askPermission(p));
+    this.rpc.onRequest('session/request_permission', (p) => this.gate.ask(p));
+  }
+
+  /** MCP do Bash Organizer: só o que precisa para falar com a API como este terminal. */
+  mcpServers() {
+    const { BO_API_URL, BO_API_TOKEN } = organizerEnv(this.id);
+    return BO_API_URL ? [boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id })] : [];
+  }
+
+  async start() {
+    this.state('iniciando');
     try {
-      await this.rpc.request('initialize', {
+      this.spawn();
+      const init = await this.rpc.request('initialize', {
         protocolVersion: PROTOCOL_VERSION,
         clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
         clientInfo: { name: 'bash-organizer', title: 'Bash Organizer', version: app.getVersion() },
       });
-      // o MCP do Bash Organizer recebe só o que precisa para falar com a API como este terminal
-      const { BO_API_URL, BO_API_TOKEN } = organizerEnv(this.id);
-      const mcp = boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id });
-      const session = await this.rpc.request('session/new', { cwd: this.cwd, mcpServers: BO_API_URL ? [mcp] : [] });
-      this.sessionId = session.sessionId;
+      this.caps = init?.agentCapabilities || {};
+      this.emit({ type: 'capabilities', canResume: !!this.caps.loadSession, canList: !!this.caps.sessionCapabilities?.list });
+      await this.open();
       this.state('pronto');
     } catch (err) {
       this.emit({ type: 'error', message: `Não foi possível iniciar o agente: ${err.message}` });
@@ -64,7 +77,49 @@ class AgentSession {
     }
   }
 
-  /** Um turno: o texto do usuário; resolve quando o agente termina (stopReason). */
+  /** Continua a sessão anterior (session/load: o agente reenvia a conversa) ou abre uma nova. */
+  async open() {
+    const params = { cwd: this.cwd, mcpServers: this.mcpServers() };
+    let result = null;
+    if (this.resume && this.caps.loadSession) {
+      try {
+        result = await this.rpc.request('session/load', { ...params, sessionId: this.resume });
+        this.sessionId = this.resume;
+      } catch (err) {
+        this.emit({ type: 'error', message: `Não deu para continuar a sessão anterior (${err.message}); abrindo uma nova.` });
+      }
+    }
+    if (!this.sessionId) {
+      result = await this.rpc.request('session/new', params);
+      this.sessionId = result.sessionId;
+    }
+    this.emit({ type: 'session', sessionId: this.sessionId, resumed: this.sessionId === this.resume });
+    await this.applyModes(result?.modes);
+  }
+
+  /** Modos anunciados pelo agente; aplica o modo padrão do perfil, se ele existir. */
+  async applyModes(modes) {
+    if (!modes?.availableModes?.length) return;
+    this.modes = { current: modes.currentModeId, available: modes.availableModes };
+    const wanted = this.profile.mode?.trim();
+    if (wanted && wanted !== this.modes.current && this.modes.available.some((m) => m.id === wanted)) await this.setMode(wanted);
+    else this.emit({ type: 'modes', ...this.modes });
+  }
+
+  async setMode(modeId) {
+    await this.rpc.request('session/set_mode', { sessionId: this.sessionId, modeId });
+    this.modes = { ...this.modes, current: modeId };
+    this.emit({ type: 'modes', ...this.modes });
+  }
+
+  /** Sessões anteriores nesta pasta (para "Retomar…"). */
+  async listSessions() {
+    if (!this.caps?.sessionCapabilities?.list) return [];
+    const r = await this.rpc.request('session/list', { cwd: this.cwd });
+    return (r?.sessions || []).map((s) => ({ sessionId: s.sessionId, title: s.title || null, updatedAt: s.updatedAt || null }));
+  }
+
+  /** Um turno: o texto do usuário; os eventos chegam por `emit` e o fim por { type: 'turn' }. */
   async prompt(text) {
     if (!this.sessionId) throw new Error('A sessão do agente ainda não está pronta.');
     this.state('trabalhando');
@@ -80,35 +135,17 @@ class AgentSession {
 
   cancel() {
     if (!this.sessionId) return;
-    this.cancelPermissions();
+    this.gate.cancelAll();
     this.rpc.notify('session/cancel', { sessionId: this.sessionId });
   }
 
-  /** Pedido de permissão do agente: vai para o renderer (e para a tarefa, em espera) até alguém responder. */
-  askPermission({ toolCall, options }) {
-    const requestId = ++this.permissionSeq;
-    return new Promise((resolve) => {
-      this.permissions.set(requestId, resolve);
-      this.emit({ type: 'permission', requestId, toolCall, options });
-    });
-  }
-
   answerPermission(requestId, optionId) {
-    const resolve = this.permissions.get(requestId);
-    if (!resolve) return false;
-    this.permissions.delete(requestId);
-    resolve({ outcome: optionId ? { outcome: 'selected', optionId } : { outcome: 'cancelled' } });
-    this.emit({ type: 'permission-answered', requestId, optionId });
-    return true;
-  }
-
-  cancelPermissions() {
-    for (const id of [...this.permissions.keys()]) this.answerPermission(id, null);
+    return this.gate.answer(requestId, optionId);
   }
 
   stop() {
     this.state('encerrado');
-    this.cancelPermissions();
+    this.gate.cancelAll();
     try {
       this.proc?.kill();
     } catch {}

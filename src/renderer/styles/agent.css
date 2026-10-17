@@ -207,3 +207,12 @@
   cursor: default;
   filter: none;
 }
+.ag-status .spacer {
+  flex: 1;
+}
+.ag-mode.input {
+  width: auto;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+}

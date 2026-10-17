@@ -1,9 +1,34 @@
 // Sessão de agente via ACP (experimento): terminal do tipo "agente" conversando com um agente ACP
-// falso (test/fixtures/fake-acp-agent.js). Verifica a conversa e o "Em espera" automático.
+// falso (test/fixtures/fake-acp-agent.js). 1ª execução: conversa, "Em espera" automático, modos e
+// perfis. 2ª execução (app reaberto): a sessão continua sozinha; Retomar… e Nova sessão.
+const os = require('os');
 const path = require('path');
 const { suite, seed } = require('./harness');
 
 process.env.BO_ACP_AGENT = JSON.stringify([process.execPath, path.join(__dirname, 'fixtures', 'fake-acp-agent.js')]);
+process.env.FAKE_ACP_STORE = path.join(process.env.BO_TEST_DIR || os.tmpdir(), 'acp-sessions.json');
+
+/** App reaberto: o terminal de agente continua a última sessão; dá para retomar outra ou abrir nova. */
+async function reopened(t) {
+  const id = await t.js(`return S.store.state.projects[0].groups[0].terminals.find((x) => x.kind === 'agent')?.id`);
+  const s = (expr) => t.js(`const s = SE.getSession(${JSON.stringify(id)}); return ${expr};`);
+  const view = () => s('s.body.textContent'); // o terminal ativo ao reabrir é outro: este fica oculto
+  t.check(await t.waitFor(async () => (await view()).includes('Sessão anterior retomada.')), 'ao reabrir o app, o terminal continua a última sessão');
+  const replay = await view();
+  t.check(replay.includes('De novo, por favor') && replay.includes('Ok, não editei.'), 'a conversa anterior volta (o agente a reenvia)', replay.slice(0, 400));
+  const before = await t.js(`return S.store.state.projects[0].groups[0].terminals.find((x) => x.kind === 'agent').acpSessionId`);
+  const listed = await s('s.listSessions()');
+  t.check(listed.length >= 2 && listed.some((x) => x.sessionId === before), 'Retomar… lista as sessões anteriores da pasta', JSON.stringify(listed));
+  const other = listed.find((x) => x.sessionId !== before);
+  await s(`s.restart({ resume: ${JSON.stringify(other.sessionId)} })`);
+  t.check(await t.waitFor(async () => (await view()).includes('Olá do perfil') || (await view()).includes('Sessão anterior retomada.')), 'retomar outra sessão traz a conversa dela');
+  t.equal(await t.waitFor(() => t.js(`return S.store.state.projects[0].groups[0].terminals.find((x) => x.kind === 'agent').acpSessionId === ${JSON.stringify(other.sessionId)}`)), true, 'o terminal passa a seguir a sessão retomada');
+  await t.waitFor(async () => (await s('s.state')) === 'pronto');
+  await s('s.restart({ resume: null })');
+  await t.waitFor(async () => (await s('s.state')) === 'pronto');
+  const fresh = await t.js(`return S.store.state.projects[0].groups[0].terminals.find((x) => x.kind === 'agent').acpSessionId`);
+  t.check(fresh && fresh !== other.sessionId && !(await view()).includes('De novo'), 'Nova sessão começa do zero');
+}
 
 suite('agente via ACP', {
   seed: (dir) => {
@@ -11,6 +36,7 @@ suite('agente via ACP', {
     return seed.state([seed.project('pA', 'App', [repo], [seed.group('gA', 'Terminais', [seed.term('a1', 'a1', repo)])])]);
   },
 }, async (t) => {
+  if (t.run > 1) return reopened(t);
   // cria o terminal de agente pelo mesmo caminho do menu
   const id = await t.js(`const A = await import('./js/actions/terminals.js'); A.newAgentTerminal(S.projectById('pA').groups[0]); return S.store.state.activeId;`);
   const state = () => t.js(`return SE.getSession(${JSON.stringify(id)})?.state`);
@@ -65,4 +91,27 @@ suite('agente via ACP', {
 
   // leitura pela API (read_terminal) traz a conversa
   t.includes(await t.js(`return B.readLines(${JSON.stringify(id)}, 50)`), '> De novo, por favor', 'ler o terminal devolve a conversa');
+
+  // modos: o seletor lista os modos do agente; em "Aceitar edições" ele não pede permissão
+  const modes = await t.js(`return [...SE.getSession(${JSON.stringify(id)}).body.querySelectorAll('.ag-mode option')].map((o) => o.textContent)`);
+  t.equal(modes, ['Padrão', 'Aceitar edições', 'Planejar'], 'seletor mostra os modos anunciados pelo agente');
+  await t.js(`const sel = SE.getSession(${JSON.stringify(id)}).body.querySelector('.ag-mode'); sel.value = 'acceptEdits'; sel.dispatchEvent(new Event('change'));`);
+  t.equal(await t.waitFor(() => t.js(`return SE.getSession(${JSON.stringify(id)}).modes?.current === 'acceptEdits' && 'acceptEdits'`)), 'acceptEdits', 'trocar o modo vale na sessão');
+  await t.js(`SE.getSession(${JSON.stringify(id)}).send('Edite sem perguntar')`);
+  t.check(await t.waitFor(async () => { const v = await view(); return v.slice(v.lastIndexOf('Edite sem perguntar')).includes('Pronto: config atualizada'); }), 'em "Aceitar edições" o agente segue sem pedir permissão');
+  t.check(!(await task()).waiting, 'e a tarefa não entra em espera');
+
+  // perfis: um agente próprio com variáveis e modo padrão
+  const second = await t.js(`const P = await import('./js/agents/profiles.js');
+    P.saveProfile({ label: 'Fake 2', command: 'fake-acp', args: '--acp', env: 'FAKE_GREETING=Olá do perfil', mode: 'plan' });
+    const p = P.agentProfiles().find((x) => x.label === 'Fake 2');
+    (await import('./js/actions/terminals.js')).newAgentTerminal(S.projectById('pA').groups[0], p.id);
+    return S.store.state.activeId;`);
+  const s2 = (expr) => t.js(`const s = SE.getSession(${JSON.stringify(second)}); return ${expr};`);
+  t.equal(await t.waitFor(() => s2(`s.state === 'pronto' && s.modes?.current`)), 'plan', 'perfil abre a sessão no modo padrão dele');
+  t.includes(await t.js(`return document.querySelector('#sidebar').innerText`), 'Fake 2 (ACP)', 'terminal leva o nome do perfil');
+  await s2(`s.send('Oi')`);
+  t.check(await t.waitFor(async () => (await s2('s.body.innerText')).includes('Olá do perfil')), 'variáveis do perfil chegam ao agente');
+  await s2(`s.answer(1, 'reject')`);
+  await t.waitFor(async () => (await s2('s.state')) === 'pronto');
 });
