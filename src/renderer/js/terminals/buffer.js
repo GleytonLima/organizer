@@ -5,6 +5,7 @@ import { getSession } from './sessions.js';
 export function readLines(id, count = 50) {
   const s = getSession(id);
   if (!s) return null;
+  if (s.agent) return s.readLines(count); // sessão de agente: o texto da conversa
   const buf = s.term.buffer.active;
   const lines = [];
   for (let i = 0; i < buf.length; i++) {

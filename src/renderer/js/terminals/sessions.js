@@ -1,6 +1,9 @@
 /* global Terminal, FitAddon, WebLinksAddon */
-// Sessões de terminal: uma instância xterm ligada a um pty no processo principal.
+// Sessões de terminal: uma instância xterm ligada a um pty no processo principal — ou, para
+// terminais do tipo "agente", uma conversa com o agente via ACP (terminals/agent-session.js),
+// com a mesma interface (s.agent = true).
 import { store, findTerm, persist, notify } from '../core/store.js';
+import { createAgentSession, initAgentEvents } from './agent-session.js';
 import { el } from '../core/dom.js';
 import { currentTheme } from '../themes/apply.js';
 import { refreshGit } from '../git/git.js';
@@ -33,6 +36,7 @@ export function processStatus(id) {
 export function initSessions(node, { onFocus } = {}) {
   container = node;
   if (onFocus) onFocusRequest = onFocus;
+  initAgentEvents();
   api.onPtyData((id, data) => sessions.get(id)?.term.write(data));
   api.onPtyExit((id) => {
     const s = sessions.get(id);
@@ -46,6 +50,11 @@ export function initSessions(node, { onFocus } = {}) {
 
 export function createSession(t) {
   if (sessions.has(t.id)) return sessions.get(t.id);
+  if (t.kind === 'agent') {
+    const s = createAgentSession(t, { container, onFocus: () => onFocusRequest(t.id) });
+    sessions.set(t.id, s);
+    return s;
+  }
   // host = cabeçalho (só na visão lado a lado) + corpo onde o xterm é montado
   const head = el('div', { class: 'term-head' });
   const body = el('div', { class: 'term-body' });
@@ -91,6 +100,7 @@ export async function writeWhenReady(id, data) {
   const s = sessions.get(id);
   if (!s) throw new Error('Terminal não está aberto.');
   await s.ready;
+  if (s.agent) return s.send(data.replace(/\r$/, '')); // vira uma mensagem para o agente
   if (s.exited) throw new Error('O shell deste terminal foi encerrado.');
   api.ptyWrite(id, data);
 }
@@ -134,6 +144,7 @@ export function restartSession(id) {
   const s = sessions.get(id);
   const entry = findTerm(id);
   if (!s || !entry) return;
+  if (s.agent) return s.restart();
   api.ptyKill(id);
   Object.assign(s, { running: null, lastExit: null });
   s.exited = false;
@@ -145,8 +156,11 @@ export function restartSession(id) {
 export function destroySession(id) {
   const s = sessions.get(id);
   if (!s) return;
-  api.ptyKill(id);
-  s.term.dispose();
+  if (s.agent) s.dispose();
+  else {
+    api.ptyKill(id);
+    s.term.dispose();
+  }
   s.host.remove();
   sessions.delete(id);
 }
@@ -164,11 +178,13 @@ async function onCwdChange(id, cwd) {
 export function runInActive(cmd) {
   const s = activeSession();
   if (!s || s.exited) return;
+  if (s.agent) return s.send(cmd);
   api.ptyWrite(store.state.activeId, cmd + '\r');
   s.term.focus();
 }
 
 function safeFit(s) {
+  if (s.agent) return;
   try {
     s.fit.fit();
   } catch {}
@@ -179,8 +195,11 @@ export function fitVisible() {
   for (const s of sessions.values()) if (s.host.classList.contains('visible')) safeFit(s);
 }
 
-export const focusActive = () => activeSession()?.term.focus();
+export const focusActive = () => {
+  const s = activeSession();
+  return s?.agent ? s.focus() : s?.term.focus();
+};
 
 export function setTerminalTheme(theme) {
-  for (const s of sessions.values()) s.term.options.theme = theme;
+  for (const s of sessions.values()) if (!s.agent) s.term.options.theme = theme;
 }

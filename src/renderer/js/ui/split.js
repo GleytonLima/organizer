@@ -16,7 +16,7 @@ function focusOnly(id) {
 
 function paneHead({ project, t }) {
   return [
-    tintedIcon('terminal', t.color || project.color, 'term-icon'),
+    tintedIcon(t.kind === 'agent' ? 'agent' : 'terminal', t.color || project.color, 'term-icon'),
     el('span', { class: 'pane-name', text: termLabel(t) }),
     processBadge(t.id),
     el('span', { class: 'spacer' }),

@@ -17,6 +17,7 @@ Projeto (nome + `repos`: lista explícita de pastas, não uma pasta raiz) → Gr
 "Em espera" é `task.needsInput` (não é coluna).
 Memória fica no `memory.db` (processo principal), com escopo global | project | folder (pasta por caminho; ver `src/main/memory/scope.js`); o renderer resolve projeto/repo/tarefa e chama via IPC (`api.memory`).
 Tipos de memória em `js/memory/kinds.js` (o banco não tem CHECK de tipo: valide em `store.js`). Vínculos `refs: [{ id: gid, type: depends|related|contradicts }]`; só `depends` propaga impacto; mudar uma memória oferece marcar a cadeia "a revisar" (`ui/memory/impact.js`). Ideia: `status` open|converted|discarded; "virar tarefa" em `actions/idea-task.js`. Tarefa referencia memórias em `task.memoryRefs` (gids) e o `get_task` as entrega ao agente. Lista de tarefas: período em `tasks/period.js` (padrão última semana; em aberto sempre aparecem).
+Terminal do tipo "agente" (`t.kind === 'agent'`): `terminals/agent-session.js` tem a mesma interface de uma sessão xterm (send, readLines, focus…); pedidos de permissão viram Em espera com botões (`actions/agent-tasks.js`). Testes com `test/fixtures/fake-acp-agent.js` (BO_ACP_AGENT).
 Sync (contrato em `../bo-memory-server/docs/API.md`): projeto sincroniza pela `project.syncKey` (workspace no servidor), pasta pelo remote git normalizado, global vai para o time; sem chave/remote fica só local. Conflito é marcado (`conflict`) e o usuário resolve (minha / do servidor / mescla); "Retomar" faz claim do progresso e cria a tarefa local (`actions/task-adopt.js`).
 Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — não converter caminhos MSYS à mão. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
 
@@ -25,6 +26,8 @@ Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — n�
 src/main/        processo principal (index, window, pty, git, bash, system, files)
 src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
 src/main/memory/  memória: db + migrations (node:sqlite + FTS5), store (decisão/nota/ideia/como fazer/progresso), refs + links (vínculos, cadeia de impacto, "a revisar"), search (texto/híbrida), embeddings (opcional)
+src/main/acp/    experimento ACP (Agent Client Protocol): rpc (JSON-RPC por linha), agents (claude-agent-acp), session (um agente por terminal), index (IPC)
+src/main/env.js  ambiente dos filhos (tira as variáveis de uma sessão hospedeira do Claude Code)
 src/main/sync/   sync da memória com o bo-memory-server: settings (URL + token no safeStorage), client, remote, mapping, rows, engine (push → pull a cada 30 s)
 src/main/notifications.js  toast do Windows + piscar na barra de tarefas
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)

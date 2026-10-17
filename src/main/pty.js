@@ -6,6 +6,7 @@ const pty = require('node-pty');
 const { BASH, rcFile, windowsToMsys } = require('./bash');
 const { sendToWindow } = require('./window');
 const { apiInfo } = require('./api/server');
+const { childEnv } = require('./env');
 
 const ptys = new Map();
 
@@ -32,14 +33,13 @@ function spawn({ id, cwd, cols, rows }) {
     cols: cols || 80,
     rows: rows || 24,
     cwd: dir,
-    env: {
-      ...process.env,
+    env: childEnv({
       MSYSTEM: 'MINGW64',
       CHERE_INVOKING: '1',
       TERM_PROGRAM: 'bash-organizer',
       COLORTERM: 'truecolor',
       ...organizerEnv(id),
-    },
+    }),
   });
   ptys.set(id, proc);
   proc.onData((data) => sendToWindow('pty:data', id, data));
@@ -77,4 +77,4 @@ function registerPtyIpc() {
   });
 }
 
-module.exports = { registerPtyIpc, killAll };
+module.exports = { registerPtyIpc, killAll, organizerEnv };

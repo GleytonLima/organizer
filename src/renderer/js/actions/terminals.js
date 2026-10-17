@@ -49,6 +49,11 @@ export function newTerminal(group = currentGroup(), extra = {}) {
   addTerminal(group, { cwd, ...extra });
 }
 
+/** Terminal do tipo "agente": conversa com o agente via ACP (experimento; ver terminals/agent-session.js). */
+export function newAgentTerminal(group = currentGroup(), agent = 'claude') {
+  newTerminal(group, { kind: 'agent', agent, agentLabel: 'Claude Code', name: 'Claude (ACP)' });
+}
+
 /** Remove o terminal do estado e escolhe o próximo ativo. Não pergunta nada. */
 export function removeTerminal(id) {
   const entry = findTerm(id);

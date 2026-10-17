@@ -15,6 +15,7 @@ const SUITES = [
   { name: 'projects' },
   { name: 'split' },
   { name: 'links' },
+  { name: 'agent' },
   { name: 'sync' }, // precisa do bo-memory-server (binário) e do PostgreSQL de testes; sem eles, é pulada
 ];
 const SUITE_TIMEOUT = 180000;

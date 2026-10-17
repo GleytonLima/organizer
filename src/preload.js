@@ -40,6 +40,17 @@ contextBridge.exposeInMainWorld('api', {
     onChanged: (cb) => ipcRenderer.on('memory:changed', () => cb()),
   },
 
+  // Sessões de agente via ACP (Agent Client Protocol): terminal do tipo "agente".
+  acp: {
+    agents: () => ipcRenderer.invoke('acp:agents'),
+    start: (id, opts) => ipcRenderer.invoke('acp:start', id, opts),
+    prompt: (id, text) => ipcRenderer.invoke('acp:prompt', id, text),
+    cancel: (id) => ipcRenderer.invoke('acp:cancel', id),
+    permission: (id, requestId, optionId) => ipcRenderer.invoke('acp:permission', id, requestId, optionId),
+    stop: (id) => ipcRenderer.send('acp:stop', id),
+    onEvent: (cb) => ipcRenderer.on('acp:event', (_e, id, event) => cb(id, event)),
+  },
+
   // Sync da memória com o bo-memory-server.
   sync: {
     settings: () => ipcRenderer.invoke('sync:settings'),

@@ -22,7 +22,7 @@ function terminalItem(project, group, t) {
       ...draggable('terminal', t.id),
       ...dropTarget('terminal', (id) => moveTerminal(id, group, t.id)),
     },
-    tintedIcon('terminal', t.color || project.color, 'term-icon'),
+    tintedIcon(t.kind === 'agent' ? 'agent' : 'terminal', t.color || project.color, 'term-icon'),
     el('div', { class: 'term-text' }, el('div', { class: 'term-name', text: termLabel(t) }), el('div', { class: 'term-meta' }, terminalMeta(t))),
     unreadDot([t.id]),
     iconButton('close', 'Fechar terminal', () => closeTerminal(t.id), 'reveal'),

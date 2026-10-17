@@ -4,11 +4,34 @@ import { el } from '../../core/dom.js';
 import { findTerm } from '../../core/store.js';
 import { termLabel, timeAgo } from '../../core/format.js';
 import { replyToTask, dismissWaiting } from '../../actions/task-waiting.js';
+import { answerFromTask } from '../../actions/agent-tasks.js';
 import { icon } from '../icons.js';
+
+const ALLOW = new Set(['allow_once', 'allow_always']);
+
+/** Pedido de permissão de um agente (ACP): as opções dele viram botões. */
+function choicesBox(task) {
+  const w = task.needsInput;
+  const answer = (id) => answerFromTask(task, id).catch((err) => console.warn('ACP:', err.message));
+  return el(
+    'section',
+    { class: 'td-waiting' },
+    el('div', { class: 'td-waiting-head' }, icon('pause'), el('span', { text: `Em espera há ${timeAgo(w.at)}` })),
+    el('p', { class: 'td-question', text: w.question }),
+    el(
+      'div',
+      { class: 'td-waiting-actions' },
+      el('button', { type: 'button', class: 'btn ghost', onclick: () => answer(null), text: 'Cancelar pedido' }),
+      el('span', { class: 'spacer' }),
+      w.choices.map((c) => el('button', { type: 'button', class: `btn${ALLOW.has(c.kind) ? ' primary' : ''}`, onclick: () => answer(c.id), text: c.label })),
+    ),
+  );
+}
 
 /** `draft`: { reply } persistente entre renders (ver detail.js). */
 export function waitingBox(task, draft) {
   const w = task.needsInput;
+  if (w.choices?.length) return choicesBox(task);
   const origin = findTerm(task.terminalId);
   if (draft.reply === undefined) draft.reply = w.suggestion?.text || '';
 

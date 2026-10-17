@@ -2,7 +2,7 @@
 import { store, findTerm, projectTerminals } from '../core/store.js';
 import { splitGroup, splitProject, exitSplit, isSplit } from '../actions/split.js';
 import { restartSession } from '../terminals/sessions.js';
-import { editTerminal, duplicateTerminal, closeTerminal, newTerminal, moveTerminal } from '../actions/terminals.js';
+import { editTerminal, duplicateTerminal, closeTerminal, newTerminal, newAgentTerminal, moveTerminal } from '../actions/terminals.js';
 import { createGroup, renameGroup, deleteGroup } from '../actions/groups.js';
 import { editProject, openProject, closeProject, deleteProject } from '../actions/projects.js';
 import { editCommand, moveCommand, removeCommand } from '../actions/commands.js';
@@ -40,6 +40,7 @@ export function groupMenu(e, group) {
   showMenu(e, [
     splitItem('group', group, group.terminals.length, splitGroup),
     { label: 'Novo terminal', action: () => newTerminal(group) },
+    { label: 'Nova sessão de agente (ACP)', action: () => newAgentTerminal(group) },
     { label: 'Renomear…', action: () => renameGroup(group) },
     SEP,
     { label: 'Excluir grupo', danger: true, action: () => deleteGroup(group) },
@@ -50,6 +51,7 @@ export function projectMenu(e, project) {
   showMenu(e, [
     splitItem('project', project, projectTerminals(project).length, splitProject),
     { label: 'Novo terminal', action: () => newTerminal(project.groups[0]) },
+    { label: 'Nova sessão de agente (ACP)', action: () => newAgentTerminal(project.groups[0]) },
     { label: 'Novo grupo…', action: () => createGroup(project) },
     { label: 'Editar…', action: () => editProject(project) },
     project.open
