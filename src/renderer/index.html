@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+    <title>Bash Organizer</title>
+    <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="layout-left">
+      <aside id="sidebar">
+        <div class="sidebar-head">
+          <span class="brand">Terminais</span>
+          <button class="icon-btn" id="btn-new-ws" title="Novo workspace">＋</button>
+        </div>
+        <div id="ws-list"></div>
+      </aside>
+
+      <main id="main">
+        <header id="topbar">
+          <div id="tabs-area"></div>
+          <div id="active-info"></div>
+          <div class="spacer"></div>
+          <div class="layout-switch" role="group" aria-label="Layout">
+            <button class="icon-btn" data-layout="left" title="Painel à esquerda">
+              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="1.5" y="2.5" width="4.5" height="11" rx="1.5" /></svg>
+            </button>
+            <button class="icon-btn" data-layout="right" title="Painel à direita">
+              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="10" y="2.5" width="4.5" height="11" rx="1.5" /></svg>
+            </button>
+            <button class="icon-btn" data-layout="tabs" title="Abas">
+              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="1.5" y="2.5" width="13" height="3.5" rx="1.5" /></svg>
+            </button>
+          </div>
+        </header>
+        <div id="cmdbar"></div>
+        <div id="terminals">
+          <div id="empty" class="empty hidden">
+            <p>Nenhum terminal aberto.</p>
+            <button class="btn primary" id="btn-empty-new">Novo terminal</button>
+          </div>
+        </div>
+        <footer id="statusbar"></footer>
+      </main>
+    </div>
+
+    <div id="menu" class="menu hidden"></div>
+    <div id="modal-backdrop" class="hidden">
+      <form id="modal" autocomplete="off"></form>
+    </div>
+
+    <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+    <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+    <script src="../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
