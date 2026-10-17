@@ -9,6 +9,7 @@ import { currentTheme } from '../themes/apply.js';
 import { refreshGit } from '../git/git.js';
 import { terminalKeyHandler } from './keys.js';
 import { copyOrPaste } from './clipboard.js';
+import { playwrightFinished } from '../playwright/result.js';
 import { attachNotifySources, commandFinished } from '../notify/sources.js';
 
 // id -> { term, fit, host, head, exited, running: { cmd, since } | null, lastExit: number | null }
@@ -133,7 +134,8 @@ function registerShellIntegration(id, s) {
     else if (kind === 'end') {
       const finished = s.running;
       [s.running, s.lastExit] = [null, Number(arg) || 0];
-      commandFinished(id, finished, s.lastExit);
+      // `playwright test` vira aviso/tarefa com o resultado; o resto, o aviso de comando longo
+      if (!playwrightFinished(id, finished, s.lastExit)) commandFinished(id, finished, s.lastExit);
     }
     notify();
     return true;

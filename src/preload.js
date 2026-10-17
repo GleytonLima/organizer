@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('api', {
   clipboardWrite: (text) => ipcRenderer.send('clipboard:write', text),
   openPath: (p) => ipcRenderer.send('shell:openPath', p),
   openInEditor: (p) => ipcRenderer.invoke('editor:open', p),
+  playwrightDetect: (dir) => ipcRenderer.invoke('playwright:detect', dir),
 
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
 

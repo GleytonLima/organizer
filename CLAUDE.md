@@ -31,6 +31,7 @@ src/main/acp/    experimento ACP (Agent Client Protocol): rpc (JSON-RPC por linh
 src/main/env.js  ambiente dos filhos (tira as variáveis de uma sessão hospedeira do Claude Code)
 src/main/sync/   sync da memória com o bo-memory-server: settings (URL + token no safeStorage), client, remote, mapping, rows, engine (push → pull a cada 30 s)
 src/main/notifications.js  toast do Windows + piscar na barra de tarefas
+src/main/playwright.js  detecta playwright.config.* e o relatório; o renderer roda (`js/playwright/runner.js`) e trata o fim de `playwright test` em qualquer terminal (`result.js`: aviso ou tarefa #playwright)
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
 src/renderer/

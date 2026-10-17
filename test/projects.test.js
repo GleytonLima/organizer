@@ -4,6 +4,19 @@ const fs = require('fs');
 const path = require('path');
 const { suite, seed } = require('./harness');
 
+/** Pasta com playwright.config.js e um `playwright` falso em node_modules/.bin (o npx usa o local). */
+function playwrightFolder(dir) {
+  const [folder] = seed.makeFolders(dir, ['e2e-app'], { git: false });
+  const fake = path.join(__dirname, 'fixtures', 'fake-playwright.js').replace(/\\/g, '/');
+  fs.writeFileSync(path.join(folder, 'playwright.config.js'), 'module.exports = {};\n');
+  fs.writeFileSync(path.join(folder, 'package.json'), '{"name":"e2e-app","version":"1.0.0"}\n');
+  const bin = path.join(folder, 'node_modules', '.bin');
+  fs.mkdirSync(bin, { recursive: true });
+  fs.writeFileSync(path.join(bin, 'playwright'), `#!/bin/sh\nexec node "${fake}" "$@"\n`, { mode: 0o755 });
+  fs.writeFileSync(path.join(bin, 'playwright.cmd'), `@node "${fake}" %*\r\n`);
+  return folder;
+}
+
 // "Abrir no VS Code" usa um editor falso que registra a pasta (BO_EDITOR, como BO_ACP_AGENT)
 const EDITOR_LOG = path.join(process.env.BO_TEST_DIR || require('os').tmpdir(), 'editor.log');
 process.env.BO_EDITOR = JSON.stringify([process.execPath, path.join(__dirname, 'fixtures', 'fake-editor.js')]);
@@ -23,6 +36,7 @@ suite('projetos', {
         seed.group('g1', 'Agente', [seed.term('dev1', 'devtools', path.join(shared, 'devtools'))]),
       ]),
       seed.project('p2', 'outro-app', R('outro-backend'), [seed.group('g2', 'Terminais', [seed.term('o1', 'outro', path.join(shared, 'outro-backend'))])]),
+      seed.project('p3', 'e2e', [playwrightFolder(dir)], [seed.group('g3', 'Terminais', [])]),
     ]);
   },
 }, async (t) => {
@@ -91,4 +105,28 @@ suite('projetos', {
   await t.js(`(await import('./js/ui/editor.js')).openInEditor(${JSON.stringify(path.join(shared, 'nao-existe'))})`);
   t.check(await t.waitFor(async () => (await t.modal.open()) && (await t.modal.text()).includes('Não foi possível abrir no VS Code')), 'pasta inexistente (ou editor fora do PATH) explica o problema');
   await t.modal.submit();
+
+  // testes Playwright da pasta: o chip oferece rodar; falha vira tarefa (uma só), sucesso vira aviso
+  await t.js(`S.store.state.focusProjectId = 'p3'; S.commit()`);
+  await t.js(`document.querySelector('.repo-chip').click()`);
+  const pwItem = await t.waitFor(async () => {
+    await t.js(`document.querySelector('.repo-chip').click()`); // a detecção chega depois do 1º render
+    return t.js(`return [...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Rodar testes Playwright'))?.textContent || null`);
+  });
+  t.includes(pwItem || '', 'playwright.config.js', 'pasta com playwright.config.* oferece "Rodar testes Playwright" no chip');
+  await t.js(`[...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Rodar testes Playwright')).click()`);
+  const runner = await t.waitFor(() => t.js(`return S.store.state.projects.find((p) => p.id === 'p3').groups[0].terminals.find((x) => x.name === 'Playwright · e2e-app')?.id || null`));
+  t.check(runner, 'roda num terminal próprio "Playwright · e2e-app"');
+  const pwTasks = () => t.js(`return S.store.state.tasks.filter((k) => k.title === 'Testes Playwright falhando em e2e-app').map((k) => ({ tags: k.tags, desc: k.description, reports: k.history.filter((h) => h.type === 'report').length }))`);
+  const failed = await t.waitFor(async () => ((await pwTasks()).length ? pwTasks() : null), { timeout: 60000 });
+  t.equal(failed?.[0]?.tags, ['playwright'], 'falha cria a tarefa com a tag #playwright');
+  t.check(/1 failed/.test(failed?.[0]?.desc) && /login\.spec\.ts/.test(failed?.[0]?.desc), 'a tarefa traz as contagens e o teste que falhou', failed?.[0]?.desc);
+  await t.type(runner, 'npx playwright test');
+  const again = await t.waitFor(async () => { const k = await pwTasks(); return k.length === 1 && k[0].reports >= 1 && k; }, { timeout: 60000 });
+  t.check(again, 'falha de novo acrescenta um relato à mesma tarefa (não cria outra)', JSON.stringify(await pwTasks()));
+  // olhando outro terminal (vendo o do Playwright, o app não avisa: você já está vendo o resultado)
+  await t.js(`(await import('./js/notify/center.js')).clearNotifications(); (await import('./js/actions/terminals.js')).activate('dev1')`);
+  await t.type(runner, 'FAKE_PW_EXIT=0 npx playwright test');
+  const passed = await t.waitFor(() => t.js(`return (await import('./js/notify/center.js')).recentNotifications().find((n) => n.body.includes('passou'))?.body || null`), { timeout: 60000 });
+  t.includes(passed || '', '3 passed', 'sucesso vira aviso com as contagens');
 });

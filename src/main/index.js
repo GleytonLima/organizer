@@ -5,6 +5,7 @@ const { registerPtyIpc, killAll } = require('./pty');
 const { registerGitIpc } = require('./git');
 const { registerSystemIpc } = require('./system');
 const { registerEditorIpc } = require('./editor');
+const { registerPlaywrightIpc } = require('./playwright');
 const { registerBridgeIpc } = require('./api/bridge');
 const { startApiServer, stopApiServer } = require('./api/server');
 const { registerNotificationIpc } = require('./notifications');
@@ -25,6 +26,7 @@ if (!app.requestSingleInstanceLock()) {
   registerGitIpc();
   registerSystemIpc();
   registerEditorIpc();
+  registerPlaywrightIpc();
   registerBridgeIpc();
   registerNotificationIpc();
   registerMemoryIpc();

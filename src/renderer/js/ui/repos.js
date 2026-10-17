@@ -8,23 +8,38 @@ import { addProjectFolders, removeProjectFolder } from '../actions/projects.js';
 import { gitDetail, iconButton } from './components.js';
 import { showMenu } from './menu.js';
 import { openInEditor } from './editor.js';
+import { playwrightOf, runPlaywright } from '../playwright/runner.js';
+
+/** Pasta com playwright.config.*: rodar os testes num terminal próprio e abrir o último relatório. */
+function playwrightItems(project, repo) {
+  const pw = playwrightOf(repo.path);
+  if (!pw) return [];
+  return [
+    { sep: true },
+    { label: 'Rodar testes Playwright', hint: pw.config, action: () => runPlaywright(project, repo) },
+    pw.report ? { label: 'Abrir relatório Playwright', action: () => api.openPath(pw.report) } : null,
+  ].filter(Boolean);
+}
 
 function repoMenu(e, project, repo) {
   showMenu(e, [
     { label: `Novo terminal em ${repo.name}`, action: () => newTerminal(currentGroup(project), { cwd: repo.path }) },
     { label: 'Abrir no VS Code', action: () => openInEditor(repo.path) },
     { label: 'Abrir pasta', action: () => api.openPath(repo.path) },
+    ...playwrightItems(project, repo),
     { sep: true },
     { label: 'Remover do projeto', danger: true, action: () => removeProjectFolder(project, repo) },
   ]);
 }
 
-const chip = (project, r) =>
-  el(
+function chip(project, r) {
+  playwrightOf(r.path); // detecta já, para o menu ter "Rodar testes Playwright" no 1º clique
+  return el(
     'button',
     { class: 'repo-chip', title: r.path, onclick: (e) => repoMenu(e, project, r), oncontextmenu: (e) => repoMenu(e, project, r) },
     r.git ? gitDetail(r.git, { repo: r.name }) : el('span', { class: 'git-repo', text: r.name }),
   );
+}
 
 export function repoStrip() {
   const project = currentProject();
