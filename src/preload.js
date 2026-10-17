@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   loadState: () => ipcRenderer.invoke('state:load'),
   saveState: (state) => ipcRenderer.send('state:save', state),
+  saveStateSync: (state) => ipcRenderer.sendSync('state:saveSync', state),
 
   ptyInfo: () => ipcRenderer.invoke('pty:info'),
   ptyCreate: (opts) => ipcRenderer.invoke('pty:create', opts),

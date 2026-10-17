@@ -61,9 +61,15 @@ function readJson(file, fallback) {
 }
 
 function writeJsonAtomic(file, data) {
+  const json = JSON.stringify(data, null, 2);
   const tmp = `${file}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, file);
+  try {
+    fs.writeFileSync(tmp, json);
+    fs.renameSync(tmp, file);
+  } catch {
+    // rename pode falhar no Windows se o arquivo estiver bloqueado (antivírus, indexador)
+    fs.writeFileSync(file, json);
+  }
 }
 
 function createWindow() {
@@ -72,7 +78,7 @@ function createWindow() {
     ...bounds,
     minWidth: 640,
     minHeight: 400,
-    backgroundColor: '#14161b',
+    backgroundColor: '#15120f',
     title: 'Bash Organizer',
     autoHideMenuBar: true,
     webPreferences: {
@@ -110,6 +116,16 @@ ipcMain.on('state:save', (_e, state) => {
     writeJsonAtomic(STATE_FILE(), state);
   } catch (err) {
     console.error('Falha ao salvar estado', err);
+  }
+});
+// Versão síncrona usada ao fechar a janela, para o último estado não se perder.
+ipcMain.on('state:saveSync', (e, state) => {
+  try {
+    writeJsonAtomic(STATE_FILE(), state);
+    e.returnValue = true;
+  } catch (err) {
+    console.error('Falha ao salvar estado', err);
+    e.returnValue = false;
   }
 });
 

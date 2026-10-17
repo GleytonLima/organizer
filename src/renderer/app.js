@@ -3,19 +3,19 @@
 
 // `api` é exposto pelo preload (contextBridge) como global.
 
-const COLORS = ['#5fa8ff', '#5fd38d', '#f2c66d', '#ff8f5f', '#ff6b6b', '#c38bff', '#4fd6d6', '#9aa3b2'];
+const COLORS = ['#ec7000', '#ffc94d', '#5fd38d', '#5fa8ff', '#ff6b6b', '#c38bff', '#4fd6d6', '#a69a8b'];
 const GIT_POLL_MS = 3000;
 
 const THEME = {
-  background: '#14161b',
-  foreground: '#d7dae0',
-  cursor: '#5fa8ff',
-  cursorAccent: '#14161b',
-  selectionBackground: '#3a4a6680',
-  black: '#1b1e25',
+  background: '#15120f',
+  foreground: '#ede6dc',
+  cursor: '#ec7000',
+  cursorAccent: '#15120f',
+  selectionBackground: '#ec700055',
+  black: '#1d1915',
   red: '#ff6b6b',
   green: '#5fd38d',
-  yellow: '#f2c66d',
+  yellow: '#ffb347',
   blue: '#5fa8ff',
   magenta: '#c38bff',
   cyan: '#4fd6d6',
@@ -866,8 +866,7 @@ function openModal({ title, message, fields = [], submit = 'OK', danger = false 
     });
 
     form.replaceChildren(
-      el('h2', { text: title }),
-      message ? el('p', { text: message }) : null,
+      ...[el('h2', { text: title }), message ? el('p', { text: message }) : null].filter(Boolean),
       ...fieldNodes,
       el(
         'div',
@@ -965,7 +964,7 @@ async function init() {
 
 window.addEventListener('beforeunload', () => {
   clearTimeout(saveTimer);
-  api.saveState(state);
+  api.saveStateSync(state);
 });
 
 init();
