@@ -44,14 +44,14 @@ function add({ projectId = null, project = null, repo = null, kind = 'note', tex
   if (!clean) throw new Error('A memória precisa de um texto.');
   if (!['note', 'decision'].includes(kind)) throw new Error('Tipo inválido: use "note" ou "decision".');
   if (kind === 'decision') validateDecision(clean);
+  // Valida antes de gravar: um supersedes inválido não pode deixar a decisão nova registrada.
+  if (supersedes && !get(supersedes)) throw new Error(`Decisão a substituir não encontrada: ${supersedes}`);
   const id = crypto.randomUUID().slice(0, 8);
   const t = now();
   const db = openDb();
   db.prepare(`INSERT INTO memories (id, project_id, project, repo, kind, text, tags, source, task_key, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, projectId, project, repo, kind, clean, normTags(tags), source, taskKey, t, t);
   if (supersedes) {
-    const old = get(supersedes);
-    if (!old) throw new Error(`Decisão a substituir não encontrada: ${supersedes}`);
     db.prepare('UPDATE memories SET superseded_by = ?, updated_at = ? WHERE id = ?').run(id, t, supersedes);
   }
   return get(id);
