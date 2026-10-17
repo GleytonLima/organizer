@@ -2,8 +2,8 @@
 // subtarefa, a linha "Subtarefa de …" leva à tarefa-mãe. Subtarefa é uma tarefa completa (parentId).
 import { el } from '../../core/dom.js';
 import { columnById, isDoneColumn } from '../../tasks/columns.js';
-import { taskProject, subtasksOf, parentOf } from '../../tasks/queries.js';
-import { createTask } from '../../actions/tasks.js';
+import { taskProject, subtasksOf, parentOf, projectTasks } from '../../tasks/queries.js';
+import { createTask, setTaskParent } from '../../actions/tasks.js';
 import { openModal, field } from '../modal.js';
 import { icon } from '../icons.js';
 import { openTask } from './selection.js';
@@ -45,4 +45,24 @@ export function parentLine(task) {
   const parent = parentOf(task);
   if (!parent) return null;
   return el('button', { type: 'button', class: 'td-parent', onclick: () => openTask(parent.id) }, `↳ Subtarefa de ${parent.key} · ${parent.title}`);
+}
+
+/** Escolher a tarefa-mãe (ou nenhuma) entre as tarefas do projeto. */
+export async function parentDialog(task) {
+  const candidates = projectTasks(taskProject(task)).filter((t) => t !== task);
+  const v = await openModal({
+    title: `Tornar ${task.key} subtarefa de…`,
+    fields: [
+      field.select('parent', 'Tarefa-mãe', task.parentId || '', {
+        options: [{ value: '', label: '(nenhuma — tarefa solta)' }, ...candidates.map((t) => ({ value: t.id, label: `${t.key} · ${t.title}` }))],
+      }),
+    ],
+    submit: 'Salvar',
+  });
+  if (!v) return;
+  try {
+    setTaskParent(task, candidates.find((t) => t.id === v.parent) || null);
+  } catch (err) {
+    await openModal({ title: 'Não foi possível', message: err.message });
+  }
 }

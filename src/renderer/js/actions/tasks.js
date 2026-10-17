@@ -76,6 +76,20 @@ export function updateTask(task, { title, description, columnId }) {
   return task;
 }
 
+/** Torna `task` subtarefa de `parent` (ou tarefa solta, com null). Recusa ciclos. */
+export function setTaskParent(task, parent, { by = 'você' } = {}) {
+  for (let p = parent; p; p = store.state.tasks.find((t) => t.id === p.parentId)) {
+    if (p === task) throw new Error(`${parent.key} já é subtarefa de ${task.key}.`);
+  }
+  const before = store.state.tasks.find((t) => t.id === task.parentId);
+  if (before === parent) return task;
+  task.parentId = parent?.id || null;
+  logTask(task, by, 'edit', parent ? `Virou subtarefa de ${parent.key}` : `Deixou de ser subtarefa de ${before?.key}`);
+  if (parent) logTask(parent, by, 'edit', `Nova subtarefa ${task.key}: ${task.title}`);
+  commit();
+  return task;
+}
+
 export async function deleteTask(task) {
   const ok = await confirmDanger({ title: `Excluir ${task.key}?`, message: task.title });
   if (!ok) return false;

@@ -5,6 +5,7 @@ import { moveTask, deleteTask } from '../../actions/tasks.js';
 import { showMenu } from '../menu.js';
 import { openTask } from './selection.js';
 import { saveProgressDialog } from '../memory/progress.js';
+import { parentDialog } from './detail-subtasks.js';
 
 export function taskMenu(e, task) {
   const moves = columnsOf(taskProject(task))
@@ -13,6 +14,7 @@ export function taskMenu(e, task) {
   showMenu(e, [
     { label: 'Abrir', action: () => openTask(task.id) },
     { label: 'Salvar progresso…', action: () => saveProgressDialog(taskProject(task), task) },
+    { label: 'Tornar subtarefa de…', action: () => parentDialog(task) },
     ...(moves.length ? [{ sep: true }, ...moves] : []),
     { sep: true },
     { label: 'Excluir', danger: true, action: () => deleteTask(task) },

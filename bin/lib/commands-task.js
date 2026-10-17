@@ -19,6 +19,10 @@ const ACTIONS = {
         }),
       ),
   },
+  parent: {
+    usage: 'parent <tarefa> <mãe>   (vira subtarefa; --none solta)',
+    run: async ([task, parent], o) => line(await request('task_set_parent', { task, parent: o.none ? null : parent })),
+  },
   show: {
     usage: 'show <tarefa>   (detalhes, subtarefas e memórias vinculadas)',
     run: async ([task]) => {

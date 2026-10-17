@@ -3,7 +3,7 @@ import { findTerm } from '../core/store.js';
 import { termLabel } from '../core/format.js';
 import { columnsOf, columnById, resolveColumn } from '../tasks/columns.js';
 import { allTasks, projectTasks, taskProject, resolveTaskRef, subtasksOf, parentOf } from '../tasks/queries.js';
-import { createTask, moveTask, reportTask, completeTask } from '../actions/tasks.js';
+import { createTask, moveTask, reportTask, completeTask, setTaskParent } from '../actions/tasks.js';
 import { requestInput, suggestReply } from '../actions/task-waiting.js';
 import { callerOf, resolveProject } from './resolve.js';
 import { linkTaskMemories, unlinkTaskMemory, taskMemories } from '../actions/task-memories.js';
@@ -81,6 +81,13 @@ export const taskHandlers = {
     const task = createTask(parent ? taskProject(parent) : project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente', parent });
     if (p.memories?.length) await linkTaskMemories(task, p.memories, { by: 'agente' });
     return taskInfo(task);
+  },
+
+  /** Torna a tarefa subtarefa de `parent` (ou solta, com parent vazio). */
+  task_set_parent(p) {
+    const { project, task } = context(p, { needTask: true });
+    const parent = p.parent ? resolveTaskRef(p.parent, { project: taskProject(task) || project }) : null;
+    return taskInfo(setTaskParent(task, parent, { by: 'agente' }));
   },
 
   /** Vincula (ou, com `remove`, desvincula) memórias à tarefa. */

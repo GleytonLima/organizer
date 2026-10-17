@@ -94,6 +94,12 @@ const TASK_TOOLS = [
     run: (request, args) => request('task_get', args),
   },
   {
+    name: 'set_task_parent',
+    description: 'Torna uma tarefa existente SUBTAREFA de outra (parent = chave da mãe), ou solta (parent vazio).',
+    inputSchema: { type: 'object', properties: { task: taskRef, parent: { type: 'string' } }, required: ['task'] },
+    run: (request, args) => request('task_set_parent', args),
+  },
+  {
     name: 'link_task_memory',
     description: 'Vincula memórias à tarefa (ou desvincula, com remove) — ex.: a decisão ou o "como fazer" que quem pegar a tarefa precisa saber.',
     inputSchema: {

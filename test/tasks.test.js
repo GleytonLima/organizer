@@ -84,5 +84,9 @@ suite('tarefas', {
   t.equal(await t.js(`return document.querySelector('.task-card.selected .task-progress span')?.style.width || null`), '50%', 'progresso da mãe = metade das subtarefas concluída');
   await t.js(`SEL.openTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(sub1.key)}).id)`, TASK_UI);
   t.check(await t.waitFor(async () => (await t.js(`return document.querySelector('#task-detail').innerText`)).includes(`Subtarefa de ${parent.key}`)), 'gaveta da subtarefa leva à mãe');
+  const loose = (await agent.tool('create_task', { title: 'Solta' })).data;
+  t.includes((await t.bo(['task', 'parent', loose.key, parent.key], { terminal: 'dev1' })).stdout, `↳ ${parent.key}`, '`bo task parent` torna uma tarefa existente subtarefa');
+  const cycle = await agent.tool('set_task_parent', { task: parent.key, parent: loose.key });
+  t.check(!cycle.ok, 'ciclo (mãe virar filha da própria subtarefa) é recusado', JSON.stringify(cycle));
   await t.js(`SEL.closeTask(); A.setTaskView('off')`, TASK_UI);
 });
