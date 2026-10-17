@@ -6,12 +6,13 @@ const TASK_UI = { A: './js/actions/tasks.js', SEL: './js/ui/tasks/selection.js' 
 
 suite('tarefas', {
   seed: (dir) => {
-    const [app] = seed.makeFolders(dir, ['minha-app']);
+    const [app, site] = seed.makeFolders(dir, ['minha-app', 'site']);
     return seed.state([
       seed.project('p1', 'minha-app', [app], [
         seed.group('g1', 'Agente', [seed.term('dev1', 'devtools', app)]),
         seed.group('g2', 'Serviços', [seed.term('be', 'backend', app)]),
       ]),
+      seed.project('p2', 'site', [site], [seed.group('g3', 'Site', [])]), // outro projeto, para o escopo "todos"
     ]);
   },
 }, async (t) => {
@@ -88,5 +89,36 @@ suite('tarefas', {
   t.includes((await t.bo(['task', 'parent', loose.key, parent.key], { terminal: 'dev1' })).stdout, `↳ ${parent.key}`, '`bo task parent` torna uma tarefa existente subtarefa');
   const cycle = await agent.tool('set_task_parent', { task: parent.key, parent: loose.key });
   t.check(!cycle.ok, 'ciclo (mãe virar filha da própria subtarefa) é recusado', JSON.stringify(cycle));
-  await t.js(`SEL.closeTask(); A.setTaskView('off')`, TASK_UI);
+  await t.js(`SEL.closeTask()`, TASK_UI);
+
+  // lista do painel: busca, chips, "Mostrar mais" e escopo "Todos os projetos"
+  await t.js(`S.store.state.focusProjectId = 'p1'; S.store.state.taskScope = 'project'; S.store.state.sideTab = 'tasks'; A.setTaskView('panel');
+    const p1 = S.projectById('p1'); for (let i = 1; i <= 25; i++) A.createTask(p1, { title: 'Lote ' + i });
+    A.createTask(S.projectById('p2'), { title: 'Página de preços' });`, TASK_UI);
+  const titles = () => t.js(`return [...document.querySelectorAll('#taskpanel .tp-list .task-title')].map((x) => x.textContent)`);
+  const search = (q) => t.js(`const i = document.querySelector('#taskpanel [data-draft="task-query"]'); i.value = ${JSON.stringify(q)}; i.dispatchEvent(new Event('input'))`);
+  const todo = () => t.js(`const s = document.querySelector('#taskpanel .tp-section[data-section]:not([data-section="__waiting"])'); return { count: +s.querySelector('.tp-count').textContent, cards: s.querySelectorAll('.task-card').length, more: s.querySelector('.tp-more')?.textContent || null }`);
+  const first = await t.waitFor(async () => ((await todo()).count >= 25 ? todo() : null));
+  t.equal([first?.cards, first?.more], [20, `Mostrar mais ${first.count - 20}`], 'seção grande mostra 20 tarefas e "Mostrar mais"');
+  await t.js(`document.querySelector('#taskpanel .tp-more').click()`);
+  t.equal((await t.waitFor(async () => ((await todo()).more === null ? todo() : null)))?.cards, first.count, '"Mostrar mais" abre o resto');
+  await search('subir BACKEND');
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Subir backend local'], 'busca por texto (sem diferenciar maiúsculas)');
+  await search(task.key);
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Subir backend local'], 'busca pela chave da tarefa');
+  await search('');
+  await t.js(`S.store.state.tasks.find((x) => x.title === 'Lote 3').memoryRefs = ['m-1']; S.commit(); document.querySelector('#taskpanel [data-chip="memory"]').click()`);
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'chip "Com memória" mostra só as tarefas com memória vinculada');
+  await t.js(`document.querySelector('#taskpanel [data-chip="memory"]').click()`);
+  t.check(!(await titles()).includes('Página de preços'), 'no projeto em foco, as tarefas de outro projeto não aparecem');
+  await t.js(`document.querySelector('#taskpanel .tp-scope').click()`);
+  await t.js(`[...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Todos os projetos')).click()`);
+  const groups = await t.waitFor(() => t.js(`const g = [...document.querySelectorAll('#taskpanel .tp-group-name')].map((x) => x.textContent); return g.length > 1 ? g : null`));
+  t.equal(groups, ['minha-app', 'site'], '"Todos os projetos" mostra um bloco por projeto');
+  t.includes(await t.js(`return document.querySelector('#taskpanel .tp-scope').textContent`), 'Todos os projetos', 'o topo mostra o escopo escolhido');
+  t.check((await titles()).includes('Página de preços'), 'tarefas dos outros projetos aparecem');
+  await search('preços');
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Página de preços'], 'a busca vale para todos os projetos');
+  await search('');
+  await t.js(`S.store.state.taskScope = 'project'; A.setTaskView('off')`, TASK_UI);
 });

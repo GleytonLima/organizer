@@ -159,3 +159,48 @@
 .tp-section.drop-over {
   background: var(--hover);
 }
+
+/* escopo (projeto em foco | todos), "Mostrar mais" e blocos por projeto */
+.tp-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  max-width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.tp-scope:hover {
+  color: var(--dim);
+}
+.tp-scope .icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.tp-more {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.tp-more:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.tp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tp-group-name {
+  padding: 4px 8px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--faint);
+}

@@ -2,6 +2,7 @@
 import { store, projectById, currentProject } from '../core/store.js';
 import { columnsOf, isDoneColumn } from './columns.js';
 import { inPeriod } from './period.js';
+import { matchesFilter } from './filter.js';
 
 export const allTasks = () => store.state.tasks;
 export const taskById = (id) => allTasks().find((t) => t.id === id) || null;
@@ -13,15 +14,18 @@ export const parentOf = (task) => (task.parentId ? taskById(task.parentId) : nul
 /** Projeto exibido no quadro/painel: o do terminal ativo. */
 export const boardProject = () => currentProject();
 
-/** [{ column, tasks }] na ordem das colunas; mais recentes primeiro; só as do período (tasks/period.js). */
-export function tasksByColumn(project) {
+/**
+ * [{ column, tasks }] na ordem das colunas; mais recentes primeiro; só as do período (tasks/period.js).
+ * `filter`: aplica também o filtro do painel (tasks/filter.js).
+ */
+export function tasksByColumn(project, { filter = false } = {}) {
   const cols = columnsOf(project);
   const buckets = new Map(cols.map((c) => [c.id, []]));
-  for (const t of projectTasks(project)) if (inPeriod(project, t)) (buckets.get(t.columnId) || buckets.get(cols[0].id)).push(t);
+  for (const t of projectTasks(project)) if (inPeriod(project, t) && (!filter || matchesFilter(t))) (buckets.get(t.columnId) || buckets.get(cols[0].id)).push(t);
   return cols.map((column) => ({ column, tasks: buckets.get(column.id).sort((a, b) => b.updatedAt - a.updatedAt) }));
 }
 
-export const waitingTasks = (project) => projectTasks(project).filter((t) => t.needsInput);
+export const waitingTasks = (project, { filter = false } = {}) => projectTasks(project).filter((t) => t.needsInput && (!filter || matchesFilter(t)));
 
 /** Tarefa aberta mais recente associada a um terminal (para a sidebar e para "a tarefa atual"). */
 export function currentTaskOf(terminalId) {

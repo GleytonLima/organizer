@@ -30,7 +30,7 @@ export function renderSidePanel() {
   if (!show) return;
   const project = currentProject();
   const tab = TABS.find((t) => t.id === store.state.sideTab) || TABS[0];
-  const { actions, body } = tab.build(project);
+  const { title, actions, body } = tab.build(project);
   remount(
     panel,
     el(
@@ -45,7 +45,7 @@ export function renderSidePanel() {
       actions,
       iconButton('close', 'Fechar painel', () => setTaskView('off')),
     ),
-    el('div', { class: 'tp-project', text: project.name }),
+    title || el('div', { class: 'tp-project', text: project.name }),
     el('div', { class: 'tp-body' }, body),
   );
 }
