@@ -8,11 +8,16 @@ export const makeTerminal = (fields = {}) => ({ id: uid(), name: '', color: null
 
 export const makeGroup = (fields = {}) => ({ id: uid(), name: 'Terminais', collapsed: false, terminals: [], ...fields });
 
+/**
+ * Projeto: um conjunto explícito de pastas (repositórios clonados onde você quiser — é comum
+ * vários projetos dividirem a mesma pasta de clones). `cwd` = primeira pasta, padrão dos terminais.
+ */
 export const makeProject = (fields = {}) => ({
   id: uid(),
   name: 'Projeto',
   color: DOT_COLORS[0],
   cwd: '',
+  repos: [], // [{ name, path }]
   open: true,
   collapsed: false,
   groups: [makeGroup()],
@@ -57,7 +62,10 @@ function projectsFromV1(workspaces) {
 export function migrate(saved, home) {
   const s = saved || {};
   const projects = s.projects || (s.workspaces ? projectsFromV1(s.workspaces) : []);
-  for (const p of projects) if (!p.groups?.length) p.groups = [makeGroup()];
+  for (const p of projects) {
+    if (!p.groups?.length) p.groups = [makeGroup()];
+    p.repos ||= [];
+  }
   return {
     version: 2,
     layout: s.layout || 'left',

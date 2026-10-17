@@ -29,12 +29,13 @@ const print = (opts, result, text) => console.log(opts.json ? JSON.stringify(res
 
 const COMMANDS = {
   open: {
-    usage: 'open [--name N] [--cwd PASTA] [--run CMD] [--startup CMD] [--group G] [--project P] [--focus]',
+    usage: 'open [--name N] [--repo R | --cwd PASTA] [--run CMD] [--startup CMD] [--group G] [--project P] [--focus]',
     help: 'Abre um terminal (no seu grupo, ou em --group, criado se preciso).',
     async run({ opts }) {
       const r = await request('open', {
         name: opts.name,
-        cwd: opts.cwd && path.resolve(String(opts.cwd)),
+        repo: opts.repo,
+        cwd: opts.cwd && (opts.repo ? String(opts.cwd) : path.resolve(String(opts.cwd))),
         command: opts.run,
         startup: opts.startup,
         group: opts.group,

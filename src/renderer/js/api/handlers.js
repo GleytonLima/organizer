@@ -4,7 +4,7 @@ import { termLabel } from '../core/format.js';
 import { getSession, processStatus, runningCommand, writeWhenReady } from '../terminals/sessions.js';
 import { readLines } from '../terminals/buffer.js';
 import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
-import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd } from './resolve.js';
+import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd, resolveRepo } from './resolve.js';
 import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
 import { memoryHandlers } from './memory-handlers.js';
@@ -27,6 +27,7 @@ const describeProject = (project) => ({
   id: project.id,
   name: project.name,
   cwd: project.cwd,
+  repos: (project.repos || []).map((r) => ({ name: r.name, path: r.path })),
   open: project.open,
   groups: project.groups.map((group) => ({
     id: group.id,
@@ -49,7 +50,9 @@ export const handlers = {
     const caller = callerOf(p);
     const project = resolveProject(p.project, caller);
     const group = resolveGroup(project, p.group, caller);
-    const base = caller?.project === project ? caller.t.cwd : project.cwd || store.info.home;
+    // `repo`: nome de uma pasta do projeto (ex.: "backend"); `cwd` relativo é resolvido a partir dela
+    const repo = p.repo ? resolveRepo(project, p.repo) : null;
+    const base = repo?.path || (caller?.project === project ? caller.t.cwd : project.cwd || store.info.home);
     const cwd = await resolveCwd(p.cwd, base);
     const t = addTerminal(group, { name: p.name || '', cwd, startup: p.startup || '' }, { focus: !!p.focus });
     if (p.command) await writeWhenReady(t.id, p.command + '\r');

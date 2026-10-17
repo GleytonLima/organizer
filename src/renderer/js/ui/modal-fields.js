@@ -1,7 +1,8 @@
-// Campos declarativos do modal: field.text/textarea/select/folder/color(key, label, value, opts).
+// Campos declarativos do modal: field.text/textarea/select/folder/folders/color(key, label, value, opts).
 import { el } from '../core/dom.js';
 import { store } from '../core/store.js';
 import { DOT_COLORS } from '../themes/palette.js';
+import { folderListControl } from './folder-list.js';
 
 const make = (type) => (key, label, value, opts = {}) => ({ type, key, label, value: value ?? '', ...opts });
 
@@ -9,6 +10,8 @@ export const field = {
   text: make('text'),
   textarea: make('textarea'),
   folder: make('folder'),
+  /** Lista de pastas: value = [{ name, path }]. */
+  folders: (key, label, value, opts = {}) => ({ type: 'folders', key, label, value: value || [], ...opts }),
   /** opts.options: [{ value, label }] */
   select: make('select'),
   color: (key, label, value, opts = {}) => ({ type: 'color', key, label, value: value || DOT_COLORS[0], ...opts }),
@@ -29,6 +32,7 @@ function textInput(f, values) {
 
 const CONTROLS = {
   text: textInput,
+  folders: folderListControl,
   textarea(f, values) {
     const node = el('textarea', { class: 'input textarea', rows: f.rows || 4, placeholder: f.placeholder || '', oninput: bind(f, values) });
     node.value = values[f.key];

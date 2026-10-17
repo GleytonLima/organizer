@@ -15,12 +15,12 @@ contextBridge.exposeInMainWorld('api', {
 
   fromMsys: (p) => ipcRenderer.invoke('path:fromMsys', p),
   pickFolder: (defaultPath) => ipcRenderer.invoke('dialog:folder', defaultPath),
+  pickFolders: (defaultPath) => ipcRenderer.invoke('dialog:folders', defaultPath),
   clipboardRead: () => ipcRenderer.invoke('clipboard:read'),
   clipboardWrite: (text) => ipcRenderer.send('clipboard:write', text),
   openPath: (p) => ipcRenderer.send('shell:openPath', p),
 
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
-  gitRepos: (dir) => ipcRenderer.invoke('git:repos', dir),
 
   memory: {
     add: (data) => ipcRenderer.invoke('memory:add', data),

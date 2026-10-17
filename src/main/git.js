@@ -43,27 +43,8 @@ function git(cwd, args, maxBuffer = 1024 * 1024) {
   });
 }
 
-const isRepo = (dir) => fs.existsSync(path.join(dir, '.git')); // pasta ou arquivo (worktree)
-
-/** Repositórios de um projeto: a própria pasta (se for repo) e as subpastas diretas que são repos. */
-function findRepos(dir) {
-  if (!dir || !fs.existsSync(dir)) return [];
-  const repos = isRepo(dir) ? [{ name: path.basename(dir), path: dir }] : [];
-  let entries = [];
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {}
-  for (const e of entries) {
-    if (!e.isDirectory() || e.name.startsWith('.') || e.name === 'node_modules') continue;
-    const sub = path.join(dir, e.name);
-    if (isRepo(sub)) repos.push({ name: e.name, path: sub });
-  }
-  return repos;
-}
-
 function registerGitIpc() {
   ipcMain.handle('git:status', (_e, cwd) => gitStatus(cwd));
-  ipcMain.handle('git:repos', (_e, dir) => findRepos(dir));
 }
 
 module.exports = { registerGitIpc };

@@ -29,6 +29,10 @@ function registerSystemIpc() {
     const r = await dialog.showOpenDialog(getWindow(), { properties: ['openDirectory'], defaultPath });
     return r.canceled ? null : r.filePaths[0];
   });
+  ipcMain.handle('dialog:folders', async (_e, defaultPath) => {
+    const r = await dialog.showOpenDialog(getWindow(), { properties: ['openDirectory', 'multiSelections'], defaultPath });
+    return r.canceled ? [] : r.filePaths;
+  });
   ipcMain.handle('clipboard:read', () => clipboard.readText());
   ipcMain.on('clipboard:write', (_e, text) => clipboard.writeText(text));
   ipcMain.on('shell:openPath', (_e, p) => shell.openPath(p));

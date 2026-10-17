@@ -20,8 +20,10 @@ npm start
 - **Lado a lado**: no menu de contexto de um grupo ou projeto, "Ver lado a lado" mostra todos os seus terminais
   ao mesmo tempo, em grade. Ativar um terminal de fora (ou o ✕ no topo) volta ao normal.
 - **Comandos salvos**: barra de atalhos que executa no terminal ativo (duplo clique edita, ✕ remove com confirmação).
-- **Git multi-repo**: os repositórios da pasta do projeto aparecem como chips (repo, branch, mudanças, ↑↓);
-  cada terminal mostra o repo e a branch em que está.
+- **Projetos multi-repo**: um projeto é um nome + as **pastas que você escolhe** (repositórios clonados onde quer
+  que estejam, mesmo numa pasta de clones compartilhada; pastas sem git como `devtools` também valem).
+  Elas aparecem como chips no topo (repo, branch, mudanças, ↑↓), com ＋ para adicionar; cada terminal mostra o
+  repo e a branch em que está. Agentes abrem terminais pelo nome: `open_terminal({ repo: "backend" })` / `bo open --repo backend`.
 - Arrastar terminais para reordenar ou mover entre grupos.
 
 ## Agentes de IA e CLI `bo`

@@ -1,4 +1,4 @@
-// Projetos: a pasta raiz que agrupa os grupos de terminais.
+// Projetos: um nome + as pastas (repositórios) que você associa a ele, e os grupos de terminais.
 import { store, commit, openTerminals, projectTerminals } from '../core/store.js';
 import { makeProject } from '../core/model.js';
 import { basename } from '../core/format.js';
@@ -7,13 +7,26 @@ import { destroySession } from '../terminals/sessions.js';
 import { openModal, field } from '../ui/modal.js';
 import { confirmDanger, describeTerminals, hasRunning } from '../ui/confirm.js';
 import { activate, newTerminal, ensureProjectOpen } from './terminals.js';
-import { rescanRepos } from '../git/git.js';
+import { refreshAllGit } from '../git/git.js';
 
 const projectFields = (p) => [
   field.text('name', 'Nome', p.name, { placeholder: 'minha-app' }),
-  field.folder('cwd', 'Pasta do projeto', p.cwd, { hint: 'Pasta inicial dos novos terminais.' }),
+  field.folders('repos', 'Pastas do projeto', p.repos, {
+    hint: 'Os repositórios (e outras pastas, como devtools) deste projeto, onde quer que estejam clonados. A primeira é a pasta padrão dos novos terminais.',
+  }),
   field.color('color', 'Cor', p.color),
 ];
+
+/** Aplica nome, cor e pastas; a primeira pasta vira a pasta padrão (cwd). */
+function applyFields(project, v) {
+  const repos = v.repos.map((r) => ({ name: r.name.trim() || basename(r.path), path: r.path }));
+  Object.assign(project, {
+    name: v.name.trim() || project.name || basename(repos[0]?.path) || 'Projeto',
+    color: v.color,
+    repos,
+    cwd: repos[0]?.path || project.cwd || store.info.home,
+  });
+}
 
 export function openProject(project) {
   const first = projectTerminals(project)[0];
@@ -49,25 +62,41 @@ export function toggleProject(project) {
 }
 
 export async function createProject() {
-  const draft = { name: '', cwd: '', color: DOT_COLORS[store.state.projects.length % DOT_COLORS.length] };
-  const v = await openModal({ title: 'Novo projeto', fields: projectFields(draft), submit: 'Criar' });
+  const draft = { name: '', repos: [], color: DOT_COLORS[store.state.projects.length % DOT_COLORS.length] };
+  const v = await openModal({ title: 'Novo projeto', fields: projectFields(draft), submit: 'Criar', wide: true });
   if (!v) return;
-  const project = makeProject({
-    name: v.name.trim() || basename(v.cwd) || 'Projeto',
-    cwd: v.cwd.trim() || store.info.home,
-    color: v.color,
-  });
+  const project = makeProject({ name: '' });
+  applyFields(project, v);
   store.state.projects.push(project);
   newTerminal(project.groups[0]);
-  rescanRepos();
+  refreshAllGit();
 }
 
 export async function editProject(project) {
-  const v = await openModal({ title: 'Editar projeto', fields: projectFields(project), submit: 'Salvar' });
+  const v = await openModal({ title: 'Editar projeto', fields: projectFields(project), submit: 'Salvar', wide: true });
   if (!v) return;
-  Object.assign(project, { name: v.name.trim() || project.name, cwd: v.cwd.trim() || project.cwd, color: v.color });
+  applyFields(project, v);
   commit();
-  rescanRepos();
+  refreshAllGit();
+}
+
+/** Adiciona pastas ao projeto pelo seletor (atalho do ＋ na faixa de repositórios). */
+export async function addProjectFolders(project) {
+  const picked = await api.pickFolders(project.repos.at(-1)?.path || project.cwd || store.info.home);
+  const fresh = picked.filter((path) => !project.repos.some((r) => r.path.toLowerCase() === path.toLowerCase()));
+  if (!fresh.length) return;
+  project.repos.push(...fresh.map((path) => ({ name: basename(path), path })));
+  if (!project.cwd) project.cwd = project.repos[0].path;
+  commit();
+  refreshAllGit();
+}
+
+export async function removeProjectFolder(project, repo) {
+  const ok = await confirmDanger({ title: `Remover “${repo.name}” do projeto?`, message: `${repo.path}
+A pasta não é apagada do disco.`, submit: 'Remover' });
+  if (!ok) return;
+  project.repos = project.repos.filter((r) => r.path !== repo.path);
+  commit();
 }
 
 export async function deleteProject(project) {

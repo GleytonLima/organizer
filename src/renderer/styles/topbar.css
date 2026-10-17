@@ -208,6 +208,20 @@
   color: var(--text);
   font-weight: 500;
 }
+.repo-strip {
+  align-items: center;
+}
+.repo-hint {
+  font-size: 12px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.repo-add.icon-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+}
 
 /* ✕ de remover: só ocupa espaço no hover, com transição suave */
 .chip-remove.icon-btn {

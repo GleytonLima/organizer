@@ -24,7 +24,8 @@ const TOOLS = [
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Nome do terminal (ex.: "backend").' },
-        cwd: { type: 'string', description: 'Pasta inicial: absoluta, ~/..., /c/... ou relativa ao terminal de origem (ex.: "../backend").' },
+        repo: { type: 'string', description: 'Nome de uma pasta/repositório do projeto (ex.: "backend"); veja list_terminals → repos. Preferível a caminhos.' },
+        cwd: { type: 'string', description: 'Pasta inicial: absoluta, ~/..., /c/... ou relativa (ao repo, se informado, senão ao terminal de origem).' },
         command: { type: 'string', description: 'Comando a executar uma vez ao abrir (ex.: "npm run dev").' },
         startup: { type: 'string', description: 'Comando salvo no terminal e repetido sempre que o app restaurar a sessão.' },
         group: { type: 'string', description: 'Grupo de destino (nome ou id); criado se não existir.' },

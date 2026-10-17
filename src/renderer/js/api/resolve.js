@@ -39,6 +39,16 @@ export function resolveTerminal(ref, caller) {
   throw new Error(`Terminal não encontrado: ${ref}`);
 }
 
+/** Pasta do projeto pelo nome (ex.: "backend"). */
+export function resolveRepo(project, name) {
+  const repo = (project.repos || []).find((r) => same(r.name, name));
+  if (!repo) {
+    const names = (project.repos || []).map((r) => `"${r.name}"`).join(', ') || '(nenhuma — adicione pastas ao projeto)';
+    throw new Error(`Pasta/repo "${name}" não está no projeto ${project.name}. Pastas: ${names}`);
+  }
+  return repo;
+}
+
 function normalize(p) {
   const [drive, ...rest] = p.replace(/\//g, '\\').split('\\');
   const parts = [];
