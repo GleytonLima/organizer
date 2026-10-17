@@ -85,6 +85,6 @@ export function taskTab(project) {
       iconButton('settings', 'Configurar colunas', () => columnsDialog(project)),
       iconButton('maximize', 'Abrir quadro', () => setTaskView('board')),
     ],
-    body: [filterBar(), taskScope() === 'all' ? allProjects() : projectSections(project)],
+    body: [filterBar(project), taskScope() === 'all' ? allProjects() : projectSections(project)],
   };
 }

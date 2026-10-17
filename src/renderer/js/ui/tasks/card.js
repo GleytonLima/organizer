@@ -9,6 +9,8 @@ import { taskMenu } from './menus.js';
 import { openTask, isOpen } from './selection.js';
 import { parentOf, subtasksOf, taskProject } from '../../tasks/queries.js';
 import { isDoneColumn } from '../../tasks/columns.js';
+import { tagsOf } from '../../tasks/tags.js';
+import { toggleTaskTag } from '../../tasks/filter.js';
 
 const lastReport = (task) => [...task.history].reverse().find((h) => h.type === 'report')?.text;
 
@@ -25,6 +27,10 @@ function progressOf(task) {
   const project = taskProject(task);
   return Math.round((subs.filter((s) => isDoneColumn(project, s.columnId)).length / subs.length) * 100);
 }
+
+/** Tags da tarefa: clicar filtra a lista por ela. */
+const tagChips = (task) =>
+  tagsOf(task).map((t) => el('button', { class: 'task-chip link tag', title: `Filtrar por #${t}`, onclick: stop(() => toggleTaskTag(t)) }, el('span', { text: `#${t}` })));
 
 /** Chips de origem: tarefa-mãe, branch git e terminal do agente (clicar no terminal o abre). */
 function originChips(task) {
@@ -60,6 +66,6 @@ export function taskCard(task, { compact = false } = {}) {
     !compact && task.description ? el('div', { class: 'task-desc', text: task.description }) : null,
     detail,
     progressBar(progressOf(task)),
-    el('div', { class: 'task-chips' }, originChips(task)),
+    el('div', { class: 'task-chips' }, tagChips(task), originChips(task)),
   );
 }

@@ -2,22 +2,27 @@
 const { request } = require('./client');
 
 const line = (t) =>
-  `${t.key}  [${t.column}]  ${t.title}${t.parent ? `  ↳ ${t.parent}` : ''}${t.waiting ? `  ⏸ em espera: ${t.waiting.question}` : ''}${t.branch ? `  ⎇ ${t.branch}` : ''}`;
+  `${t.key}  [${t.column}]  ${t.title}${t.tags?.length ? `  ${t.tags.map((x) => `#${x}`).join(' ')}` : ''}${t.parent ? `  ↳ ${t.parent}` : ''}${t.waiting ? `  ⏸ em espera: ${t.waiting.question}` : ''}${t.branch ? `  ⎇ ${t.branch}` : ''}`;
 
 const ACTIONS = {
-  list: { usage: 'list [--column C]', run: async (_pos, o) => (await request('task_list', { column: o.column })).map(line).join('\n') || '(sem tarefas)' },
+  list: { usage: 'list [--column C] [--tag T]', run: async (_pos, o) => (await request('task_list', { column: o.column, tag: o.tag })).map(line).join('\n') || '(sem tarefas)' },
   columns: {
     usage: 'columns',
     run: async () => (await request('task_columns')).columns.map((c) => `${c.name} — ${c.description || ''}`).join('\n'),
   },
   add: {
-    usage: 'add <título...> [--desc D] [--column C] [--parent TAREFA] [--memories ID,ID]',
+    usage: 'add <título...> [--desc D] [--column C] [--parent TAREFA] [--memories ID,ID] [--tags A,B]',
     run: async (pos, o) =>
       line(
         await request('task_create', {
           title: pos.join(' '), description: o.desc, column: o.column, parent: o.parent, memories: o.memories ? String(o.memories).split(',') : [],
+          tags: o.tags ? String(o.tags).split(',') : [],
         }),
       ),
+  },
+  tag: {
+    usage: 'tag <tarefa> <tag...> [--remove]   (ex.: bo task tag BO-3 jira:PROJ-123 frontend)',
+    run: async ([task, ...tags], o) => line(await request('task_tag', { task, tags, remove: !!o.remove })),
   },
   parent: {
     usage: 'parent <tarefa> <mãe>   (vira subtarefa; --none solta)',

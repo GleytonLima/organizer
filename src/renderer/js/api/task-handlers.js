@@ -7,6 +7,8 @@ import { createTask, moveTask, reportTask, completeTask, setTaskParent } from '.
 import { requestInput, suggestReply } from '../actions/task-waiting.js';
 import { callerOf, resolveProject } from './resolve.js';
 import { linkTaskMemories, unlinkTaskMemory, taskMemories } from '../actions/task-memories.js';
+import { addTaskTags, removeTaskTags } from '../actions/task-tags.js';
+import { tagsOf, hasTag } from '../tasks/tags.js';
 
 const iso = (ms) => new Date(ms).toISOString();
 
@@ -30,6 +32,7 @@ function taskInfo(task, { history = false } = {}) {
     branch: task.branch ?? null,
     lastReport: last?.text ?? null,
     parent: parentOf(task)?.key ?? null,
+    tags: tagsOf(task),
     updatedAt: iso(task.updatedAt),
     ...(history && { history: task.history.map((h) => ({ ...h, at: iso(h.at) })) }),
   };
@@ -63,6 +66,7 @@ export const taskHandlers = {
       const col = resolveColumn(project, p.column);
       tasks = tasks.filter((t) => t.columnId === col.id);
     }
+    if (p.tag) tasks = tasks.filter((t) => hasTag(t, p.tag));
     return tasks.sort((a, b) => b.updatedAt - a.updatedAt).map((t) => taskInfo(t));
   },
 
@@ -80,6 +84,7 @@ export const taskHandlers = {
     const parent = p.parent ? resolveTaskRef(p.parent, { project }) : null;
     const task = createTask(parent ? taskProject(parent) : project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente', parent });
     if (p.memories?.length) await linkTaskMemories(task, p.memories, { by: 'agente' });
+    if (p.tags?.length) addTaskTags(task, p.tags, { by: 'agente' });
     return taskInfo(task);
   },
 
@@ -97,6 +102,14 @@ export const taskHandlers = {
     if (p.remove) for (const r of refs) await unlinkTaskMemory(task, r);
     else await linkTaskMemories(task, refs, { by: 'agente' });
     return { ...taskInfo(task), memories: task.memoryRefs?.length || 0 };
+  },
+
+  /** Acrescenta (ou, com `remove`, tira) tags da tarefa — ex.: "jira:PROJ-123". */
+  task_tag(p) {
+    const { task } = context(p, { needTask: true });
+    const tags = (Array.isArray(p.tags) ? p.tags : [p.tags]).filter(Boolean);
+    if (!tags.length) throw new Error('Informe ao menos uma tag.');
+    return taskInfo(p.remove ? removeTaskTags(task, tags, { by: 'agente' }) : addTaskTags(task, tags, { by: 'agente' }));
   },
 
   task_move(p) {

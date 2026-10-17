@@ -204,3 +204,48 @@
   font-weight: 600;
   color: var(--faint);
 }
+
+/* filtro: chip "Por memória" e tags em uso */
+.mem-filters .chip .icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+}
+.chip-memory {
+  max-width: 100%;
+  padding: 0 4px 0 0;
+  overflow: hidden;
+}
+.chip-memory .chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+  padding: 0 6px 0 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+.chip-memory .chip-x {
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+}
+.chip-memory .chip-x:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.chip-memory .chip-x .icon {
+  margin: 0;
+}
+.tp-tags .chip.tag {
+  height: 22px;
+  padding: 0 9px;
+  font-size: 11px;
+}

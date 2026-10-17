@@ -42,6 +42,7 @@ export const makeTask = (fields = {}) => {
     progress: null, // 0–100, opcional
     needsInput: null, // { question, at } quando o agente aguarda uma decisão sua
     parentId: null, // subtarefa de outra tarefa (id)
+    tags: [], // rótulos (tasks/tags.js); tarefas antigas sem o campo = sem tags
     createdAt: now,
     updatedAt: now,
     history: [],

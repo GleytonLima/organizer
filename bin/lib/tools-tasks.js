@@ -25,6 +25,7 @@ const TASK_TOOLS = [
         column: { type: 'string', description: 'Nome ou id da coluna inicial (opcional).' },
         memories: { type: 'array', items: { type: 'string' }, description: 'Ids de memórias que dão contexto à tarefa (decisões, como fazer, a ideia de origem…).' },
         parent: { type: 'string', description: 'Tarefa-mãe (chave, ex.: "BO-35"): cria como SUBTAREFA. Ao dividir uma tarefa em partes, registre cada parte assim antes de começá-la.' },
+        tags: { type: 'array', items: { type: 'string' }, description: 'Tags (ex.: "jira:PROJ-123", "frontend").' },
         project: projectRef,
       },
       required: ['title'],
@@ -83,8 +84,8 @@ const TASK_TOOLS = [
   },
   {
     name: 'list_tasks',
-    description: 'Lista as tarefas do projeto (opcionalmente de uma coluna), com coluna, progresso e último relato.',
-    inputSchema: { type: 'object', properties: { column: { type: 'string' }, project: projectRef } },
+    description: 'Lista as tarefas do projeto (opcionalmente de uma coluna ou com uma tag), com coluna, tags, progresso e último relato.',
+    inputSchema: { type: 'object', properties: { column: { type: 'string' }, tag: { type: 'string', description: 'Só as tarefas com esta tag.' }, project: projectRef } },
     run: (request, args) => request('task_list', args),
   },
   {
@@ -98,6 +99,12 @@ const TASK_TOOLS = [
     description: 'Torna uma tarefa existente SUBTAREFA de outra (parent = chave da mãe), ou solta (parent vazio).',
     inputSchema: { type: 'object', properties: { task: taskRef, parent: { type: 'string' } }, required: ['task'] },
     run: (request, args) => request('task_set_parent', args),
+  },
+  {
+    name: 'tag_task',
+    description: 'Acrescenta tags à tarefa (ou tira, com remove) — ex.: a história do Jira ("jira:PROJ-123") ou a área ("frontend").',
+    inputSchema: { type: 'object', properties: { task: taskRef, tags: { type: 'array', items: { type: 'string' } }, remove: { type: 'boolean' } }, required: ['tags'] },
+    run: (request, args) => request('task_tag', args),
   },
   {
     name: 'link_task_memory',

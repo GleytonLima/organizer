@@ -13,6 +13,7 @@ import { waitingBox } from './detail-waiting.js';
 import { saveProgressDialog } from '../memory/progress.js';
 import { memoriesBox } from './detail-memories.js';
 import { subtasksBox, parentLine } from './detail-subtasks.js';
+import { tagsBox } from './detail-tags.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -92,6 +93,8 @@ export function renderTaskDetail() {
     editable(task, 'title', { placeholder: 'Título' }),
     task.needsInput ? waitingBox(task, draftOf(task)) : null,
     meta(task),
+    el('label', { class: 'td-label', text: 'Tags' }),
+    tagsBox(task, draftOf(task)),
     el('label', { class: 'td-label', text: 'Descrição' }),
     editable(task, 'description', { multiline: true, placeholder: 'Contexto, critérios de pronto…' }),
     el('label', { class: 'td-label', text: 'Subtarefas' }),

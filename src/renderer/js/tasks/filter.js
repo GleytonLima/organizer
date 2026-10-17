@@ -1,9 +1,11 @@
-// Filtro da lista de tarefas (painel): busca por texto (chave, título, descrição) e chips
-// "Em espera" / "Com memória". Estado só da interface (não é salvo); o escopo — projeto em foco ou
+// Filtro da lista de tarefas (painel): busca por texto (chave, título, descrição; "#tag" casa tag),
+// chips "Em espera" / "Com memória", uma tag e memórias específicas (tarefas que as referenciam). Estado só da interface (não é salvo); o escopo — projeto em foco ou
 // todos os projetos — é salvo em state.taskScope, como o período.
 import { store, commit, notify } from '../core/store.js';
+import { hasTag, foldTag } from './tags.js';
 
-export const taskFilter = { query: '', waiting: false, memory: false };
+// tag: uma tag (ou null); memories: [{ gid, text }] escolhidas no seletor de memórias
+export const taskFilter = { query: '', waiting: false, memory: false, tag: null, memories: [] };
 
 export const CHIPS = [
   { key: 'waiting', label: 'Em espera' },
@@ -22,7 +24,18 @@ export function toggleTaskChip(key) {
   notify();
 }
 
-export const filterActive = () => !!(taskFilter.query.trim() || taskFilter.waiting || taskFilter.memory);
+/** Liga/desliga a tag (clicar de novo na mesma tira o filtro). */
+export function toggleTaskTag(tag) {
+  taskFilter.tag = taskFilter.tag && foldTag(taskFilter.tag) === foldTag(tag) ? null : tag;
+  notify();
+}
+
+export function setMemoryFilter(memories) {
+  taskFilter.memories = memories;
+  notify();
+}
+
+export const filterActive = () => !!(taskFilter.query.trim() || taskFilter.waiting || taskFilter.memory || taskFilter.tag || taskFilter.memories.length);
 
 const KEY = /^[a-z]+-\d+$/; // "ma-1" casa só a chave MA-1 (não MA-10, MA-11…)
 
@@ -30,10 +43,13 @@ const KEY = /^[a-z]+-\d+$/; // "ma-1" casa só a chave MA-1 (não MA-10, MA-11�
 export function matchesFilter(task) {
   if (taskFilter.waiting && !task.needsInput) return false;
   if (taskFilter.memory && !task.memoryRefs?.length) return false;
+  if (taskFilter.tag && !hasTag(task, taskFilter.tag)) return false;
+  if (taskFilter.memories.length && !taskFilter.memories.some((m) => task.memoryRefs?.includes(m.gid))) return false;
   const words = fold(taskFilter.query).split(/\s+/).filter(Boolean);
   if (!words.length) return true;
   const hay = fold(`${task.key} ${task.title} ${task.description}`);
-  return words.every((w) => (KEY.test(w) ? fold(task.key) === w : hay.includes(w)));
+  const match = (w) => (w.startsWith('#') ? w.length === 1 || hasTag(task, w.slice(1)) : KEY.test(w) ? fold(task.key) === w : hay.includes(w));
+  return words.every(match);
 }
 
 export const SCOPES = [

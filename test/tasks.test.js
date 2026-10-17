@@ -120,5 +120,33 @@ suite('tarefas', {
   await search('preços');
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Página de preços'], 'a busca vale para todos os projetos');
   await search('');
+
+  // tags: pela API/MCP, CLI, gaveta e cartão; filtro por tag (chip ou "#tag") e por memória
+  const tagged = (await agent.tool('create_task', { title: 'História do Jira', tags: ['jira:PROJ-123', ' front end '] })).data;
+  t.equal(tagged?.tags, ['jira:PROJ-123', 'front-end'], 'create_task aceita tags (espaços viram hífen, grafia mantida)');
+  t.equal((await agent.tool('tag_task', { task: tagged.key, tags: ['JIRA:proj-123', 'api'] })).data?.tags, ['jira:PROJ-123', 'front-end', 'api'], 'tag_task acrescenta sem duplicar (ignora maiúsculas)');
+  t.includes((await t.bo(['task', 'tag', tagged.key, 'api', '--remove'], { terminal: 'dev1' })).stdout, '#front-end', '`bo task tag --remove` tira a tag e mostra as restantes');
+  const byTag = (await t.bo(['task', 'list', '--tag', 'JIRA:PROJ-123'], { terminal: 'dev1' })).stdout.trim().split('\n');
+  t.check(byTag.length === 1 && byTag[0].startsWith(tagged.key), '`bo task list --tag` filtra pela tag', byTag.join(' | '));
+  await t.js(`SEL.openTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(tagged.key)}).id)`, TASK_UI);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#task-detail .td-tag-input')`));
+  await t.js(`const i = document.querySelector('#task-detail .td-tag-input'); i.value = 'urgente'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))`);
+  const drawerTags = () => t.js(`return [...document.querySelectorAll('#task-detail .td-tag')].map((x) => x.textContent)`);
+  t.equal(await t.waitFor(async () => ((await drawerTags()).length === 3 ? drawerTags() : null)), ['#jira:PROJ-123', '#front-end', '#urgente'], 'a gaveta acrescenta tags pela caixa (Enter)');
+  await t.js(`[...document.querySelectorAll('#task-detail .td-tag')].find((x) => x.textContent === '#urgente').querySelector('.td-tag-x').click()`);
+  t.equal(await t.waitFor(async () => ((await drawerTags()).length === 2 ? drawerTags() : null)), ['#jira:PROJ-123', '#front-end'], 'o × da gaveta tira a tag');
+  await t.js(`SEL.closeTask()`, TASK_UI);
+  t.check(await t.waitFor(() => t.js(`return [...document.querySelectorAll('#taskpanel .tp-tags .chip.tag')].some((c) => c.textContent === '#front-end')`)), 'as tags em uso aparecem como filtros no painel');
+  await t.js(`[...document.querySelectorAll('#taskpanel .task-chip.tag')].find((c) => c.textContent === '#jira:PROJ-123').click()`);
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['História do Jira'], 'clicar na tag do cartão filtra a lista por ela');
+  await t.js(`document.querySelector('#taskpanel .tp-tags .chip.tag.on').click()`);
+  await search('#front-END');
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['História do Jira'], '"#tag" na busca filtra pela tag');
+  await search('');
+  await t.js(`const f = await import('./js/tasks/filter.js'); f.setMemoryFilter([{ gid: 'm-1', text: 'Decisão X' }])`);
+  t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'filtro por memória mostra as tarefas que a referenciam');
+  t.includes(await t.js(`return document.querySelector('#taskpanel .chip-memory').textContent`), 'Memória: Decisão X', 'o chip mostra a memória escolhida');
+  await t.js(`document.querySelector('#taskpanel .chip-memory .chip-x').click()`);
+  t.check(await t.waitFor(async () => (await titles()).length > 1), 'o × tira o filtro por memória');
   await t.js(`S.store.state.taskScope = 'project'; A.setTaskView('off')`, TASK_UI);
 });
