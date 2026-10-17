@@ -20,4 +20,8 @@ contextBridge.exposeInMainWorld('api', {
   openPath: (p) => ipcRenderer.send('shell:openPath', p),
 
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
+
+  // API local: pedidos chegam do main; a resposta volta com o mesmo id.
+  onApiRequest: (cb) => ipcRenderer.on('api:request', (_e, id, method, params) => cb(id, method, params)),
+  apiRespond: (id, error, result) => ipcRenderer.send('api:response', id, error, result),
 });

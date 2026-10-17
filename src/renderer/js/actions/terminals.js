@@ -26,20 +26,28 @@ export function activate(id) {
   });
 }
 
+/** Adiciona um terminal ao grupo e sobe a sessão; com `focus`, também o ativa. */
+export function addTerminal(group, fields, { focus = true } = {}) {
+  const owner = findGroup(group.id);
+  const t = makeTerminal(fields);
+  group.terminals.push(t);
+  ensureProjectOpen(owner.project);
+  if (focus) activate(t.id);
+  else commit();
+  return t;
+}
+
 /** Cria um terminal no grupo (padrão: grupo atual), herdando a pasta do terminal ativo do mesmo projeto. */
 export function newTerminal(group = currentGroup(), extra = {}) {
   const owner = group && findGroup(group.id);
   if (!owner) return;
   const act = activeEntry();
   const cwd = act?.project === owner.project ? act.t.cwd : owner.project.cwd || store.info.home;
-  const t = makeTerminal({ cwd, ...extra });
-  group.terminals.push(t);
-  ensureProjectOpen(owner.project);
-  activate(t.id);
+  addTerminal(group, { cwd, ...extra });
 }
 
 /** Remove o terminal do estado e escolhe o próximo ativo. Não pergunta nada. */
-function removeTerminal(id) {
+export function removeTerminal(id) {
   const entry = findTerm(id);
   if (!entry) return;
   const open = openTerminals();

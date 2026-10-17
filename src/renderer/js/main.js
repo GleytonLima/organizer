@@ -9,6 +9,7 @@ import { startGitPolling } from './git/git.js';
 import { initMenu } from './ui/menu.js';
 import { openModal } from './ui/modal.js';
 import { initRender, renderAll } from './ui/render.js';
+import { initApi } from './api/index.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -32,6 +33,7 @@ async function init() {
 
   restoreSession();
   renderAll();
+  initApi(); // depois de restaurar: pedidos já encontram os terminais
   startGitPolling();
 
   if (!store.info.bash) {

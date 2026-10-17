@@ -21,6 +21,36 @@ npm start
 - **Git**: branch, mudanças (●), commits a enviar/baixar (↑↓) e conflitos, atualizados a cada 3 s.
 - Arrastar terminais para reordenar ou mover entre grupos.
 
+## Agentes de IA e CLI `bo`
+
+Todo terminal aberto pelo app tem o comando `bo` no PATH e sabe quem ele é (`BO_TERMINAL_ID`).
+Terminais abertos a partir dele entram **no mesmo grupo** (ou no grupo indicado com `--group`).
+
+```bash
+bo open --name backend --cwd ../backend --group Serviços --run "npm run dev"
+bo wait backend --match "listening" --timeout 60
+bo list
+bo read backend --lines 30
+bo close backend --force
+```
+
+`bo help` lista todos os comandos (`open`, `list`, `send`, `read`, `wait`, `status`, `focus`, `close`).
+
+### Servidor MCP
+
+O mesmo script oferece um servidor MCP (`bo mcp`) com as ferramentas `open_terminal`, `list_terminals`,
+`send_input`, `read_output`, `wait_for_output`, `terminal_status`, `focus_terminal` e `close_terminal`.
+Para registrar no Claude Code, Devin etc., rode num terminal do app:
+
+```bash
+bo mcp-config
+```
+
+Rode o agente **dentro de um terminal do Bash Organizer** (ex.: o da pasta `devtools`): assim os terminais
+que ele abrir ficam associados ao grupo dele. `close_terminal` recusa fechar processo em execução sem `force`.
+
+A API escuta só em `127.0.0.1`, com token aleatório a cada início (em `%APPDATA%/Bash Organizer/api.json`).
+
 ## Atalhos
 
 | Atalho | Ação |

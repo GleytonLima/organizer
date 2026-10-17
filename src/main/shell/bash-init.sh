@@ -11,6 +11,9 @@ elif [ -f ~/.profile ]; then . ~/.profile
 elif [ -f ~/.bashrc ]; then . ~/.bashrc
 fi
 
+# CLI `bo` do app disponível em todo terminal aberto por ele.
+[ -n "$BO_BIN" ] && PATH="$BO_BIN:$PATH"
+
 # __bo_state: 0 = executando comando, 1 = pronto para o próximo, 2 = rodando o PROMPT_COMMAND
 __bo_state=2
 

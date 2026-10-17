@@ -17,6 +17,7 @@ Projeto (pasta raiz) → Grupos → Terminais. Mudou o formato salvo? Suba `vers
 ## Estrutura
 ```
 src/main/        processo principal (index, window, pty, git, bash, system, files)
+src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
 src/renderer/
@@ -25,6 +26,11 @@ src/renderer/
   js/terminals/  sessões xterm+pty, teclado, clipboard
   js/actions/    terminais, grupos, projetos, comandos salvos
   js/git/        polling de status
+  js/api/        handlers da API local (resolve nomes/ids/caminhos)
   js/ui/         sidebar(+groups), topbar, cmdbar, statusbar, menu, modal, confirm, dnd, componentes
   styles/        base, layout, sidebar, topbar, overlays, status
+bin/             CLI `bo` (bo.js + lib/: client, commands, mcp, tools, wait) e wrappers bash/cmd
 ```
+
+## API local
+Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/commands.js`) e no MCP (`bin/lib/tools.js`).

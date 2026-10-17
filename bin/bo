@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# CLI `bo` para o Git Bash: usa o runtime do próprio app (Electron em modo Node), sem exigir Node instalado.
+ELECTRON_RUN_AS_NODE=1 exec "${BO_NODE:-node}" "$(dirname "$0")/bo.js" "$@"

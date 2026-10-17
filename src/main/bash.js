@@ -31,4 +31,10 @@ function msysToWindows(p) {
   return p;
 }
 
-module.exports = { BASH, rcFile, writeRcFile, msysToWindows };
+/** C:\x\y → /c/x/y (para usar no PATH do bash). */
+function windowsToMsys(p) {
+  const m = /^([a-zA-Z]):[\\/]?(.*)$/.exec(p || '');
+  return m ? `/${m[1].toLowerCase()}/${m[2].replace(/\\/g, '/')}` : p;
+}
+
+module.exports = { BASH, rcFile, writeRcFile, msysToWindows, windowsToMsys };

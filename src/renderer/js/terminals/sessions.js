@@ -74,8 +74,17 @@ export function createSession(t) {
     copyOrPaste(term);
   });
 
-  spawn(t, s);
+  s.ready = spawn(t, s); // resolve quando o pty existe (antes disso, escritas se perderiam)
   return s;
+}
+
+/** Escreve no terminal assim que o pty estiver pronto. */
+export async function writeWhenReady(id, data) {
+  const s = sessions.get(id);
+  if (!s) throw new Error('Terminal não está aberto.');
+  await s.ready;
+  if (s.exited) throw new Error('O shell deste terminal foi encerrado.');
+  api.ptyWrite(id, data);
 }
 
 async function spawn(t, s) {
@@ -118,7 +127,7 @@ export function restartSession(id) {
   Object.assign(s, { running: null, lastExit: null });
   s.exited = false;
   s.term.reset();
-  spawn(entry.t, s);
+  s.ready = spawn(entry.t, s);
   notify();
 }
 
