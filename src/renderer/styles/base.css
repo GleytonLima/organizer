@@ -190,3 +190,18 @@ textarea {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* botão compacto (ações dentro de painéis e campos) */
+.btn.small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+}
+.btn.small .icon {
+  width: 13px;
+  height: 13px;
+}

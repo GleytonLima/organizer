@@ -24,6 +24,20 @@ export async function linkTaskMemories(task, refs, { by = 'você' } = {}) {
   return task;
 }
 
+/** Define a seleção inteira (do seletor): registra no histórico o que entrou e o que saiu. */
+export async function setTaskMemories(task, gids, { by = 'você' } = {}) {
+  const before = new Set(task.memoryRefs || []);
+  const after = new Set(gids);
+  const added = gids.filter((g) => !before.has(g));
+  const removed = [...before].filter((g) => !after.has(g));
+  if (!added.length && !removed.length) return task;
+  task.memoryRefs = [...gids];
+  const parts = [added.length && `vinculou ${added.length === 1 ? 'uma memória' : `${added.length} memórias`}`, removed.length && `desvinculou ${removed.length === 1 ? 'uma' : removed.length}`].filter(Boolean);
+  logTask(task, by, 'edit', `${parts.join(' e ')[0].toUpperCase()}${parts.join(' e ').slice(1)}`);
+  commit();
+  return task;
+}
+
 export async function unlinkTaskMemory(task, ref) {
   const [m] = await api.memory.many([ref]);
   const gid = m?.gid || ref;

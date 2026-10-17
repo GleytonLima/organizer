@@ -83,6 +83,46 @@ suite('memória: vínculos, impacto, tipos e tarefas', {
   });
   t.check(drawer && drawer.includes('Exportar a memória'), 'gaveta da tarefa mostra as memórias vinculadas', drawer);
 
+  // seletor de memórias: filtro por tipo, várias de uma vez, e desmarcar
+  const picker = {
+    text: () => t.js(`return document.querySelector('.picker-card')?.innerText || ''`),
+    chip: (label) => t.js(`[...document.querySelectorAll('.picker-card .chip')].find((c) => c.textContent === ${JSON.stringify(label)}).click()`),
+    toggle: (part) => t.js(`[...document.querySelectorAll('.picker-card .pick-row')].find((r) => r.textContent.includes(${JSON.stringify(part)})).querySelector('input').click()`),
+    save: () => t.js(`document.querySelector('.picker-card [type=submit]').click()`),
+  };
+  await t.js(`[...document.querySelectorAll('#task-detail button')].find((b) => b.textContent.includes('Vincular memórias')).click()`);
+  const opened = await t.waitFor(async () => /Selecionadas/.test(await picker.text()) && picker.text());
+  t.check(opened && opened.includes('limpar o cache') && opened.includes('Exportar a memória'), 'seletor abre com as já vinculadas no topo', opened);
+  await picker.chip('Decisões');
+  t.check(await t.waitFor(async () => { const x = await picker.text(); return x.includes('Usamos filas') && !x.includes('Eventos de domínio'); }), 'filtro por tipo mostra só decisões (e mantém as selecionadas)');
+  await picker.toggle('Usamos filas');
+  await picker.toggle('assíncrono por causa dos picos');
+  await picker.chip('Tudo');
+  await t.wait(400);
+  await shot('seletor');
+  await t.waitFor(async () => /Eventos de domínio/.test(await picker.text()));
+  await picker.toggle('limpar o cache'); // desmarca o "como fazer"
+  await picker.save();
+  const kinds = await t.waitFor(async () => {
+    const r = await data('get_task', { task: converted.key });
+    return r.memories.length === 3 && r.memories.map((m) => m.kind).sort();
+  });
+  t.equal(kinds, ['decision', 'decision', 'idea'], 'salvar aplica a seleção inteira (acrescenta e remove)');
+
+  // dentro do diálogo de memória, "Procurar…" abre o seletor por cima sem fechar o diálogo
+  await t.js(`const m = await api.memory.get(${JSON.stringify(workers.id)}); D.editMemoryDialog(S.projectById('pA'), m);`, { D: './js/ui/memory/dialogs.js' });
+  await t.waitFor(async () => /Vínculos/.test(await t.modal.text()));
+  await t.js(`[...document.querySelectorAll('#modal button')].find((b) => b.textContent === 'Procurar…').click()`);
+  await t.waitFor(async () => /Vínculos/.test(await picker.text()));
+  await picker.toggle('Eventos de domínio');
+  await picker.save();
+  const rows = await t.waitFor(async () => { const x = await t.modal.text(); return x.includes('Eventos de domínio') && x; });
+  t.check(rows && (await t.modal.open()), 'seletor sobre o diálogo acrescenta o vínculo e o diálogo continua aberto');
+  await t.modal.submit();
+  await t.waitFor(async () => !(await t.modal.open()));
+  const wl = await data('memory_links', { id: workers.id });
+  t.equal(wl.outgoing.map((l) => l.type).sort(), ['depends', 'depends'], 'novo vínculo pelo seletor entra como "apoia-se em"');
+
   // período: concluída há 20 dias some na "última semana" e volta em "último mês"
   await t.js(`const p = S.projectById('pA'); const last = p.taskColumns ? p.taskColumns.at(-1).id : null;
     const tk = S.store.state.tasks.find((x) => x.key === ${JSON.stringify(converted.key)});

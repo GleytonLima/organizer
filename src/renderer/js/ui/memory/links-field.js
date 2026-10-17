@@ -6,6 +6,7 @@ import { memoryContext } from '../../memory/context.js';
 import { field } from '../modal.js';
 import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
+import { pickMemories } from './picker.js';
 
 export const LINK_TYPES = [
   { value: 'depends', label: 'apoia-se em' },
@@ -88,7 +89,23 @@ function linksControl(project, values, selfGid) {
       timer = setTimeout(() => suggest(e.target.value), DEBOUNCE_MS);
     },
   });
+  // seletor completo (busca, filtro por tipo, várias): mantém o tipo das que ficam; as novas entram como "apoia-se em"
+  async function browse() {
+    const gids = await pickMemories({ project, title: 'Vínculos', selected: values.links.map((l) => l.id), exclude: [selfGid].filter(Boolean), suggest: values.text || '' });
+    if (!gids) return;
+    const kept = values.links.filter((l) => gids.includes(l.id));
+    const fresh = await api.memory.many(gids.filter((g) => !kept.some((l) => l.id === g)));
+    values.links = [...kept, ...fresh.map((m) => ({ id: m.gid, type: 'depends', text: m.text }))];
+    draw();
+  }
+
   values.links = values.links || [];
   draw();
-  return el('div', { class: 'links-field' }, list, input, results);
+  return el(
+    'div',
+    { class: 'links-field' },
+    list,
+    el('div', { class: 'link-search' }, input, el('button', { type: 'button', class: 'btn small', onclick: browse, text: 'Procurar…' })),
+    results,
+  );
 }
