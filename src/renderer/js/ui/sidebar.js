@@ -17,7 +17,7 @@ function projectHead(project) {
       title: project.cwd,
       onclick: () => toggleProject(project),
       oncontextmenu: (e) => projectMenu(e, project),
-      ...dropTarget((id) => moveTerminal(id, project.groups[0])),
+      ...dropTarget('terminal', (id) => moveTerminal(id, project.groups[0])),
     },
     icon('chevron', 'chevron'),
     tintedIcon('folder', project.color, 'project-icon'),

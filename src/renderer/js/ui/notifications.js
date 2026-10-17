@@ -1,19 +1,13 @@
 // Sino da barra superior: contador de não lidos e lista dos avisos recentes.
 import { el } from '../core/dom.js';
 import { findTerm } from '../core/store.js';
+import { timeAgo } from '../core/format.js';
 import { activate } from '../actions/terminals.js';
 import { recentNotifications, unreadCount, clearNotifications } from '../notify/center.js';
 import { iconButton } from './components.js';
 import { showMenu } from './menu.js';
 
 const MAX_ITEMS = 12;
-
-function timeAgo(at) {
-  const s = Math.round((Date.now() - at) / 1000);
-  if (s < 60) return 'agora';
-  if (s < 3600) return `${Math.floor(s / 60)} min`;
-  return `${Math.floor(s / 3600)} h`;
-}
 
 function notificationsMenu(e) {
   const list = recentNotifications().slice(0, MAX_ITEMS);

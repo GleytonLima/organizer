@@ -19,6 +19,29 @@ export const makeProject = (fields = {}) => ({
   ...fields,
 });
 
+/**
+ * Tarefa do quadro (colunas em tasks/columns.js, por projeto).
+ * `history`: [{ at, by: 'agente'|'você', type: 'created'|'moved'|'report'|'input'|'edit', text }].
+ */
+export const makeTask = (fields = {}) => {
+  const now = Date.now();
+  return {
+    id: uid(),
+    key: '', // ex.: "MA-12" (prefixo do projeto + sequência)
+    projectId: null,
+    columnId: null,
+    title: '',
+    description: '',
+    terminalId: null, // terminal de origem (o agente que criou/atualizou)
+    progress: null, // 0–100, opcional
+    needsInput: null, // { question, at } quando o agente aguarda uma decisão sua
+    createdAt: now,
+    updatedAt: now,
+    history: [],
+    ...fields,
+  };
+};
+
 const DEFAULT_COMMANDS = () => [
   { id: uid(), label: 'status', cmd: 'git status' },
   { id: uid(), label: 'log', cmd: 'git log --oneline -15 --graph' },
@@ -43,5 +66,7 @@ export function migrate(saved, home) {
     split: s.split || null, // visão lado a lado: { kind: 'group' | 'project', id }
     projects: projects.length ? projects : [makeProject({ name: 'Geral', cwd: home })],
     commands: s.commands || DEFAULT_COMMANDS(),
+    tasks: s.tasks || [],
+    taskView: s.taskView || 'off', // 'off' | 'panel' | 'board'
   };
 }

@@ -53,6 +53,24 @@ que ele abrir ficam associados ao grupo dele. `close_terminal` recusa fechar pro
 
 A API escuta só em `127.0.0.1`, com token aleatório a cada início (em `%APPDATA%/Bash Organizer/api.json`).
 
+## Quadro de tarefas (mini kanban para agentes)
+
+Cada projeto tem um quadro. O botão de **Tarefas** (topo) abre um **painel lateral** (agrupado por coluna, com
+"Em espera" no topo); dele, ⤢ abre o **quadro em tela cheia**. Clicar num cartão abre o **detalhe** (título,
+coluna, descrição, histórico, terminal de origem e branch git).
+
+- **Colunas configuráveis** (⚙): nome + descrição. A descrição orienta o agente sobre o que cada coluna significa.
+  A primeira recebe tarefas novas; a última é a de concluído. Padrão: A fazer → Fazendo → Feito.
+- **Em espera** é um estado (vale em qualquer coluna): o agente faz uma pergunta (`request_input`), você é avisado,
+  e a sua resposta no detalhe é **digitada direto no terminal do agente** que perguntou.
+- **Supervisor**: outro agente pode listar as esperas (`list_waiting_tasks`) e deixar uma sugestão
+  (`suggest_reply`), que aparece pré-preenchida na sua resposta.
+- A sidebar mostra, em cada terminal, a tarefa que o agente dele está tocando.
+
+Ferramentas MCP: `list_columns`, `create_task`, `move_task`, `report_progress`, `request_input`, `complete_task`,
+`list_tasks`, `get_task`, `list_waiting_tasks`, `suggest_reply`. No terminal: `bo task` (list, columns, add, move,
+report, wait, done, waiting).
+
 ## Avisos (notificações)
 
 Quando um terminal que você **não está vendo** pede atenção, ele ganha uma bolinha na sidebar (e no grupo/projeto),

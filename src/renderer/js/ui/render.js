@@ -9,6 +9,7 @@ import { renderCmdbar } from './cmdbar.js';
 import { renderStatusbar } from './statusbar.js';
 import { renderPaneHeads } from './split.js';
 import { markRead } from '../notify/center.js';
+import { renderTasks } from './tasks/index.js';
 
 export function renderAll() {
   $('#app').dataset.layout = store.state.layout;
@@ -21,6 +22,7 @@ export function renderAll() {
   renderTopbar();
   renderCmdbar();
   renderStatusbar();
+  renderTasks();
 }
 
 export const initRender = () => subscribe(renderAll);

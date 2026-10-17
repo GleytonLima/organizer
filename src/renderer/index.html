@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="styles/topbar.css" />
     <link rel="stylesheet" href="styles/overlays.css" />
     <link rel="stylesheet" href="styles/status.css" />
+    <link rel="stylesheet" href="styles/tasks.css" />
+    <link rel="stylesheet" href="styles/tasks-board.css" />
+    <link rel="stylesheet" href="styles/tasks-detail.css" />
   </head>
   <body>
     <div id="app" data-layout="left">
@@ -29,8 +32,14 @@
               <button class="btn primary" id="btn-empty-new">Novo terminal</button>
             </div>
           </div>
+          <!-- quadro de tarefas em tela cheia (substitui os terminais, que continuam rodando) -->
+          <section id="board" class="hidden"></section>
           <footer id="statusbar"></footer>
+          <!-- detalhe da tarefa: gaveta sobre a área principal (não cobre painel nem sidebar) -->
+          <aside id="task-detail" class="hidden"></aside>
         </main>
+        <!-- painel de tarefas compacto, ao lado dos terminais -->
+        <aside id="taskpanel" class="hidden"></aside>
       </div>
     </div>
 

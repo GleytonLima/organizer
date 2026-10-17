@@ -6,6 +6,7 @@ import { readLines } from '../terminals/buffer.js';
 import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
 import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd } from './resolve.js';
 import { pushNotification } from '../notify/center.js';
+import { taskHandlers } from './task-handlers.js';
 
 function terminalInfo({ project, group, t }) {
   return {
@@ -34,6 +35,8 @@ const describeProject = (project) => ({
 });
 
 export const handlers = {
+  ...taskHandlers,
+
   /** Projetos, grupos e terminais; `caller` é o terminal que pediu. */
   list(p) {
     return { caller: callerOf(p)?.t.id ?? null, projects: projects().map(describeProject) };

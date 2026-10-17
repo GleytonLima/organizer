@@ -1,28 +1,34 @@
-// Arrastar-e-soltar de terminais entre grupos (HTML5 DnD).
-let dragId = null;
+// Arrastar-e-soltar (HTML5 DnD) com tipo: um alvo só aceita itens do seu tipo
+// ('terminal' na sidebar, 'task' no quadro).
+let dragging = null; // { kind, id }
 
-/** Atributos para um elemento arrastável que carrega o id de um terminal. */
-export const draggable = (id) => ({
+/** Atributos para um elemento arrastável. */
+export const draggable = (kind, id) => ({
   draggable: 'true',
   ondragstart: (e) => {
-    dragId = id;
+    dragging = { kind, id };
     e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('dragging');
   },
-  ondragend: () => (dragId = null),
+  ondragend: (e) => {
+    dragging = null;
+    e.currentTarget.classList.remove('dragging');
+  },
 });
 
-/** Atributos para um alvo de soltura; `onDrop(id)` recebe o terminal arrastado. */
-export const dropTarget = (onDrop) => ({
+/** Atributos para um alvo de soltura; `onDrop(id)` recebe o id do item arrastado. */
+export const dropTarget = (kind, onDrop) => ({
   ondragover: (e) => {
-    if (!dragId) return;
+    if (dragging?.kind !== kind) return;
     e.preventDefault();
     e.currentTarget.classList.add('drop-over');
   },
   ondragleave: (e) => e.currentTarget.classList.remove('drop-over'),
   ondrop: (e) => {
+    e.currentTarget.classList.remove('drop-over');
+    if (dragging?.kind !== kind) return;
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('drop-over');
-    if (dragId) onDrop(dragId);
+    onDrop(dragging.id);
   },
 });

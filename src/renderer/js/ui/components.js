@@ -4,6 +4,7 @@ import { shortPath } from '../core/format.js';
 import { gitFor, dirtyCount } from '../git/git.js';
 import { getSession, processStatus } from '../terminals/sessions.js';
 import { hasUnread } from '../notify/center.js';
+import { currentTaskOf } from '../tasks/queries.js';
 import { icon } from './icons.js';
 
 export function iconButton(name, title, onClick, cls = '') {
@@ -59,6 +60,19 @@ export function processBadge(id) {
   return el('span', { class: `proc proc-${status}`, title: text }, el('span', { class: 'proc-dot' }), el('span', { class: 'proc-text', text }));
 }
 
-/** Linha secundária de um terminal: processo em execução tem prioridade, depois git, depois a pasta. */
+/** Tarefa aberta que o agente deste terminal está tocando (ou null). */
+function taskBadge(id) {
+  const task = currentTaskOf(id);
+  if (!task) return null;
+  return el(
+    'span',
+    { class: `term-task${task.needsInput ? ' waiting' : ''}`, title: task.needsInput ? `Em espera: ${task.needsInput.question}` : task.title },
+    icon(task.needsInput ? 'pause' : 'kanban'),
+    el('span', { class: 'term-task-key', text: task.key }),
+    el('span', { class: 'term-task-title', text: task.title }),
+  );
+}
+
+/** Linha secundária de um terminal: tarefa > processo em execução > git > pasta. */
 export const terminalMeta = (t) =>
-  processBadge(t.id) || gitSummary(t.cwd) || el('span', { class: 'term-path', text: shortPath(t.cwd) });
+  taskBadge(t.id) || processBadge(t.id) || gitSummary(t.cwd) || el('span', { class: 'term-path', text: shortPath(t.cwd) });

@@ -19,6 +19,9 @@ const INSTRUCTIONS = [
   'Terminais abertos sem "group" entram no mesmo grupo do terminal onde você roda, mantendo tudo associado.',
   'Para subir serviços de longa duração (backend, frontend), use open_terminal com "command" e um "group" como "Serviços",',
   'depois wait_for_output para confirmar que subiram. Não feche terminais do usuário sem ele pedir.',
+  'O app também tem um quadro de tarefas (kanban) por projeto que o usuário acompanha: registre trabalho relevante com',
+  'create_task, consulte list_columns para entender o fluxo e mova com move_task, relate andamento com report_progress,',
+  'use request_input quando precisar de uma decisão e complete_task ao terminar.',
 ].join(' ');
 
 const write = (msg) => process.stdout.write(JSON.stringify(msg) + '\n');

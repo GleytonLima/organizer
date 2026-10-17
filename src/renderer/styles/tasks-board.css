@@ -1,0 +1,161 @@
+/* Painel lateral de tarefas e quadro kanban em tela cheia. */
+/* ---------- painel lateral ---------- */
+#taskpanel {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.tp-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 0 0 6px;
+}
+.tp-project {
+  color: var(--dim);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px 12px;
+}
+.tp-section {
+  border-radius: var(--r);
+}
+.tp-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px 0 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+.tp-head:hover {
+  color: var(--text);
+}
+.tp-section.collapsed .chevron {
+  transform: rotate(-90deg);
+}
+.tp-title {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.tp-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--hover);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+.tp-section.tone-waiting .tp-title,
+.tp-section.tone-waiting .tp-count {
+  color: var(--notify);
+}
+.tp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.task-card.compact {
+  background: var(--surface);
+  padding: 9px 11px;
+}
+
+/* ---------- quadro em tela cheia ---------- */
+#board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kb-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 0 4px;
+}
+.kb-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.kb-waiting {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--notify) 16%, transparent);
+  color: var(--notify);
+  font-size: 12px;
+  font-weight: 600;
+}
+.kb-columns {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.kb-column {
+  width: 290px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  transition: background 0.12s;
+}
+.kb-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 6px 0 14px;
+}
+.kb-col-name {
+  font-weight: 600;
+}
+.kb-col-count {
+  color: var(--faint);
+  font-size: 12px;
+}
+.kb-col-desc {
+  margin: -6px 14px 6px;
+  font-size: 11.5px;
+  color: var(--faint);
+  line-height: 1.35;
+}
+.kb-col-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 12px;
+}
+.kb-column.drop-over,
+.tp-section.drop-over {
+  background: var(--hover);
+}

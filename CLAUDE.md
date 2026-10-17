@@ -12,7 +12,8 @@
 - Sem destaques berrantes nem cards com barra colorida à esquerda: cor de terminal/workspace é só uma bolinha.
 
 ## Modelo
-Projeto (pasta raiz) → Grupos → Terminais. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
+Projeto (pasta raiz) → Grupos → Terminais. Tarefas em `state.tasks` (projectId, columnId); colunas em `project.taskColumns`.
+"Em espera" é `task.needsInput` (não é coluna). Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
 
 ## Estrutura
 ```
@@ -25,14 +26,16 @@ src/renderer/
   js/core/       dom, model (fábricas + migração), store (estado, persistência, consultas), format
   js/themes/     paleta, temas, aplicação
   js/terminals/  sessões xterm+pty, layout (grade lado a lado), buffer, teclado, clipboard
-  js/actions/    terminais, grupos, projetos, split (lado a lado), comandos salvos
+  js/actions/    terminais, grupos, projetos, split (lado a lado), comandos salvos, tasks, task-waiting (espera → resposta)
   js/git/        polling de status
   js/api/        handlers da API local (resolve nomes/ids/caminhos)
+  js/tasks/      quadro de tarefas: colunas por projeto (columns), consultas (queries), histórico/origem (history)
   js/notify/     central de avisos (center) e fontes: bell, OSC 9/777, comando longo (sources)
+  js/ui/tasks/   painel, quadro, cartão, gaveta de detalhe (+ espera), diálogos (nova tarefa, colunas)
   js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes
-  styles/        base, layout, sidebar, topbar, overlays, status
+  styles/        base, layout, sidebar, topbar, overlays, status, tasks, tasks-board, tasks-detail
 build/           ícone (icon.svg → icon.png via render-icon.js) e recursos do electron-builder
-bin/             CLI `bo` (bo.js + lib/: client, commands, mcp, tools, wait) e wrappers bash/cmd
+bin/             CLI `bo` (bo.js + lib/: client, commands(+task), mcp, tools(+tasks), wait) e wrappers bash/cmd
 ```
 
 ## API local

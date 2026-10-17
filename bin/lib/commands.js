@@ -104,6 +104,11 @@ const COMMANDS = {
       if (opts.json) console.log(JSON.stringify(r, null, 2));
     },
   },
+  task: {
+    usage: 'task <list|columns|add|move|report|wait|done|waiting> …',
+    help: 'Quadro de tarefas do projeto (bo task, sem argumentos, mostra a ajuda).',
+    run: (args) => require('./commands-task').runTask(args),
+  },
   mcp: {
     usage: 'mcp',
     help: 'Inicia o servidor MCP (stdio) para agentes (Claude Code, Devin…).',

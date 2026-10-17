@@ -10,6 +10,7 @@ import { iconButton, dot, gitSummary, processBadge, unreadDot } from './componen
 import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus.js';
 import { splitIndicator } from './split.js';
 import { notificationsButton } from './notifications.js';
+import { tasksButton } from './tasks/index.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -108,6 +109,7 @@ export function renderTopbar() {
   mount(
     $('#topbar'),
     tabs ? [tabsArea(), split] : [split || activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
+    tasksButton(),
     notificationsButton(),
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),
