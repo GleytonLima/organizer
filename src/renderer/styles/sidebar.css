@@ -1,0 +1,141 @@
+#sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 4px 0 10px;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.ws-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 12px;
+}
+
+/* ---------- workspace ---------- */
+.ws-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 6px;
+  border-radius: var(--r-sm);
+  color: var(--dim);
+  cursor: pointer;
+}
+.ws-head:hover {
+  color: var(--text);
+}
+.ws-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--faint);
+  transition: transform 0.15s;
+}
+.ws.collapsed .ws-chevron {
+  transform: rotate(-90deg);
+}
+.ws-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws-count {
+  font-size: 11px;
+  color: var(--faint);
+  padding: 0 4px;
+}
+.ws-head:hover .ws-count {
+  display: none;
+}
+.ws-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+.ws.collapsed .ws-body {
+  display: none;
+}
+.ws-closed {
+  align-self: flex-start;
+  margin-left: 26px;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+}
+.ws-closed:hover {
+  color: var(--text);
+}
+
+/* ---------- terminal ---------- */
+.term-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 6px 8px 14px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.term-item:hover {
+  background: var(--hover);
+}
+.term-item.active {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.term-text {
+  flex: 1;
+  min-width: 0;
+}
+.term-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.term-item:not(.active) .term-name {
+  color: var(--dim);
+}
+.term-item:not(.active):hover .term-name {
+  color: var(--text);
+}
+.term-meta {
+  display: flex;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--faint);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.term-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.term-item.exited .term-name {
+  color: var(--faint);
+  text-decoration: line-through;
+}

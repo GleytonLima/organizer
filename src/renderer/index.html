@@ -8,39 +8,21 @@
     />
     <title>Bash Organizer</title>
     <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/sidebar.css" />
+    <link rel="stylesheet" href="styles/topbar.css" />
+    <link rel="stylesheet" href="styles/overlays.css" />
   </head>
   <body>
-    <div id="app" class="layout-left">
-      <aside id="sidebar">
-        <div class="sidebar-head">
-          <span class="brand">Terminais</span>
-          <button class="icon-btn" id="btn-new-ws" title="Novo workspace">＋</button>
-        </div>
-        <div id="ws-list"></div>
-      </aside>
-
+    <div id="app" data-layout="left">
+      <aside id="sidebar"></aside>
       <main id="main">
-        <header id="topbar">
-          <div id="tabs-area"></div>
-          <div id="active-info"></div>
-          <div class="spacer"></div>
-          <div class="layout-switch" role="group" aria-label="Layout">
-            <button class="icon-btn" data-layout="left" title="Painel à esquerda">
-              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="1.5" y="2.5" width="4.5" height="11" rx="1.5" /></svg>
-            </button>
-            <button class="icon-btn" data-layout="right" title="Painel à direita">
-              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="10" y="2.5" width="4.5" height="11" rx="1.5" /></svg>
-            </button>
-            <button class="icon-btn" data-layout="tabs" title="Abas">
-              <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" /><rect class="fill" x="1.5" y="2.5" width="13" height="3.5" rx="1.5" /></svg>
-            </button>
-          </div>
-        </header>
+        <header id="topbar"></header>
         <div id="cmdbar"></div>
         <div id="terminals">
           <div id="empty" class="empty hidden">
-            <p>Nenhum terminal aberto.</p>
+            <p>Nenhum terminal aberto</p>
             <button class="btn primary" id="btn-empty-new">Novo terminal</button>
           </div>
         </div>
@@ -56,6 +38,6 @@
     <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
     <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
     <script src="../../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

@@ -2,7 +2,7 @@
   "name": "git-bash-organizer",
   "version": "0.1.0",
   "description": "Gerenciador desktop de terminais Git Bash",
-  "main": "src/main.js",
+  "main": "src/main/index.js",
   "scripts": {
     "start": "electron ."
   },

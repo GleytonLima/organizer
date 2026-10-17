@@ -1,0 +1,191 @@
+/* Tokens (os valores de cor são sobrescritos pelo tema ativo em runtime). */
+:root {
+  --app: #101113;
+  --surface: #16171a;
+  --raised: #1e1f23;
+  --hover: #25262b;
+  --border: #27282d;
+  --text: #e4e4e7;
+  --dim: #9b9ca3;
+  --faint: #5f6068;
+  --accent: #d4d4d8;
+  --on-accent: #111214;
+  --warn: #e2c08d;
+  --danger: #e5787a;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  --r-sm: 7px;
+  --r: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-kind='light'] {
+  --warn: #9a6700;
+  --danger: #c4314b;
+  --shadow: 0 12px 40px rgba(20, 20, 30, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--app);
+  overflow: hidden;
+  user-select: none;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+.hidden {
+  display: none !important;
+}
+.spacer {
+  flex: 1;
+}
+
+/* ---------- ícones e botões ---------- */
+.icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, opacity 0.12s;
+}
+.icon-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.icon-btn .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* elementos que só aparecem no hover do pai */
+.reveal {
+  opacity: 0;
+}
+:hover > .reveal,
+.reveal:focus-visible {
+  opacity: 1;
+}
+
+.btn {
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--raised);
+  cursor: pointer;
+  transition: background 0.12s, filter 0.12s;
+}
+.btn:hover {
+  background: var(--hover);
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+}
+.btn.ghost:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  font-weight: 600;
+}
+.btn.primary:hover,
+.btn.danger:hover {
+  filter: brightness(1.08);
+}
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---------- git ---------- */
+.git {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.git-icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.8;
+}
+.git-branch {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.git-dirty {
+  color: var(--warn);
+}
+.git-sync {
+  color: var(--dim);
+}
+.git-conflict {
+  color: var(--danger);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hover);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

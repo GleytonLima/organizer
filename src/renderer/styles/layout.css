@@ -1,0 +1,80 @@
+#app {
+  display: flex;
+  gap: 8px;
+  height: 100vh;
+  padding: 8px;
+}
+#app[data-layout='right'] {
+  flex-direction: row-reverse;
+}
+#app[data-layout='tabs'] #sidebar {
+  display: none;
+}
+
+#main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* superfície do terminal */
+#terminals {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+.term-host {
+  position: absolute;
+  inset: 14px 8px 10px 16px;
+  visibility: hidden;
+}
+.term-host.active {
+  visibility: visible;
+}
+.xterm .xterm-viewport {
+  background: transparent !important;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--dim);
+}
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#statusbar .link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--dim);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#statusbar .link:hover {
+  color: var(--text);
+}
+#statusbar .hint {
+  white-space: pre;
+}
