@@ -34,9 +34,16 @@ export function applyUpdate(s, u) {
     }
     case 'current_mode_update':
       if (s.modes) s.modes.current = u.currentModeId;
+      if (s.config) for (const o of s.config) if (o.id === 'mode') o.currentValue = u.currentModeId;
+      return;
+    case 'config_option_update':
+      if (u.configOptions) s.config = u.configOptions;
+      return;
+    case 'available_commands_update':
+      s.commands = u.availableCommands || [];
       return;
     default:
-      // outros tipos (comandos disponíveis, uso, configurações…) não aparecem por enquanto
+      // outros tipos (uso, informações da sessão…) não aparecem por enquanto
   }
 }
 

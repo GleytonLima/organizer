@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('api', {
     cancel: (id) => ipcRenderer.invoke('acp:cancel', id),
     permission: (id, requestId, optionId) => ipcRenderer.invoke('acp:permission', id, requestId, optionId),
     setMode: (id, modeId) => ipcRenderer.invoke('acp:setMode', id, modeId),
+    setConfig: (id, configId, value) => ipcRenderer.invoke('acp:setConfig', id, configId, value),
     sessions: (id) => ipcRenderer.invoke('acp:sessions', id),
     stop: (id) => ipcRenderer.send('acp:stop', id),
     onEvent: (cb) => ipcRenderer.on('acp:event', (_e, id, event) => cb(id, event)),

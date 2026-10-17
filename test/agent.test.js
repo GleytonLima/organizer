@@ -92,11 +92,50 @@ suite('agente via ACP', {
   // leitura pela API (read_terminal) traz a conversa
   t.includes(await t.js(`return B.readLines(${JSON.stringify(id)}, 50)`), '> De novo, por favor', 'ler o terminal devolve a conversa');
 
-  // modos: o seletor lista os modos do agente; em "Aceitar edições" ele não pede permissão
-  const modes = await t.js(`return [...SE.getSession(${JSON.stringify(id)}).body.querySelectorAll('.ag-mode option')].map((o) => o.textContent)`);
-  t.equal(modes, ['Padrão', 'Aceitar edições', 'Planejar'], 'seletor mostra os modos anunciados pelo agente');
-  await t.js(`const sel = SE.getSession(${JSON.stringify(id)}).body.querySelector('.ag-mode'); sel.value = 'acceptEdits'; sel.dispatchEvent(new Event('change'));`);
-  t.equal(await t.waitFor(() => t.js(`return SE.getSession(${JSON.stringify(id)}).modes?.current === 'acceptEdits' && 'acceptEdits'`)), 'acceptEdits', 'trocar o modo vale na sessão');
+  // seletores das opções do agente (modo, modelo, esforço): lista com descrição, escolha pelo teclado
+  const sid = JSON.stringify(id);
+  const key = (k) => t.js(`window.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(k)}, bubbles: true }))`);
+  const popupRows = () => t.js(`return [...document.querySelectorAll('.list-popup:not(.hidden) .list-row')].map((r) => r.innerText.replace(/\\s+/g, ' ').trim())`);
+  const openPicker = (option) => t.js(`SE.getSession(${sid}).body.querySelector('.ag-picker[data-option="${option}"]').click()`);
+  const pickerText = (option) => t.js(`return SE.getSession(${sid}).body.querySelector('.ag-picker[data-option="${option}"]')?.innerText.replace(/\\s+/g, ' ').trim()`);
+  t.equal(await t.js(`return [...SE.getSession(${sid}).body.querySelectorAll('.ag-picker')].map((b) => b.dataset.option)`), ['mode', 'model', 'effort'], 'barra mostra seletores para as opções que o agente anuncia');
+  await openPicker('model');
+  t.equal(await t.waitFor(popupRows), ['Rápido Respostas curtas', 'Forte Para tarefas difíceis'], 'lista de modelos com nome e descrição');
+  await t.wait(300);
+  await shot('modelo');
+  await key('ArrowDown');
+  await key('Enter');
+  t.equal(await t.waitFor(async () => (await pickerText('model')) === 'Modelo: Forte' && 'Forte'), 'Forte', '↓ + Enter troca o modelo na sessão');
+  await openPicker('effort');
+  t.equal((await t.waitFor(popupRows)).length, 4, 'esforço lista os níveis do modelo escolhido');
+  await key('ArrowUp');
+  await key('Enter');
+  t.equal(await t.waitFor(async () => (await pickerText('effort'))?.endsWith('max') && 'max'), 'max', 'esforço escolhido pelo teclado');
+  await openPicker('mode');
+  await t.waitFor(popupRows);
+  await key('Escape');
+  t.equal(await t.js(`return !!document.querySelector('.list-popup:not(.hidden)')`), false, 'Esc fecha a lista sem mudar nada');
+
+  // autocompletar de "/": lista os comandos do agente, filtra e completa pelo teclado
+  const typeIn = (text) => t.js(`const ta = SE.getSession(${sid}).view.textarea; ta.focus(); ta.value = ${JSON.stringify(text)}; ta.dispatchEvent(new Event('input'));`);
+  await typeIn('/');
+  t.equal((await t.waitFor(popupRows))?.length, 3, 'digitar / mostra os comandos anunciados');
+  await shot('comandos');
+  await typeIn('/res');
+  const filtered = await t.waitFor(popupRows);
+  t.check(filtered?.length === 1 && filtered[0].includes('/resumir') && filtered[0].includes('<tamanho>'), 'filtra pelo que foi digitado e mostra a dica do argumento', JSON.stringify(filtered));
+  await t.js(`SE.getSession(${sid}).view.textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))`);
+  t.equal(await t.js(`return SE.getSession(${sid}).view.textarea.value`), '/resumir ', 'Tab completa o comando na caixa');
+  await t.js(`SE.getSession(${sid}).view.sendBtn.click()`);
+  t.check(await t.waitFor(async () => (await view()).includes('Comando /resumir executado (modelo forte, esforço max)')), 'o comando vai ao agente com o modelo e o esforço escolhidos');
+  await t.waitFor(async () => (await state()) === 'pronto');
+
+  // modo: em "Aceitar edições" o agente não pede permissão
+  await openPicker('mode');
+  await t.waitFor(popupRows);
+  await key('ArrowDown');
+  await key('Enter');
+  t.equal(await t.waitFor(() => t.js(`return SE.getSession(${sid}).config?.find((o) => o.id === 'mode')?.currentValue === 'acceptEdits' && 'acceptEdits'`)), 'acceptEdits', 'trocar o modo vale na sessão');
   await t.js(`SE.getSession(${JSON.stringify(id)}).send('Edite sem perguntar')`);
   t.check(await t.waitFor(async () => { const v = await view(); return v.slice(v.lastIndexOf('Edite sem perguntar')).includes('Pronto: config atualizada'); }), 'em "Aceitar edições" o agente segue sem pedir permissão');
   t.check(!(await task()).waiting, 'e a tarefa não entra em espera');

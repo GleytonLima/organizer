@@ -4,6 +4,7 @@
 //   { type: 'session', sessionId, resumed }  sessão aberta (o renderer guarda o id para continuar)
 //   { type: 'capabilities', canResume, canList }
 //   { type: 'modes', current, available }    modos de permissão (default, acceptEdits, plan…)
+//   { type: 'config', options }              opções do agente (modelo, esforço, modo…) — ver setConfig
 //   { type: 'update', update }               session/update (mensagens, ferramentas, plano…)
 //   { type: 'permission', requestId, toolCall, options }   o agente pede permissão (Em espera)
 //   { type: 'turn', stopReason } | { type: 'error', message }
@@ -94,6 +95,7 @@ class AgentSession {
       this.sessionId = result.sessionId;
     }
     this.emit({ type: 'session', sessionId: this.sessionId, resumed: this.sessionId === this.resume });
+    if (result?.configOptions) this.emit({ type: 'config', options: result.configOptions });
     await this.applyModes(result?.modes);
   }
 
@@ -110,6 +112,16 @@ class AgentSession {
     await this.rpc.request('session/set_mode', { sessionId: this.sessionId, modeId });
     this.modes = { ...this.modes, current: modeId };
     this.emit({ type: 'modes', ...this.modes });
+  }
+
+  /**
+   * Muda uma opção anunciada pelo agente (configOptions: modelo, esforço, modo…). O agente devolve
+   * as opções atualizadas — o esforço disponível, por exemplo, depende do modelo.
+   */
+  async setConfig(configId, value) {
+    const r = await this.rpc.request('session/set_config_option', { sessionId: this.sessionId, configId, value });
+    if (r?.configOptions) this.emit({ type: 'config', options: r.configOptions });
+    if (configId === 'mode' && this.modes) this.emit({ type: 'modes', ...(this.modes = { ...this.modes, current: value }) });
   }
 
   /** Sessões anteriores nesta pasta (para "Retomar…"). */

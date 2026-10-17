@@ -22,6 +22,7 @@ function handle(s, ev) {
     persist();
   } else if (ev.type === 'capabilities') s.caps = ev;
   else if (ev.type === 'modes') s.modes = { current: ev.current, available: ev.available };
+  else if (ev.type === 'config') s.config = ev.options;
   else if (ev.type === 'update') applyUpdate(s, ev.update);
   else if (ev.type === 'permission') {
     const item = { type: 'permission', requestId: ev.requestId, title: ev.toolCall?.title || 'Ação do agente', options: ev.options || [], answer: undefined };
@@ -33,7 +34,6 @@ function handle(s, ev) {
     onPermissionAnswered(s.id, item);
   } else if (ev.type === 'turn') {
     s.items.push({ type: 'turn', stopReason: ev.stopReason });
-    s.lastExit = ev.stopReason === 'end_turn' ? 0 : 1;
     onTurnEnd(s.id, s.items.findLast((i) => i.type === 'agent')?.text || '', ev.stopReason);
   } else if (ev.type === 'error') s.items.push({ type: 'error', text: ev.message });
   if (s.running) s.running.cmd = waitingYou(s) ? `${s.label} aguardando você` : `${s.label} trabalhando`;
@@ -65,6 +65,8 @@ export function createAgentSession(t, { container, onFocus }) {
     items: [],
     state: 'iniciando',
     modes: null,
+    config: null, // opções do agente (modelo, esforço, modo…)
+    commands: [], // comandos de / anunciados pelo agente
     caps: null,
     exited: false, running: null, lastExit: null,
     get label() {
@@ -84,6 +86,7 @@ export function createAgentSession(t, { container, onFocus }) {
     answer: (requestId, optionId) => api.acp.permission(t.id, requestId, optionId),
     cancel: () => api.acp.cancel(t.id),
     setMode: (modeId) => api.acp.setMode(t.id, modeId),
+    setConfig: (configId, value) => api.acp.setConfig(t.id, configId, value),
     listSessions: () => api.acp.sessions(t.id),
     focus: () => body.querySelector('textarea')?.focus(),
     readLines: (count = 40) => transcriptText(s, count),
@@ -94,6 +97,8 @@ export function createAgentSession(t, { container, onFocus }) {
     restart({ resume = t.acpSessionId || null } = {}) {
       s.items = [];
       s.modes = null;
+      s.config = null;
+      s.commands = [];
       if (!resume) t.acpSessionId = null;
       s.ready = api.acp.start(t.id, { profile: { ...profileById(t.agent) }, cwd: t.cwd, resume });
       s.render();

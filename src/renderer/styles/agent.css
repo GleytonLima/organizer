@@ -210,9 +210,37 @@
 .ag-status .spacer {
   flex: 1;
 }
-.ag-mode.input {
-  width: auto;
+/* seletores do agente (modelo, esforço, modo) */
+.ag-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   height: 26px;
-  padding: 0 8px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
   font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ag-picker:hover:not(:disabled) {
+  background: var(--hover);
+}
+.ag-picker:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ag-picker-label {
+  color: var(--faint);
+}
+.ag-picker .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--faint);
+}
+.ag-status {
+  flex-wrap: wrap;
 }

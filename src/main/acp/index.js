@@ -34,6 +34,7 @@ function registerAcpIpc() {
   ipcMain.handle('acp:cancel', (_e, id) => session(id).cancel());
   ipcMain.handle('acp:permission', (_e, id, requestId, optionId) => session(id).answerPermission(requestId, optionId));
   ipcMain.handle('acp:setMode', (_e, id, modeId) => session(id).setMode(modeId));
+  ipcMain.handle('acp:setConfig', (_e, id, configId, value) => session(id).setConfig(configId, value));
   ipcMain.handle('acp:sessions', (_e, id) => session(id).listSessions());
   ipcMain.on('acp:stop', (_e, id) => stop(id));
 }

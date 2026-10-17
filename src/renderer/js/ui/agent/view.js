@@ -1,8 +1,11 @@
-// Tela de uma sessão de agente (ACP): estado (modo, Retomar…, Nova sessão), conversa (mensagens, ferramentas, plano, pedidos de
-// permissão com botões) e a caixa de mensagem. A caixa é criada uma vez (não perde o que você digita).
+// Tela de uma sessão de agente (ACP): estado (modelo, esforço, modo — o que o agente anunciar —,
+// Retomar…, Nova sessão), conversa (mensagens, ferramentas, plano, pedidos de permissão com botões)
+// e a caixa de mensagem, com autocompletar de "/". A caixa é criada uma vez (não perde o que você digita).
 import { el, mount } from '../../core/dom.js';
 import { icon } from '../icons.js';
 import { resumeDialog } from './resume-dialog.js';
+import { configPickers } from './config-pickers.js';
+import { attachSlash } from './slash.js';
 
 const TOOL_ICON = { read: 'search', search: 'search', edit: 'note', delete: 'trash', move: 'folder', execute: 'terminal', fetch: 'cloud', think: 'memory' };
 const STATUS_LABEL = { pending: 'aguardando', in_progress: 'em andamento', completed: 'feito', failed: 'falhou' };
@@ -42,7 +45,7 @@ function build(s) {
   const textarea = el('textarea', {
     class: 'input textarea ag-input',
     rows: 2,
-    placeholder: `Mensagem para o ${s.label}… (Enter envia, Shift+Enter quebra linha)`,
+    placeholder: `Mensagem para o ${s.label}… (Enter envia, Shift+Enter quebra linha, / comandos)`,
     onkeydown: (e) => {
       if (e.key !== 'Enter' || e.shiftKey) return;
       e.preventDefault();
@@ -60,6 +63,7 @@ function build(s) {
       s.render();
     }
   }
+  attachSlash(s, textarea);
   const view = {
     status: el('div', { class: 'ag-status' }),
     log: el('div', { class: 'ag-log' }),
@@ -69,21 +73,14 @@ function build(s) {
   return view;
 }
 
-/** Barra de estado: agente e estado; modo de permissão; Retomar… e Nova sessão. */
+/** Barra de estado: agente e estado; seletores (modelo, esforço, modo…); Retomar… e Nova sessão. */
 function statusBar(s) {
   const busy = s.state === 'trabalhando' || s.state === 'iniciando';
-  const mode = s.modes?.available?.length
-    ? el(
-        'select',
-        { class: 'input select ag-mode', title: 'Modo de permissão do agente', disabled: busy, onchange: (e) => s.setMode(e.target.value).catch((err) => s.items.push({ type: 'error', text: err.message })) },
-        s.modes.available.map((m) => el('option', { value: m.id, selected: m.id === s.modes.current, title: m.description || '', text: m.name || m.id })),
-      )
-    : null;
   return [
     el('span', { class: `ag-state ${s.stateLabel() === 'aguardando você' ? 'aguardando' : s.state}` }),
     el('span', { text: `${s.label} · ACP · ${s.stateLabel()}` }),
     el('span', { class: 'spacer' }),
-    mode,
+    configPickers(s, { disabled: busy }),
     s.caps?.canList ? el('button', { class: 'btn small ghost', disabled: busy, onclick: () => resumeDialog(s), text: 'Retomar…' }) : null,
     el('button', { class: 'btn small ghost', disabled: s.state === 'trabalhando', onclick: () => s.restart({ resume: null }), text: 'Nova sessão' }),
   ];

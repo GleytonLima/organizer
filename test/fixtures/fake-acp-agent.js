@@ -13,6 +13,20 @@ const STORE = process.env.FAKE_ACP_STORE || path.join(os.tmpdir(), 'bo-fake-acp-
 const load = () => { try { return JSON.parse(fs.readFileSync(STORE, 'utf8')); } catch { return {}; } };
 const save = (all) => fs.writeFileSync(STORE, JSON.stringify(all));
 const MODES = [{ id: 'default', name: 'Padrão' }, { id: 'acceptEdits', name: 'Aceitar edições' }, { id: 'plan', name: 'Planejar' }];
+// Como o adaptador do Claude: modelo, esforço e modo como opções de configuração; comandos de "/".
+const MODELS = [{ value: 'rapido', name: 'Rápido', description: 'Respostas curtas' }, { value: 'forte', name: 'Forte', description: 'Para tarefas difíceis' }];
+const EFFORTS = { rapido: ['low', 'medium'], forte: ['low', 'medium', 'high', 'max'] };
+const COMMANDS = [
+  { name: 'revisar', description: 'Revisa as mudanças pendentes', input: null },
+  { name: 'resumir', description: 'Resume a conversa', input: { hint: '<tamanho>' } },
+  { name: 'ajuda', description: 'Mostra a ajuda', input: null },
+];
+const config = { model: 'rapido', effort: 'low' };
+const configOptions = () => [
+  { id: 'mode', name: 'Mode', category: 'mode', type: 'select', currentValue: mode, options: MODES.map((m) => ({ value: m.id, name: m.name })) },
+  { id: 'model', name: 'Model', category: 'model', type: 'select', currentValue: config.model, options: MODELS },
+  { id: 'effort', name: 'Effort', category: 'thought_level', type: 'select', currentValue: config.effort, options: EFFORTS[config.model].map((v) => ({ value: v, name: v })) },
+];
 
 let seq = 1000;
 let mode = 'default';
@@ -38,6 +52,10 @@ async function prompt(id, { sessionId, prompt: blocks }) {
   cancelled = false;
   remember(sessionId, 'user', text);
   update(sessionId, { sessionUpdate: 'plan', entries: [{ content: 'Ler a config', priority: 'high', status: 'completed' }, { content: 'Editar a config', priority: 'high', status: 'pending' }] });
+  if (text.startsWith('/')) {
+    say(sessionId, `Comando ${text.split(' ')[0]} executado (modelo ${config.model}, esforço ${config.effort}).`);
+    return send({ id, result: { stopReason: 'end_turn' } });
+  }
   const greeting = process.env.FAKE_GREETING ? `${process.env.FAKE_GREETING} ` : '';
   for (const part of [greeting, 'Entendi: ', `"${text}". `, 'Vou editar a config.']) {
     if (part) say(sessionId, part);
@@ -70,7 +88,17 @@ function loadSession(id, { sessionId }) {
 
 const HANDLERS = {
   initialize: () => ({ protocolVersion: 1, agentCapabilities: { loadSession: true, sessionCapabilities: { list: {} } }, authMethods: [] }),
-  'session/new': (p) => ({ sessionId: `fake-${Date.now()}-${p.mcpServers.length}`, modes: { currentModeId: mode, availableModes: MODES } }),
+  'session/new': (p) => {
+    const sessionId = `fake-${Date.now()}-${p.mcpServers.length}`;
+    setTimeout(() => update(sessionId, { sessionUpdate: 'available_commands_update', availableCommands: COMMANDS }), 20);
+    return { sessionId, modes: { currentModeId: mode, availableModes: MODES }, configOptions: configOptions() };
+  },
+  'session/set_config_option': (p) => {
+    if (p.configId === 'mode') mode = p.value;
+    else config[p.configId] = p.value;
+    if (p.configId === 'model' && !EFFORTS[p.value].includes(config.effort)) config.effort = EFFORTS[p.value][0];
+    return { configOptions: configOptions() };
+  },
   'session/set_mode': (p) => {
     mode = p.modeId;
     update(p.sessionId, { sessionUpdate: 'current_mode_update', currentModeId: mode });
