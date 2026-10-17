@@ -1,4 +1,5 @@
-// Painel lateral com abas: Tarefas | Memória. Cada aba fornece { actions, body }.
+// Painel lateral com abas: Tarefas | Memória. Cada aba fornece { title?, actions, body }: as abas e o
+// fechar na 1ª linha; título (projeto/escopo) e ações na 2ª.
 import { $, el, remount } from '../core/dom.js';
 import { store, commit, currentProject } from '../core/store.js';
 import { setTaskView } from '../actions/tasks.js';
@@ -42,10 +43,10 @@ export function renderSidePanel() {
         TABS.map((t) => el('button', { class: `tp-tab${t === tab ? ' on' : ''}`, role: 'tab', onclick: () => selectTab(t.id), text: t.label })),
       ),
       el('span', { class: 'spacer' }),
-      actions,
       iconButton('close', 'Fechar painel', () => setTaskView('off')),
     ),
-    title || el('div', { class: 'tp-project', text: project.name }),
+    // 2ª linha: projeto/escopo à esquerda e as ações da aba à direita (na 1ª, o painel estreito as cortava)
+    el('div', { class: 'tp-toolbar' }, title || el('div', { class: 'tp-project', text: project.name }), el('span', { class: 'spacer' }), actions),
     el('div', { class: 'tp-body' }, body),
   );
 }

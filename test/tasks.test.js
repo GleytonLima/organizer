@@ -98,6 +98,14 @@ suite('tarefas', {
   const titles = () => t.js(`return [...document.querySelectorAll('#taskpanel .tp-list .task-title')].map((x) => x.textContent)`);
   const search = (q) => t.js(`const i = document.querySelector('#taskpanel [data-draft="task-query"]'); i.value = ${JSON.stringify(q)}; i.dispatchEvent(new Event('input'))`);
   const todo = () => t.js(`const s = document.querySelector('#taskpanel .tp-section[data-section]:not([data-section="__waiting"])'); return { count: +s.querySelector('.tp-count').textContent, cards: s.querySelectorAll('.task-card').length, more: s.querySelector('.tp-more')?.textContent || null }`);
+  await t.js(`S.store.state.taskPeriod = '90d'; S.commit()`); // rótulo de período mais longo
+  const clipped = await t.waitFor(() => t.js(`const p = document.querySelector('#taskpanel').getBoundingClientRect();
+    const b = [...document.querySelectorAll('#taskpanel .tp-header button, #taskpanel .tp-toolbar button')];
+    return b.length ? b.filter((x) => x.getBoundingClientRect().right > p.right + 1).map((x) => x.title || x.textContent) : null`));
+  t.equal(clipped, [], 'os botões do painel cabem na largura (nenhum cortado, inclusive "Abrir quadro")');
+  await t.js(`document.querySelector('#taskpanel [title="Abrir quadro"]').click()`);
+  t.equal(await t.waitFor(() => t.js(`return S.store.state.taskView === 'board' && !document.querySelector('#board').classList.contains('hidden')`)), true, '"Abrir quadro" abre o kanban');
+  await t.js(`A.setTaskView('panel'); S.store.state.taskPeriod = '7d'; S.commit()`, TASK_UI);
   const first = await t.waitFor(async () => ((await todo()).count >= 25 ? todo() : null));
   t.equal([first?.cards, first?.more], [20, `Mostrar mais ${first.count - 20}`], 'seção grande mostra 20 tarefas e "Mostrar mais"');
   await t.js(`document.querySelector('#taskpanel .tp-more').click()`);
