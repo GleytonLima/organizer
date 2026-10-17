@@ -30,7 +30,7 @@ function row(project, m, picked, onToggle) {
  * `selected`: gids já escolhidos; `exclude`: gids que não podem aparecer (ex.: a própria memória);
  * `suggest`: texto usado para ordenar por semelhança quando a busca está vazia (ex.: título da tarefa).
  */
-export async function pickMemories({ project, title = 'Vincular memórias', selected = [], exclude = [], suggest = '' }) {
+export async function pickMemories({ project, title = 'Vincular memórias', selected = [], exclude = [], suggest = '', submit = 'Salvar vínculos' }) {
   const picked = new Map((await api.memory.many(selected)).map((m) => [m.gid, m])); // gid → memória
   const view = { query: '', kind: null, items: [], similar: [] }; // similar: parecidas com `suggest` (sem busca)
   const list = el('div', { class: 'pick-list' });
@@ -98,7 +98,7 @@ export async function pickMemories({ project, title = 'Vincular memórias', sele
 
   draw();
   load();
-  const ok = await overlay(title, el('div', { class: 'picker' }, search, chips, list, status));
+  const ok = await overlay(title, el('div', { class: 'picker' }, search, chips, list, status), submit);
   return ok ? [...picked.keys()] : null;
 }
 
@@ -106,7 +106,7 @@ export async function pickMemories({ project, title = 'Vincular memórias', sele
  * Camada própria por cima de tudo (inclusive de um diálogo aberto: o seletor é usado dentro do
  * diálogo de memória). Esc e clique fora cancelam; resolve true ao salvar.
  */
-function overlay(title, content) {
+function overlay(title, content, submit) {
   return new Promise((resolve) => {
     const close = (result) => {
       window.removeEventListener('keydown', onKey, true);
@@ -130,7 +130,7 @@ function overlay(title, content) {
         { class: 'modal-actions' },
         el('span', { class: 'spacer' }),
         el('button', { type: 'button', class: 'btn ghost', onclick: () => close(false), text: 'Cancelar' }),
-        el('button', { type: 'submit', class: 'btn primary', text: 'Salvar vínculos' }),
+        el('button', { type: 'submit', class: 'btn primary', text: submit }),
       ),
     );
     const backdrop = el('div', { class: 'picker-backdrop', onmousedown: (e) => e.target === backdrop && close(false) }, card);

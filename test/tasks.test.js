@@ -143,6 +143,9 @@ suite('tarefas', {
   await search('#front-END');
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['História do Jira'], '"#tag" na busca filtra pela tag');
   await search('');
+  await t.js(`document.querySelector('#taskpanel [data-chip="by-memory"]').click()`);
+  t.equal(await t.waitFor(() => t.js(`return document.querySelector('.picker-card [type=submit]')?.textContent || null`)), 'Filtrar', '"Por memória…" abre o seletor com o botão "Filtrar" (não "Salvar vínculos")');
+  await t.js(`document.querySelector('.picker-card .btn.ghost').click()`);
   await t.js(`const f = await import('./js/tasks/filter.js'); f.setMemoryFilter([{ gid: 'm-1', text: 'Decisão X' }])`);
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'filtro por memória mostra as tarefas que a referenciam');
   t.includes(await t.js(`return document.querySelector('#taskpanel .chip-memory').textContent`), 'Memória: Decisão X', 'o chip mostra a memória escolhida');

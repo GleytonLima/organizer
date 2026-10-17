@@ -23,7 +23,7 @@ export const scopeTitle = (project) =>
   );
 
 async function pickFilterMemories(project) {
-  const gids = await pickMemories({ project, title: 'Tarefas que referenciam…', selected: taskFilter.memories.map((m) => m.gid) });
+  const gids = await pickMemories({ project, title: 'Filtrar tarefas pelas memórias que referenciam', selected: taskFilter.memories.map((m) => m.gid), submit: 'Filtrar' });
   if (!gids) return;
   const items = gids.length ? await api.memory.many(gids) : [];
   setMemoryFilter(items.map((m) => ({ gid: m.gid, text: m.text })));
