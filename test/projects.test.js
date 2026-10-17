@@ -4,6 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const { suite, seed } = require('./harness');
 
+// "Abrir no VS Code" usa um editor falso que registra a pasta (BO_EDITOR, como BO_ACP_AGENT)
+const EDITOR_LOG = path.join(process.env.BO_TEST_DIR || require('os').tmpdir(), 'editor.log');
+process.env.BO_EDITOR = JSON.stringify([process.execPath, path.join(__dirname, 'fixtures', 'fake-editor.js')]);
+process.env.FAKE_EDITOR_LOG = EDITOR_LOG;
+
 const norm = (p) => String(p || '').replace(/\//g, '\\').toLowerCase();
 
 suite('projetos', {
@@ -71,4 +76,19 @@ suite('projetos', {
   await t.js(`document.querySelectorAll('#sidebar .project-head')[${idx}].querySelector('.chevron-btn').click()`);
   const after = await t.js(`const p = S.store.state.projects.find((x) => x.id === 'p2'); return [p.collapsed, S.store.state.focusProjectId]`);
   t.equal(after, [true, 'p2'], 'a seta recolhe o projeto sem mudar o foco');
+
+  // "Abrir no VS Code" pelo menu do chip de repositório
+  await t.js(`S.store.state.focusProjectId = 'p1'; S.commit()`);
+  const chip = await t.waitFor(async () => {
+    const i = await t.js(`return [...document.querySelectorAll('.repo-chip')].findIndex((c) => /[\\\\/]backend$/.test(c.title))`);
+    return i >= 0 ? i + 1 : null; // +1: índice 0 também conta como achado
+  });
+  await t.js(`document.querySelectorAll('.repo-chip')[${chip - 1}].click()`);
+  await t.js(`[...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Abrir no VS Code')).click()`);
+  const lastOpen = () => fs.existsSync(EDITOR_LOG) && JSON.parse(fs.readFileSync(EDITOR_LOG, 'utf8').trim().split('\n').at(-1));
+  const opened = await t.waitFor(lastOpen);
+  t.equal(norm(opened?.args?.[0]), norm(path.join(shared, 'backend')), '"Abrir no VS Code" passa a pasta do repositório ao editor');
+  await t.js(`(await import('./js/ui/editor.js')).openInEditor(${JSON.stringify(path.join(shared, 'nao-existe'))})`);
+  t.check(await t.waitFor(async () => (await t.modal.open()) && (await t.modal.text()).includes('Não foi possível abrir no VS Code')), 'pasta inexistente (ou editor fora do PATH) explica o problema');
+  await t.modal.submit();
 });

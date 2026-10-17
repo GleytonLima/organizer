@@ -7,10 +7,12 @@ import { newTerminal } from '../actions/terminals.js';
 import { addProjectFolders, removeProjectFolder } from '../actions/projects.js';
 import { gitDetail, iconButton } from './components.js';
 import { showMenu } from './menu.js';
+import { openInEditor } from './editor.js';
 
 function repoMenu(e, project, repo) {
   showMenu(e, [
     { label: `Novo terminal em ${repo.name}`, action: () => newTerminal(currentGroup(project), { cwd: repo.path }) },
+    { label: 'Abrir no VS Code', action: () => openInEditor(repo.path) },
     { label: 'Abrir pasta', action: () => api.openPath(repo.path) },
     { sep: true },
     { label: 'Remover do projeto', danger: true, action: () => removeProjectFolder(project, repo) },

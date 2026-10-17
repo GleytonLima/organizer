@@ -24,7 +24,7 @@ Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — n�
 
 ## Estrutura
 ```
-src/main/        processo principal (index, window, pty, git, bash, system, files)
+src/main/        processo principal (index, window, pty, git, bash, system, files, editor = "Abrir no VS Code")
 src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
 src/main/memory/  memória: db + migrations (node:sqlite + FTS5), store (decisão/nota/ideia/como fazer/progresso), refs + links (vínculos, cadeia de impacto, "a revisar"), search (texto/híbrida), embeddings (opcional)
 src/main/acp/    experimento ACP (Agent Client Protocol): rpc (JSON-RPC por linha), agents (claude-agent-acp), session (um agente por terminal), index (IPC)

@@ -16,6 +16,7 @@ import { editProject, openProject, closeProject, deleteProject } from '../action
 import { editCommand, moveCommand, removeCommand } from '../actions/commands.js';
 import { THEMES } from '../themes/themes.js';
 import { setTheme } from '../themes/apply.js';
+import { openInEditor } from './editor.js';
 import { showMenu } from './menu.js';
 
 const SEP = { sep: true };
@@ -37,6 +38,7 @@ export function terminalMenu(e, id) {
     { label: 'Editar…', action: () => editTerminal(id) },
     { label: 'Duplicar', action: () => duplicateTerminal(id) },
     { label: 'Reiniciar', action: () => restartSession(id) },
+    { label: 'Abrir no VS Code', action: () => openInEditor(t.cwd) },
     { label: 'Abrir pasta', action: () => api.openPath(t.cwd) },
     ...(moveTo.length ? [SEP, ...moveTo] : []),
     SEP,
@@ -65,6 +67,7 @@ export function projectMenu(e, project) {
     project.open
       ? { label: 'Fechar projeto', action: () => closeProject(project) }
       : { label: 'Abrir projeto', action: () => openProject(project) },
+    { label: 'Abrir no VS Code', action: () => openInEditor(project.cwd) },
     { label: 'Abrir pasta', action: () => api.openPath(project.cwd) },
     SEP,
     { label: 'Excluir projeto', danger: true, action: () => deleteProject(project) },
