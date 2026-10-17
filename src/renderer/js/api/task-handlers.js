@@ -37,7 +37,7 @@ function taskInfo(task, { history = false } = {}) {
 function context(p, { needTask = false } = {}) {
   const caller = callerOf(p);
   const terminalId = caller?.t.id ?? null;
-  const project = resolveProject(p.project, caller);
+  const project = resolveProject(p.project, caller, p.fromCwd);
   const task = needTask ? resolveTaskRef(p.task, { project, terminalId }) : null;
   return { caller, terminalId, project, task };
 }
@@ -92,7 +92,7 @@ export const taskHandlers = {
 
   /** Tarefas em espera (de todos os projetos, ou de `project`), com histórico — para um supervisor. */
   task_waiting(p) {
-    const scope = p.project ? projectTasks(resolveProject(p.project, null)) : allTasks();
+    const scope = p.project ? projectTasks(resolveProject(p.project, null, p.fromCwd)) : allTasks();
     return scope.filter((t) => t.needsInput).map((t) => taskInfo(t, { history: true }));
   },
 

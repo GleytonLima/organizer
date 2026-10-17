@@ -39,11 +39,14 @@ bo read backend --lines 30
 bo close backend --force
 ```
 
-`bo help` lista todos os comandos (`open`, `list`, `send`, `read`, `wait`, `status`, `focus`, `close`, `notify`).
+`bo help` lista todos os comandos (`project`, `open`, `list`, `send`, `read`, `wait`, `status`, `focus`, `close`, `notify`, `task`, `mem`).
+
+Fora de um terminal do app (outro terminal, IDE), o `bo` e o MCP deduzem o projeto pela **pasta atual**: basta
+estar dentro de uma das pastas do projeto. Agentes também podem criar o projeto: `create_project` / `bo project add`.
 
 ### Servidor MCP
 
-O mesmo script oferece um servidor MCP (`bo mcp`) com as ferramentas `open_terminal`, `list_terminals`,
+O mesmo script oferece um servidor MCP (`bo mcp`) com as ferramentas `create_project`, `open_terminal`, `list_terminals`,
 `send_input`, `read_output`, `wait_for_output`, `terminal_status`, `focus_terminal`, `close_terminal` e `notify_user`.
 Para registrar no Claude Code, Devin etc., rode num terminal do app:
 

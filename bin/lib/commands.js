@@ -105,6 +105,16 @@ const COMMANDS = {
       if (opts.json) console.log(JSON.stringify(r, null, 2));
     },
   },
+  project: {
+    usage: 'project add <nome> <pasta...>',
+    help: 'Cria um projeto com pastas (ou acrescenta pastas a um existente).',
+    async run({ pos, opts }) {
+      const [action, name, ...folders] = pos;
+      if (action !== 'add' || !name) throw new Error('uso: bo project add <nome> <pasta...>');
+      const r = await request('project_create', { name, repos: folders.map((f) => path.resolve(f)) });
+      print(opts, r, (p) => `${p.name}: ${p.repos.map((x) => x.name).join(', ') || '(sem pastas)'}`);
+    },
+  },
   task: {
     usage: 'task <list|columns|add|move|report|wait|done|waiting> …',
     help: 'Quadro de tarefas do projeto (bo task, sem argumentos, mostra a ajuda).',

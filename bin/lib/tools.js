@@ -16,6 +16,21 @@ const TOOLS = [
     run: (request) => request('list'),
   },
   {
+    name: 'create_project',
+    description:
+      'Cria um projeto no Bash Organizer com suas pastas/repositórios (ex.: backend, frontend, infra, devtools). ' +
+      'Idempotente: se já existe um projeto com esse nome, apenas acrescenta as pastas que faltarem.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        repos: { type: 'array', items: { type: 'string' }, description: 'Caminhos das pastas (absolutos, ~/... ou /c/...).' },
+      },
+      required: ['name'],
+    },
+    run: (request, args) => request('project_create', args),
+  },
+  {
     name: 'open_terminal',
     description:
       'Abre um novo terminal Git Bash no Bash Organizer. Sem "group", ele entra no mesmo grupo do terminal onde você está; ' +

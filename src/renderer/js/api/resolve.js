@@ -8,8 +8,29 @@ const same = (a, b) => typeof a === 'string' && typeof b === 'string' && a.toLow
 /** Terminal que fez o pedido (BO_TERMINAL_ID enviado pelo cliente como `from`). */
 export const callerOf = (params) => findTerm(params.from);
 
-export function resolveProject(ref, caller) {
-  if (!ref) return caller?.project || currentProject();
+const normPath = (p) => String(p || '').replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase();
+
+/** Projeto ao qual a pasta pertence (a pasta de projeto mais específica que a contém). */
+function projectForPath(dir) {
+  const d = normPath(dir);
+  if (!d) return null;
+  let best = null;
+  let bestLen = -1;
+  for (const project of projects()) {
+    for (const folder of [...(project.repos || []).map((r) => r.path), project.cwd]) {
+      const f = normPath(folder);
+      if (f && (d === f || d.startsWith(f + '\\')) && f.length > bestLen) [best, bestLen] = [project, f.length];
+    }
+  }
+  return best;
+}
+
+/**
+ * Projeto alvo: o nomeado em `ref`; senão o do terminal que pediu; senão o da pasta de onde o
+ * cliente (bo/MCP) foi chamado (`fromCwd`); por fim, o projeto ativo na janela.
+ */
+export function resolveProject(ref, caller, fromCwd) {
+  if (!ref) return caller?.project || projectForPath(fromCwd) || currentProject();
   const p = projectById(ref) || projects().find((x) => same(x.name, ref));
   if (!p) throw new Error(`Projeto não encontrado: ${ref}`);
   return p;

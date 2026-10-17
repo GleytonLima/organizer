@@ -7,6 +7,7 @@ import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
 import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd, resolveRepo } from './resolve.js';
 import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
+import { addProject, addFoldersToProject } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
 
 function terminalInfo({ project, group, t }) {
@@ -45,10 +46,28 @@ export const handlers = {
     return { caller: callerOf(p)?.t.id ?? null, projects: projects().map(describeProject) };
   },
 
+  /**
+   * Cria um projeto com suas pastas; idempotente pelo nome (se já existe, devolve o existente
+   * acrescentando as pastas que faltarem). `repos`: ["C:\\caminho", …] ou [{ name, path }].
+   */
+  async project_create(p) {
+    if (!String(p.name || '').trim()) throw new Error('Informe o nome do projeto.');
+    const repos = await Promise.all(
+      (p.repos || []).map(async (r) => {
+        const item = typeof r === 'string' ? { path: r } : r;
+        return { name: item.name || '', path: await resolveCwd(item.path, store.info.home) };
+      }),
+    );
+    const existing = projects().find((x) => x.name.toLowerCase() === p.name.trim().toLowerCase());
+    if (!existing) return describeProject(addProject({ name: p.name.trim(), repos }));
+    addFoldersToProject(existing, repos);
+    return describeProject(existing);
+  },
+
   /** Abre um terminal (no grupo de quem pediu, ou em `group`, criado se não existir). */
   async open(p) {
     const caller = callerOf(p);
-    const project = resolveProject(p.project, caller);
+    const project = resolveProject(p.project, caller, p.fromCwd);
     const group = resolveGroup(project, p.group, caller);
     // `repo`: nome de uma pasta do projeto (ex.: "backend"); `cwd` relativo é resolvido a partir dela
     const repo = p.repo ? resolveRepo(project, p.repo) : null;

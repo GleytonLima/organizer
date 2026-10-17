@@ -11,7 +11,7 @@ const view = ({ createdAt, updatedAt, ...m }) => ({ ...m, createdAt: iso(created
 
 function context(p) {
   const caller = callerOf(p);
-  const project = resolveProject(p.project, caller);
+  const project = resolveProject(p.project, caller, p.fromCwd);
   return { caller, project, scope: p.all ? {} : { projectId: project.id } };
 }
 

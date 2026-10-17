@@ -61,15 +61,22 @@ export function toggleProject(project) {
   commit();
 }
 
-export async function createProject() {
-  const draft = { name: '', repos: [], color: DOT_COLORS[store.state.projects.length % DOT_COLORS.length] };
-  const v = await openModal({ title: 'Novo projeto', fields: projectFields(draft), submit: 'Criar', wide: true });
-  if (!v) return;
+const nextColor = () => DOT_COLORS[store.state.projects.length % DOT_COLORS.length];
+
+/** Cria um projeto (usado pela interface e pela API). `repos`: [{ name?, path }]. */
+export function addProject({ name = '', repos = [], color = nextColor() }) {
   const project = makeProject({ name: '' });
-  applyFields(project, v);
+  applyFields(project, { name, color, repos: repos.map((r) => ({ name: r.name || '', path: r.path })) });
   store.state.projects.push(project);
-  newTerminal(project.groups[0]);
+  commit();
   refreshAllGit();
+  return project;
+}
+
+export async function createProject() {
+  const v = await openModal({ title: 'Novo projeto', fields: projectFields({ name: '', repos: [], color: nextColor() }), submit: 'Criar', wide: true });
+  if (!v) return;
+  newTerminal(addProject(v).groups[0]);
 }
 
 export async function editProject(project) {
@@ -80,20 +87,24 @@ export async function editProject(project) {
   refreshAllGit();
 }
 
-/** Adiciona pastas ao projeto pelo seletor (atalho do ＋ na faixa de repositórios). */
-export async function addProjectFolders(project) {
-  const picked = await api.pickFolders(project.repos.at(-1)?.path || project.cwd || store.info.home);
-  const fresh = picked.filter((path) => !project.repos.some((r) => r.path.toLowerCase() === path.toLowerCase()));
+/** Acrescenta pastas ao projeto, ignorando as que ele já tem. `folders`: [{ name?, path }]. */
+export function addFoldersToProject(project, folders) {
+  const fresh = folders.filter((f) => !project.repos.some((r) => r.path.toLowerCase() === f.path.toLowerCase()));
   if (!fresh.length) return;
-  project.repos.push(...fresh.map((path) => ({ name: basename(path), path })));
+  project.repos.push(...fresh.map((f) => ({ name: f.name || basename(f.path), path: f.path })));
   if (!project.cwd) project.cwd = project.repos[0].path;
   commit();
   refreshAllGit();
 }
 
+/** Adiciona pastas pelo seletor do sistema (atalho do ＋ na faixa de repositórios). */
+export async function addProjectFolders(project) {
+  const picked = await api.pickFolders(project.repos.at(-1)?.path || project.cwd || store.info.home);
+  addFoldersToProject(project, picked.map((path) => ({ path })));
+}
+
 export async function removeProjectFolder(project, repo) {
-  const ok = await confirmDanger({ title: `Remover “${repo.name}” do projeto?`, message: `${repo.path}
-A pasta não é apagada do disco.`, submit: 'Remover' });
+  const ok = await confirmDanger({ title: `Remover “${repo.name}” do projeto?`, message: `${repo.path} — a pasta não é apagada do disco.`, submit: 'Remover' });
   if (!ok) return;
   project.repos = project.repos.filter((r) => r.path !== repo.path);
   commit();

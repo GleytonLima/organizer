@@ -48,9 +48,12 @@ function post({ url, token }, method, params) {
 
 const isConnError = (err) => ['ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH'].includes(err.code);
 
-/** Chama um método da API; `from` (terminal de origem) vem de BO_TERMINAL_ID. */
+/**
+ * Chama um método da API. Contexto enviado junto: `from` (terminal de origem, BO_TERMINAL_ID) e
+ * `fromCwd` (pasta atual) — fora de um terminal do app, o projeto é deduzido pela pasta.
+ */
 async function request(method, params = {}) {
-  const payload = { from: process.env.BO_TERMINAL_ID, ...params };
+  const payload = { from: process.env.BO_TERMINAL_ID, fromCwd: process.cwd(), ...params };
   const targets = endpoints();
   if (!targets.length) throw new Error('Bash Organizer não está aberto (api.json não encontrado).');
   let lastErr;

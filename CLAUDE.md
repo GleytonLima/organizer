@@ -48,3 +48,8 @@ Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/comma
 ## Empacotamento
 `npm run dist` (electron-builder, config em package.json → build). `bin/**` e `node-pty` ficam fora do .asar
 (asarUnpack): executáveis e scripts precisam existir em disco. Caminhos para eles: troque `app.asar` por `app.asar.unpacked`.
+
+## Dogfooding
+O histórico deste projeto (tarefas, decisões em uma frase, notas) está no próprio app, projeto "Bash Organizer".
+Ao decidir algo, registre: `bo mem decide "<frase com o porquê>"`; consulte antes: `bo mem search <termos>` / `bo mem decisions`.
+Tarefas: `bo task add|move|done`. Dentro da pasta do repo o projeto é deduzido sozinho.
