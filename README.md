@@ -109,6 +109,16 @@ O que gera aviso:
 
 Para o Claude Code avisar sempre que termina uma resposta ou precisa de você, use os hooks mostrados por `bo mcp-config`.
 
+## Testes
+
+```bash
+npm test
+```
+
+Roda as suítes de ponta a ponta em `test/` (shell, tarefas, memória, projetos, lado a lado): cada uma abre o app com uma
+pasta de dados temporária (não mexe nos seus projetos), fala com ele pelo MCP/CLI e termina com código ≠ 0 se algo falhar.
+Uma suíte só: `node test/run.js memory`. As janelas aparecem durante a execução.
+
 ## Gerar o executável
 
 ```bash

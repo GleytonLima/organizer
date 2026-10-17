@@ -39,11 +39,17 @@ src/renderer/
   js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes
   styles/        base, layout, sidebar, topbar, overlays, status, tasks, tasks-board, tasks-detail, memory
 build/           ícone (icon.svg → icon.png via render-icon.js) e recursos do electron-builder
+test/            ponta a ponta: run.js (uma suíte por processo Electron), harness.js + lib/ (contexto, MCP, seed, checks), *.test.js
 bin/             CLI `bo` (bo.js + lib/: client, commands(+task, +memory), mcp, tools(+tasks, +memory), wait) e wrappers bash/cmd
 ```
 
 ## API local
 Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/commands.js`) e no MCP (`bin/lib/tools.js`).
+
+## Testes
+`npm test` (ou `node test/run.js <suíte>`): sobe o app de verdade com dados isolados e verifica pelo MCP/CLI/renderer.
+Mudou um comportamento coberto? Ajuste ou acrescente verificações no `test/<área>.test.js`; reuse o contexto do `harness.js`.
+No processo principal, chame o `bo` só de forma assíncrona (`t.bo`): `execFileSync` trava a própria API.
 
 ## Empacotamento
 `npm run dist` (electron-builder, config em package.json → build). `bin/**` e `node-pty` ficam fora do .asar

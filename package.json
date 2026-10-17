@@ -10,7 +10,8 @@
     "start": "electron .",
     "icon": "electron build/render-icon.js",
     "pack": "electron-builder --win --dir",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win",
+    "test": "node test/run.js"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
