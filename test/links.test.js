@@ -123,6 +123,28 @@ suite('memória: vínculos, impacto, tipos e tarefas', {
   const wl = await data('memory_links', { id: workers.id });
   t.equal(wl.outgoing.map((l) => l.type).sort(), ['depends', 'depends'], 'novo vínculo pelo seletor entra como "apoia-se em"');
 
+  // Nova decisão: clicar nos outros campos funciona (o fundo do diálogo não cancela o mousedown),
+  // contador e limite de 280, e "Procurar…" com um texto sem parecidas ainda lista as recentes
+  await t.js(`D.newMemoryDialog(S.projectById('pA'), 'decision')`, { D: './js/ui/memory/dialogs.js' });
+  await t.waitFor(() => t.modal.open());
+  const clickable = await t.js(`const tags = document.querySelector('#modal [data-field="tags"] input');
+    return tags.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))`);
+  t.check(clickable, 'mousedown num campo do diálogo não é cancelado (dá para clicar nos outros campos)');
+  const setText = (v) => t.js(`const i = document.querySelector('#modal [data-field="text"] input'); i.value = ${JSON.stringify(v)}; i.dispatchEvent(new Event('input', { bubbles: true }))`);
+  const counter = () => t.js(`const c = document.querySelector('#modal [data-field="text"] .field-count'); return [c.textContent, c.classList.contains('over')]`);
+  await setText('x'.repeat(281));
+  t.equal(await counter(), ['281/280', true], 'contador mostra o tamanho e destaca ao passar de 280');
+  await t.modal.submit();
+  t.check((await t.modal.open()) && (await t.js(`return document.querySelector('#modal [data-field="text"]').classList.contains('invalid')`)), 'acima do limite o diálogo não salva e marca o campo');
+  await setText('asfasdfasddf');
+  t.equal(await counter(), ['12/280', false], 'dentro do limite o destaque some');
+  await t.js(`[...document.querySelectorAll('#modal button')].find((b) => b.textContent === 'Procurar…').click()`);
+  const listed = await t.waitFor(async () => { const x = await picker.text(); return x.includes('Mais recentes') && !x.includes('Nada encontrado') && x; });
+  t.check(listed, '"Procurar…" com um texto sem parecidas lista as mais recentes', listed || (await picker.text()));
+  await t.js(`document.querySelector('.picker-backdrop .btn.ghost').click()`);
+  await t.modal.cancel();
+  await t.waitFor(async () => !(await t.modal.open()));
+
   // período: concluída há 20 dias some na "última semana" e volta em "último mês"
   await t.js(`const p = S.projectById('pA'); const last = p.taskColumns ? p.taskColumns.at(-1).id : null;
     const tk = S.store.state.tasks.find((x) => x.key === ${JSON.stringify(converted.key)});

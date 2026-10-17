@@ -103,6 +103,28 @@
   font-size: 11.5px;
   color: var(--faint);
 }
+/* campo com limite: dica à esquerda, contador "n/máx" à direita; em vermelho ao passar */
+.field-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.field-foot .hint {
+  flex: 1;
+}
+.field-count {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+.field-count.over {
+  color: var(--danger);
+  font-weight: 600;
+}
+.field.invalid .input {
+  border-color: var(--danger);
+}
 .input {
   width: 100%;
   height: 36px;

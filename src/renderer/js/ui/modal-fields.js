@@ -68,5 +68,25 @@ const CONTROLS = {
   },
 };
 
-export const fieldNode = (f, values) =>
-  el('div', { class: 'field' }, el('label', { text: f.label }), CONTROLS[f.type](f, values), f.hint ? el('div', { class: 'hint', text: f.hint }) : null);
+/** Com `max`: contador "n/max" ao lado da dica, que fica em destaque ao passar do limite. */
+function withCounter(f, values, control) {
+  const counter = el('span', { class: 'field-count' });
+  const update = () => {
+    const n = String(values[f.key] ?? '').length;
+    counter.textContent = `${n}/${f.max}`;
+    counter.classList.toggle('over', n > f.max);
+    if (n <= f.max) control.closest('.field')?.classList.remove('invalid');
+  };
+  control.addEventListener('input', update);
+  update();
+  return el('div', { class: 'field-foot' }, f.hint ? el('div', { class: 'hint', text: f.hint }) : el('span'), counter);
+}
+
+export function fieldNode(f, values) {
+  const control = CONTROLS[f.type](f, values);
+  const foot = f.max ? withCounter(f, values, control) : f.hint ? el('div', { class: 'hint', text: f.hint }) : null;
+  return el('div', { class: 'field', 'data-field': f.key }, el('label', { text: f.label }), control, foot);
+}
+
+/** Primeiro campo que passa do `max` (o diálogo não fecha e mostra o erro nele). */
+export const overLimit = (fields, values) => fields.find((f) => f.max && String(values[f.key] ?? '').length > f.max) || null;

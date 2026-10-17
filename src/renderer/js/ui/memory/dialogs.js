@@ -37,7 +37,9 @@ async function save(run) {
 function memoryFields(project, kind, item, links) {
   const k = kindOf(kind);
   return [
-    k.single ? field.text('text', k.label, item?.text || '', { hint: k.hint }) : field.textarea('text', k.label, item?.text || '', { rows: 5, hint: k.hint }),
+    k.single
+      ? field.text('text', k.label, item?.text || '', { hint: k.hint, max: k.max })
+      : field.textarea('text', k.label, item?.text || '', { rows: 5, hint: k.hint, max: k.max }),
     field.select('where', 'Onde vale', whereOf(item), { options: whereOptions(project, item) }),
     field.text('tags', 'Tags', item?.tags?.join(', ') || '', { placeholder: 'banco, infra' }),
     linksField(project, links, { selfGid: item?.gid }),

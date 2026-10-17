@@ -7,7 +7,8 @@
 export const KINDS = {
   decision: {
     label: 'Decisão', plural: 'Decisões', icon: 'decision', newTitle: 'Nova decisão', editTitle: 'Editar decisão', single: true,
-    hint: 'Uma frase com o porquê (máx. 280). Ex.: "Usamos Postgres porque o time já domina."',
+    hint: 'Uma frase com o porquê. Ex.: "Usamos Postgres porque o time já domina."',
+    max: 280, // o mesmo limite do processo principal (DECISION_MAX em src/main/memory/store.js)
   },
   note: { label: 'Nota', plural: 'Notas', icon: 'note', newTitle: 'Nova nota', editTitle: 'Editar nota' },
   idea: {

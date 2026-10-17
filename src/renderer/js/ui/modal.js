@@ -5,7 +5,7 @@
 // `content`: nós extras abaixo dos campos (ex.: histórico). `collect()`: valores próprios do conteúdo.
 import { $, el, mount } from '../core/dom.js';
 import { focusActive } from '../terminals/sessions.js';
-import { fieldNode } from './modal-fields.js';
+import { fieldNode, overLimit } from './modal-fields.js';
 
 export { field } from './modal-fields.js';
 
@@ -43,10 +43,21 @@ export function openModal({ title, message, fields = [], content = null, collect
     );
     form.onsubmit = (e) => {
       e.preventDefault();
+      const over = overLimit(fields, values);
+      if (over) {
+        const node = form.querySelector(`[data-field="${over.key}"]`);
+        node?.classList.add('invalid');
+        node?.querySelector('input, textarea')?.focus();
+        return;
+      }
       const own = collect ? collect() : null;
       done(fields.length || own ? { ...values, ...own } : true);
     };
-    backdrop.onmousedown = (e) => e.target === backdrop && done(null);
+    // bloco com chaves: um handler de propriedade que devolve false cancela o mousedown, e aí clicar
+    // num campo do diálogo não muda o foco (só o primeiro, focado sozinho, funcionava)
+    backdrop.onmousedown = (e) => {
+      if (e.target === backdrop) done(null);
+    };
     document.addEventListener('keydown', onKey, true);
     document.body.classList.add('modal-open');
     backdrop.classList.remove('hidden');

@@ -32,7 +32,7 @@ function row(project, m, picked, onToggle) {
  */
 export async function pickMemories({ project, title = 'Vincular memórias', selected = [], exclude = [], suggest = '' }) {
   const picked = new Map((await api.memory.many(selected)).map((m) => [m.gid, m])); // gid → memória
-  const view = { query: '', kind: null, items: [] };
+  const view = { query: '', kind: null, items: [], similar: [] }; // similar: parecidas com `suggest` (sem busca)
   const list = el('div', { class: 'pick-list' });
   const chips = el('div', { class: 'mem-filters' });
   const status = el('div', { class: 'pick-status' });
@@ -48,23 +48,34 @@ export async function pickMemories({ project, title = 'Vincular memórias', sele
   function draw() {
     mount(chips, KIND_FILTERS.map((f) => el('button', { type: 'button', class: `chip${view.kind === f.kind ? ' on' : ''}`, onclick: () => setKind(f.kind), text: f.label })));
     const chosen = [...picked.values()].filter((m) => !view.kind || m.kind === view.kind);
-    const rest = view.items.filter((m) => !picked.has(m.gid));
+    const similar = view.similar.filter((m) => !picked.has(m.gid));
+    const rest = view.items.filter((m) => !picked.has(m.gid) && !similar.some((s) => s.gid === m.gid));
     mount(
       list,
       chosen.length ? el('div', { class: 'pick-heading', text: 'Selecionadas' }) : null,
       chosen.map((m) => row(project, m, true, toggle)),
-      el('div', { class: 'pick-heading', text: view.query ? 'Resultados' : suggest ? 'Parecidas com a tarefa' : 'Mais recentes' }),
+      similar.length ? el('div', { class: 'pick-heading', text: 'Parecidas' }) : null,
+      similar.map((m) => row(project, m, false, toggle)),
+      el('div', { class: 'pick-heading', text: view.query ? 'Resultados' : 'Mais recentes' }),
       rest.length ? rest.map((m) => row(project, m, false, toggle)) : el('div', { class: 'link-empty', text: 'Nada encontrado.' }),
     );
     status.textContent = picked.size ? `${picked.size === 1 ? '1 selecionada' : `${picked.size} selecionadas`}` : 'Nenhuma selecionada';
   }
 
+  // Com busca: os resultados. Sem busca: as parecidas com `suggest` (se houver) e, abaixo, as mais
+  // recentes — um texto sem nada parecido não deixa a lista vazia.
   async function load() {
     const mine = ++seq;
-    const { items } = await api.memory.search(view.query || suggest, { context: memoryContext(project), kind: view.kind || undefined, limit: 40 });
-    if (mine !== seq) return;
+    const opts = { context: memoryContext(project), kind: view.kind || undefined };
     const skip = new Set(exclude);
-    view.items = items.filter((m) => m.kind !== 'progress' && !skip.has(m.gid));
+    const keep = (items) => items.filter((m) => m.kind !== 'progress' && !skip.has(m.gid));
+    const [main, similar] = await Promise.all([
+      api.memory.search(view.query, { ...opts, limit: 40 }),
+      !view.query && suggest.trim() ? api.memory.search(suggest, { ...opts, limit: 8 }) : { items: [] },
+    ]);
+    if (mine !== seq) return;
+    view.items = keep(main.items);
+    view.similar = keep(similar.items);
     draw();
   }
 
