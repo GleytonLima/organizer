@@ -5,6 +5,10 @@
   height: 38px;
   padding: 0 0 0 6px;
 }
+/* com o painel à esquerda, o título começa alinhado à coluna do terminal */
+#app[data-layout='left'] .active-title {
+  margin-left: calc(var(--sidebar-w) + var(--gap) - 6px);
+}
 .active-title {
   display: flex;
   align-items: center;

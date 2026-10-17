@@ -1,5 +1,5 @@
 #sidebar {
-  width: 248px;
+  width: var(--sidebar-w);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 38px;
+  height: 30px;
   padding: 0 4px 0 10px;
 }
 .eyebrow {

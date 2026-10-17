@@ -17,18 +17,21 @@
   </head>
   <body>
     <div id="app" data-layout="left">
-      <aside id="sidebar"></aside>
-      <main id="main">
-        <header id="topbar"></header>
-        <div id="cmdbar"></div>
-        <div id="terminals">
-          <div id="empty" class="empty hidden">
-            <p>Nenhum terminal aberto</p>
-            <button class="btn primary" id="btn-empty-new">Novo terminal</button>
+      <!-- largura total: os controles de tema/layout ficam sempre no canto superior direito -->
+      <header id="topbar"></header>
+      <div id="body">
+        <aside id="sidebar"></aside>
+        <main id="main">
+          <div id="cmdbar"></div>
+          <div id="terminals">
+            <div id="empty" class="empty hidden">
+              <p>Nenhum terminal aberto</p>
+              <button class="btn primary" id="btn-empty-new">Novo terminal</button>
+            </div>
           </div>
-        </div>
-        <footer id="statusbar"></footer>
-      </main>
+          <footer id="statusbar"></footer>
+        </main>
+      </div>
     </div>
 
     <div id="menu" class="menu hidden"></div>
