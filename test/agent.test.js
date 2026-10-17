@@ -20,7 +20,13 @@ async function reopened(t) {
   const listed = await s('s.listSessions()');
   t.check(listed.length >= 2 && listed.some((x) => x.sessionId === before), 'Retomar… lista as sessões anteriores da pasta', JSON.stringify(listed));
   const other = listed.find((x) => x.sessionId !== before);
-  await s(`s.restart({ resume: ${JSON.stringify(other.sessionId)} })`);
+  // o diálogo mostra todas à vista, a atual marcada, e já escolhe a mais recente que não é a atual
+  await t.js(`import('./js/ui/agent/resume-dialog.js').then((m) => m.resumeDialog(SE.getSession(${JSON.stringify(id)})))`);
+  const rows = await t.waitFor(() => t.js(`const r = [...document.querySelectorAll('#modal .resume-list .pick-row')]; return r.length ? r.map((x) => [x.querySelector('input').value, x.querySelector('input').checked, x.textContent.includes('atual')]) : null`));
+  t.equal(rows?.length, listed.length, 'Retomar… mostra todas as sessões numa lista à vista');
+  t.equal(rows?.find((r) => r[1])?.[0], other.sessionId, 'já vem escolhida a mais recente que não é a atual');
+  t.equal(rows?.find((r) => r[2])?.[0], before, 'a sessão atual aparece marcada');
+  await t.js(`document.querySelector('#modal button[type=submit]').click()`);
   t.check(await t.waitFor(async () => (await view()).includes('Olá do perfil') || (await view()).includes('Sessão anterior retomada.')), 'retomar outra sessão traz a conversa dela');
   t.equal(await t.waitFor(() => t.js(`return S.store.state.projects[0].groups[0].terminals.find((x) => x.kind === 'agent').acpSessionId === ${JSON.stringify(other.sessionId)}`)), true, 'o terminal passa a seguir a sessão retomada');
   await t.waitFor(async () => (await s('s.state')) === 'pronto');

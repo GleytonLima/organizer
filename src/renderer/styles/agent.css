@@ -311,3 +311,13 @@
 .dropping > .ag-composer {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
+
+/* Retomar…: sessões anteriores à vista */
+.resume-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 4px 0 8px;
+}
