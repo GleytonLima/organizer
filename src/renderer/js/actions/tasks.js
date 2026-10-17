@@ -14,7 +14,8 @@ function keyPrefix(name) {
   return raw.toUpperCase().slice(0, 4);
 }
 
-export function createTask(project, { title, description = '', columnId, terminalId = null, by = 'você' }) {
+/** Cria uma tarefa; com `parent`, ela é subtarefa daquela (tarefa completa, com chave própria). */
+export function createTask(project, { title, description = '', columnId, terminalId = null, by = 'você', parent = null }) {
   if (!String(title || '').trim()) throw new Error('A tarefa precisa de um título.');
   project.taskSeq = (project.taskSeq || 0) + 1;
   const task = makeTask({
@@ -23,9 +24,11 @@ export function createTask(project, { title, description = '', columnId, termina
     columnId: columnId || firstColumn(project).id,
     title: title.trim(),
     description,
+    parentId: parent?.id || null,
   });
   stampOrigin(task, terminalId);
-  logTask(task, by, 'created', `Criada em “${columnById(project, task.columnId).name}”`);
+  logTask(task, by, 'created', `Criada em “${columnById(project, task.columnId).name}”${parent ? ` como subtarefa de ${parent.key}` : ''}`);
+  if (parent) logTask(parent, by, 'edit', `Nova subtarefa ${task.key}: ${task.title}`);
   store.state.tasks.push(task);
   commit();
   return task;
@@ -77,6 +80,8 @@ export async function deleteTask(task) {
   const ok = await confirmDanger({ title: `Excluir ${task.key}?`, message: task.title });
   if (!ok) return false;
   store.state.tasks = store.state.tasks.filter((t) => t !== task);
+  // subtarefas continuam existindo, sem a mãe
+  for (const t of store.state.tasks) if (t.parentId === task.id) t.parentId = null;
   commit();
   return true;
 }

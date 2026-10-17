@@ -7,6 +7,8 @@ export const allTasks = () => store.state.tasks;
 export const taskById = (id) => allTasks().find((t) => t.id === id) || null;
 export const projectTasks = (project) => allTasks().filter((t) => t.projectId === project?.id);
 export const taskProject = (task) => projectById(task.projectId);
+export const subtasksOf = (task) => allTasks().filter((t) => t.parentId === task.id);
+export const parentOf = (task) => (task.parentId ? taskById(task.parentId) : null);
 
 /** Projeto exibido no quadro/painel: o do terminal ativo. */
 export const boardProject = () => currentProject();

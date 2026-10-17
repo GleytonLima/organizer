@@ -40,6 +40,7 @@ export const makeTask = (fields = {}) => {
     terminalId: null, // terminal de origem (o agente que criou/atualizou)
     progress: null, // 0–100, opcional
     needsInput: null, // { question, at } quando o agente aguarda uma decisão sua
+    parentId: null, // subtarefa de outra tarefa (id)
     createdAt: now,
     updatedAt: now,
     history: [],

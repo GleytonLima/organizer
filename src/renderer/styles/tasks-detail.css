@@ -222,3 +222,66 @@
 .col-add {
   align-self: flex-start;
 }
+
+/* subtarefas */
+.td-subtasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.td-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.td-sub:hover {
+  background: var(--hover);
+}
+.td-sub.done .td-sub-title {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.td-sub-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+}
+.td-sub-dot {
+  width: 7px;
+  height: 7px;
+  margin: 0 3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--dim);
+}
+.td-sub-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.td-sub-col {
+  font-size: 11px;
+  color: var(--faint);
+}
+.td-parent {
+  align-self: flex-start;
+  margin-bottom: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.td-parent:hover {
+  color: var(--text);
+}

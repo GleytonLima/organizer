@@ -2,7 +2,7 @@
 const { request } = require('./client');
 
 const line = (t) =>
-  `${t.key}  [${t.column}]  ${t.title}${t.waiting ? `  ⏸ em espera: ${t.waiting.question}` : ''}${t.branch ? `  ⎇ ${t.branch}` : ''}`;
+  `${t.key}  [${t.column}]  ${t.title}${t.parent ? `  ↳ ${t.parent}` : ''}${t.waiting ? `  ⏸ em espera: ${t.waiting.question}` : ''}${t.branch ? `  ⎇ ${t.branch}` : ''}`;
 
 const ACTIONS = {
   list: { usage: 'list [--column C]', run: async (_pos, o) => (await request('task_list', { column: o.column })).map(line).join('\n') || '(sem tarefas)' },
@@ -11,16 +11,21 @@ const ACTIONS = {
     run: async () => (await request('task_columns')).columns.map((c) => `${c.name} — ${c.description || ''}`).join('\n'),
   },
   add: {
-    usage: 'add <título...> [--desc D] [--column C] [--memories ID,ID]',
+    usage: 'add <título...> [--desc D] [--column C] [--parent TAREFA] [--memories ID,ID]',
     run: async (pos, o) =>
-      line(await request('task_create', { title: pos.join(' '), description: o.desc, column: o.column, memories: o.memories ? String(o.memories).split(',') : [] })),
+      line(
+        await request('task_create', {
+          title: pos.join(' '), description: o.desc, column: o.column, parent: o.parent, memories: o.memories ? String(o.memories).split(',') : [],
+        }),
+      ),
   },
   show: {
-    usage: 'show <tarefa>   (detalhes e memórias vinculadas)',
+    usage: 'show <tarefa>   (detalhes, subtarefas e memórias vinculadas)',
     run: async ([task]) => {
       const t = await request('task_get', { task });
+      const subs = t.subtasks.map((s) => `  ${s.key}  [${s.column}]  ${s.title}${s.waiting ? '  ⏸ em espera' : ''}`).join('\n') || '  (nenhuma)';
       const mems = t.memories.map((m) => `  [${m.id}] (${m.kind}) ${m.text}${m.review ? '  [a revisar]' : ''}`).join('\n') || '  (nenhuma)';
-      return [line(t), t.description, 'Memórias:', mems].filter(Boolean).join('\n');
+      return [line(t), t.parent && `↳ subtarefa de ${t.parent}`, t.description, 'Subtarefas:', subs, 'Memórias:', mems].filter(Boolean).join('\n');
     },
   },
   link: {

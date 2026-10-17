@@ -64,5 +64,25 @@ suite('tarefas', {
 
   const cli = await t.bo(['task', 'list'], { terminal: 'dev1' });
   t.check(cli.code === 0 && cli.stdout.includes(task.key), '`bo task list` mostra a tarefa', cli.stderr || cli.stdout);
+
+  // subtarefas: criar pela API e pelo CLI, ver na mãe, progresso pela fração concluída
+  const parent = (await agent.tool('create_task', { title: 'Tarefa grande' })).data;
+  const sub1 = (await agent.tool('create_task', { title: 'Parte 1', parent: parent.key })).data;
+  const sub2 = await t.bo(['task', 'add', 'Parte 2', '--parent', parent.key], { terminal: 'dev1' });
+  t.equal(sub1?.parent, parent.key, 'create_task com parent cria uma subtarefa');
+  t.includes(sub2.stdout, `↳ ${parent.key}`, '`bo task add --parent` cria uma subtarefa');
+  await agent.tool('complete_task', { task: sub1.key });
+  const big = (await agent.tool('get_task', { task: parent.key })).data;
+  t.equal(big?.subtasks?.map((s) => s.title), ['Parte 1', 'Parte 2'], 'get_task lista as subtarefas');
+  t.check(big.history.some((h) => h.text.includes(`Nova subtarefa ${sub1.key}`)), 'a mãe registra cada subtarefa no histórico');
+  await t.js(`SEL.openTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(parent.key)}).id)`, TASK_UI);
+  const drawer = await t.waitFor(async () => {
+    const txt = await t.js(`return document.querySelector('#task-detail').innerText`);
+    return txt.includes('Parte 2') && txt;
+  });
+  t.check(drawer && drawer.includes('Parte 1') && drawer.includes('Nova subtarefa'), 'gaveta da mãe mostra as subtarefas', drawer);
+  t.equal(await t.js(`return document.querySelector('.task-card.selected .task-progress span')?.style.width || null`), '50%', 'progresso da mãe = metade das subtarefas concluída');
+  await t.js(`SEL.openTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(sub1.key)}).id)`, TASK_UI);
+  t.check(await t.waitFor(async () => (await t.js(`return document.querySelector('#task-detail').innerText`)).includes(`Subtarefa de ${parent.key}`)), 'gaveta da subtarefa leva à mãe');
   await t.js(`SEL.closeTask(); A.setTaskView('off')`, TASK_UI);
 });

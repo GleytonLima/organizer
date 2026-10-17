@@ -12,6 +12,7 @@ import { selectedTask, closeTask } from './selection.js';
 import { waitingBox } from './detail-waiting.js';
 import { saveProgressDialog } from '../memory/progress.js';
 import { memoriesBox } from './detail-memories.js';
+import { subtasksBox, parentLine } from './detail-subtasks.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -87,11 +88,14 @@ export function renderTaskDetail() {
       iconButton('trash', 'Excluir tarefa', async () => (await deleteTask(task)) && closeTask(), 'td-delete'),
       iconButton('collapse', 'Fechar', closeTask),
     ),
+    parentLine(task),
     editable(task, 'title', { placeholder: 'Título' }),
     task.needsInput ? waitingBox(task, draftOf(task)) : null,
     meta(task),
     el('label', { class: 'td-label', text: 'Descrição' }),
     editable(task, 'description', { multiline: true, placeholder: 'Contexto, critérios de pronto…' }),
+    el('label', { class: 'td-label', text: 'Subtarefas' }),
+    subtasksBox(task),
     el('label', { class: 'td-label', text: 'Memórias' }),
     memoriesBox(task),
     el('label', { class: 'td-label', text: 'Histórico' }),

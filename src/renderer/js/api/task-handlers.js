@@ -2,7 +2,7 @@
 import { findTerm } from '../core/store.js';
 import { termLabel } from '../core/format.js';
 import { columnsOf, columnById, resolveColumn } from '../tasks/columns.js';
-import { allTasks, projectTasks, taskProject, resolveTaskRef } from '../tasks/queries.js';
+import { allTasks, projectTasks, taskProject, resolveTaskRef, subtasksOf, parentOf } from '../tasks/queries.js';
 import { createTask, moveTask, reportTask, completeTask } from '../actions/tasks.js';
 import { requestInput, suggestReply } from '../actions/task-waiting.js';
 import { callerOf, resolveProject } from './resolve.js';
@@ -29,6 +29,7 @@ function taskInfo(task, { history = false } = {}) {
     repo: task.repo ?? null,
     branch: task.branch ?? null,
     lastReport: last?.text ?? null,
+    parent: parentOf(task)?.key ?? null,
     updatedAt: iso(task.updatedAt),
     ...(history && { history: task.history.map((h) => ({ ...h, at: iso(h.at) })) }),
   };
@@ -69,13 +70,15 @@ export const taskHandlers = {
   async task_get(p) {
     const { task } = context(p, { needTask: true });
     const memories = (await taskMemories(task)).map((m) => ({ id: m.id, kind: m.kind, text: m.text, review: m.review?.reason ?? null }));
-    return { ...taskInfo(task, { history: true }), memories };
+    const subtasks = subtasksOf(task).map((t) => ({ key: t.key, title: t.title, column: columnById(taskProject(t), t.columnId)?.name, waiting: !!t.needsInput }));
+    return { ...taskInfo(task, { history: true }), subtasks, memories };
   },
 
   async task_create(p) {
     const { project, terminalId } = context(p);
     const columnId = p.column ? resolveColumn(project, p.column).id : undefined;
-    const task = createTask(project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente' });
+    const parent = p.parent ? resolveTaskRef(p.parent, { project }) : null;
+    const task = createTask(parent ? taskProject(parent) : project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente', parent });
     if (p.memories?.length) await linkTaskMemories(task, p.memories, { by: 'agente' });
     return taskInfo(task);
   },

@@ -24,6 +24,7 @@ const TASK_TOOLS = [
         description: { type: 'string', description: 'Detalhes, critérios de pronto, contexto.' },
         column: { type: 'string', description: 'Nome ou id da coluna inicial (opcional).' },
         memories: { type: 'array', items: { type: 'string' }, description: 'Ids de memórias que dão contexto à tarefa (decisões, como fazer, a ideia de origem…).' },
+        parent: { type: 'string', description: 'Tarefa-mãe (chave, ex.: "BO-35"): cria como SUBTAREFA. Ao dividir uma tarefa em partes, registre cada parte assim antes de começá-la.' },
         project: projectRef,
       },
       required: ['title'],
@@ -88,7 +89,7 @@ const TASK_TOOLS = [
   },
   {
     name: 'get_task',
-    description: 'Detalhes de uma tarefa, incluindo o histórico completo e as MEMÓRIAS vinculadas (decisões, como fazer, ideias): leia-as antes de começar.',
+    description: 'Detalhes de uma tarefa, incluindo o histórico completo, as SUBTAREFAS e as MEMÓRIAS vinculadas (decisões, como fazer, ideias): leia-as antes de começar.',
     inputSchema: { type: 'object', properties: { task: taskRef } },
     run: (request, args) => request('task_get', args),
   },

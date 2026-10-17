@@ -7,6 +7,8 @@ import { icon } from '../icons.js';
 import { draggable } from '../dnd.js';
 import { taskMenu } from './menus.js';
 import { openTask, isOpen } from './selection.js';
+import { parentOf, subtasksOf, taskProject } from '../../tasks/queries.js';
+import { isDoneColumn } from '../../tasks/columns.js';
 
 const lastReport = (task) => [...task.history].reverse().find((h) => h.type === 'report')?.text;
 
@@ -15,10 +17,21 @@ function progressBar(value) {
   return el('div', { class: 'task-progress', title: `${value}%` }, el('span', { style: { width: `${value}%` } }));
 }
 
-/** Chips de origem: branch git e terminal do agente (clicar no terminal o abre). */
+/** Progresso: o informado pelo agente ou, numa tarefa com subtarefas, a fração delas concluída. */
+function progressOf(task) {
+  if (task.progress != null) return task.progress;
+  const subs = subtasksOf(task);
+  if (!subs.length) return null;
+  const project = taskProject(task);
+  return Math.round((subs.filter((s) => isDoneColumn(project, s.columnId)).length / subs.length) * 100);
+}
+
+/** Chips de origem: tarefa-mãe, branch git e terminal do agente (clicar no terminal o abre). */
 function originChips(task) {
   const origin = findTerm(task.terminalId);
+  const parent = parentOf(task);
   return [
+    parent ? el('button', { class: 'task-chip link', title: `Subtarefa de ${parent.key}: ${parent.title}`, onclick: stop(() => openTask(parent.id)) }, el('span', { text: `↳ ${parent.key}` })) : null,
     task.branch
       ? el('span', { class: 'task-chip', title: 'Repositório e branch' }, icon('branch'), el('span', { text: task.repo ? `${task.repo} · ${task.branch}` : task.branch }))
       : null,
@@ -46,7 +59,7 @@ export function taskCard(task, { compact = false } = {}) {
     el('div', { class: 'task-title', text: task.title }),
     !compact && task.description ? el('div', { class: 'task-desc', text: task.description }) : null,
     detail,
-    progressBar(task.progress),
+    progressBar(progressOf(task)),
     el('div', { class: 'task-chips' }, originChips(task)),
   );
 }
