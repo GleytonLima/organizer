@@ -82,16 +82,6 @@
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-.count {
-  font-size: 11px;
-  color: var(--faint);
-  padding: 0 4px;
-}
-.project-head:hover > .count,
-.group-head:hover > .count {
-  display: none;
-}
-
 /* ---------- corpo ---------- */
 .project-body,
 .group-body {
@@ -168,6 +158,8 @@
 .term-icon {
   width: 14px;
   height: 14px;
+}
+.term-item .term-icon {
   align-self: flex-start;
   margin-top: 2px;
 }

@@ -7,11 +7,13 @@ import { refreshGit } from '../git/git.js';
 import { terminalKeyHandler } from './keys.js';
 import { copyOrPaste } from './clipboard.js';
 
-// id -> { term, fit, host, exited, running: { cmd, since } | null, lastExit: number | null }
+// id -> { term, fit, host, head, exited, running: { cmd, since } | null, lastExit: number | null }
 const sessions = new Map();
 let container = null;
+let onFocusRequest = () => {};
 
 export const getSession = (id) => sessions.get(id);
+export const allSessions = () => sessions.entries();
 export const activeSession = () => sessions.get(store.state.activeId);
 
 /** Comando em execução no terminal (texto), ou null se estiver no prompt. */
@@ -26,8 +28,10 @@ export function processStatus(id) {
   return s.lastExit ? 'error' : 'idle';
 }
 
-export function initSessions(node) {
+/** `onFocus(id)`: chamado quando o usuário clica num terminal (ex.: na visão lado a lado). */
+export function initSessions(node, { onFocus } = {}) {
   container = node;
+  if (onFocus) onFocusRequest = onFocus;
   api.onPtyData((id, data) => sessions.get(id)?.term.write(data));
   api.onPtyExit((id) => {
     const s = sessions.get(id);
@@ -37,12 +41,14 @@ export function initSessions(node) {
     s.term.write('\r\n\x1b[2m[processo encerrado — Enter para reiniciar]\x1b[0m\r\n');
     notify();
   });
-  new ResizeObserver(fitActive).observe(container);
 }
 
 export function createSession(t) {
   if (sessions.has(t.id)) return sessions.get(t.id);
-  const host = el('div', { class: 'term-host' });
+  // host = cabeçalho (só na visão lado a lado) + corpo onde o xterm é montado
+  const head = el('div', { class: 'term-head' });
+  const body = el('div', { class: 'term-body' });
+  const host = el('div', { class: 'term-host', onmousedown: () => onFocusRequest(t.id) }, head, body);
   container.append(host);
 
   const term = new Terminal({
@@ -58,9 +64,9 @@ export function createSession(t) {
   const fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
   term.loadAddon(new WebLinksAddon.WebLinksAddon((_e, url) => window.open(url)));
-  term.open(host);
+  term.open(body);
 
-  const s = { term, fit, host, exited: false, running: null, lastExit: null };
+  const s = { term, fit, host, head, exited: false, running: null, lastExit: null };
   sessions.set(t.id, s);
   registerShellIntegration(t.id, s);
   term.onData((data) => {
@@ -159,19 +165,15 @@ export function runInActive(cmd) {
   s.term.focus();
 }
 
-export function syncVisibility() {
-  for (const [id, s] of sessions) s.host.classList.toggle('active', id === store.state.activeId);
-}
-
 function safeFit(s) {
   try {
     s.fit.fit();
   } catch {}
 }
 
-export function fitActive() {
-  const s = activeSession();
-  if (s) safeFit(s);
+/** Ajusta o tamanho de todos os terminais visíveis (ver terminals/layout.js). */
+export function fitVisible() {
+  for (const s of sessions.values()) if (s.host.classList.contains('visible')) safeFit(s);
 }
 
 export const focusActive = () => activeSession()?.term.focus();

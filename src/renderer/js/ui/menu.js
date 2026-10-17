@@ -26,7 +26,7 @@ function itemNode(it) {
 export function showMenu(e, items) {
   e.preventDefault();
   e.stopPropagation();
-  const node = mount(menu(), items.map(itemNode));
+  const node = mount(menu(), items.filter(Boolean).map(itemNode));
   node.classList.remove('hidden');
   const anchor = e.type === 'click' ? e.currentTarget?.getBoundingClientRect?.() : null;
   const x = anchor ? anchor.right - node.offsetWidth : e.clientX;

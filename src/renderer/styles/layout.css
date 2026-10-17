@@ -39,13 +39,74 @@
   border-radius: var(--r-xl);
   overflow: hidden;
 }
+/* cada terminal: .term-host > .term-head (só na divisão) + .term-body (xterm) */
 .term-host {
   position: absolute;
-  inset: 14px 8px 10px 16px;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   visibility: hidden;
 }
-.term-host.active {
+.term-host.visible {
   visibility: visible;
+}
+.term-head {
+  display: none;
+}
+.term-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  margin: 14px 8px 10px 16px;
+}
+
+/* ---------- visão lado a lado: grade de painéis arredondados ---------- */
+#terminals.split {
+  display: grid;
+  gap: var(--gap);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+#terminals.split .term-host {
+  position: relative;
+  inset: auto;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+#terminals.split .term-host:not(.visible) {
+  display: none;
+}
+#terminals.split .term-host.active {
+  border-color: color-mix(in srgb, var(--text) 28%, var(--border));
+}
+#terminals.split .term-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#terminals.split .term-host:not(.active) .term-head {
+  opacity: 0.75;
+}
+.pane-name {
+  color: var(--text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#terminals.split .term-body {
+  margin: 8px 6px 6px 12px;
 }
 .xterm .xterm-viewport {
   background: transparent !important;

@@ -2,6 +2,7 @@
 import { store, commit } from '../core/store.js';
 import { uid } from '../core/model.js';
 import { openModal, field } from '../ui/modal.js';
+import { confirmDanger } from '../ui/confirm.js';
 
 export async function editCommand(c = null) {
   const v = await openModal({
@@ -28,7 +29,9 @@ export function moveCommand(c, dir) {
   commit();
 }
 
-export function removeCommand(c) {
+export async function removeCommand(c) {
+  const ok = await confirmDanger({ title: `Remover “${c.label}”?`, message: c.cmd, submit: 'Remover' });
+  if (!ok) return;
   store.state.commands = store.state.commands.filter((x) => x !== c);
   commit();
 }

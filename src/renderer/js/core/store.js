@@ -70,6 +70,25 @@ export const activeEntry = () => findTerm(store.state.activeId);
 
 export const currentProject = () => activeEntry()?.project || projects().find((p) => p.open) || projects()[0];
 
+/** Origem da visão lado a lado ({ label, terminals }), ou null se não houver divisão válida. */
+export function splitSource() {
+  const split = store.state.split;
+  if (!split) return null;
+  if (split.kind === 'group') {
+    const owner = findGroup(split.id);
+    return owner?.project.open ? { label: owner.group.name, terminals: owner.group.terminals } : null;
+  }
+  const project = projectById(split.id);
+  return project?.open ? { label: project.name, terminals: projectTerminals(project) } : null;
+}
+
+/** Terminais visíveis agora: os da divisão (2+) ou só o ativo. */
+export function visibleTerminalIds() {
+  const src = splitSource();
+  if (src && src.terminals.length > 1) return src.terminals.map((t) => t.id);
+  return store.state.activeId ? [store.state.activeId] : [];
+}
+
 /** Grupo do terminal ativo se ele for do projeto; senão, o primeiro grupo do projeto. */
 export function currentGroup(project = currentProject()) {
   const act = activeEntry();

@@ -17,7 +17,9 @@ npm start
 - **Confirmação ao apagar**: fechar um terminal com processo rodando, excluir grupo ou projeto pede confirmação.
 - **Restaurar sessão**: ao reabrir o app, os terminais voltam na última pasta em que estavam.
 - **Nome, cor e comando inicial** por terminal (duplo clique ou F2). Sem nome, o terminal mostra a pasta atual.
-- **Comandos salvos**: barra de atalhos que executa no terminal ativo (botão direito para editar).
+- **Lado a lado**: no menu de contexto de um grupo ou projeto, "Ver lado a lado" mostra todos os seus terminais
+  ao mesmo tempo, em grade. Ativar um terminal de fora (ou o ✕ no topo) volta ao normal.
+- **Comandos salvos**: barra de atalhos que executa no terminal ativo (duplo clique edita, ✕ remove com confirmação).
 - **Git**: branch, mudanças (●), commits a enviar/baixar (↑↓) e conflitos, atualizados a cada 3 s.
 - Arrastar terminais para reordenar ou mover entre grupos.
 

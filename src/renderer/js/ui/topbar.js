@@ -2,12 +2,13 @@
 import { $, el, mount } from '../core/dom.js';
 import { store, commit, activeEntry, currentProject, currentGroup, projectById, projectTerminals } from '../core/store.js';
 import { termLabel } from '../core/format.js';
-import { fitActive, processStatus } from '../terminals/sessions.js';
+import { fitVisible, processStatus } from '../terminals/sessions.js';
 import { activate, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
 import { createProject, openProject } from '../actions/projects.js';
 import { gitFor, dirtyCount } from '../git/git.js';
 import { iconButton, dot, gitSummary, processBadge } from './components.js';
 import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus.js';
+import { splitIndicator } from './split.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -18,7 +19,7 @@ const LAYOUTS = [
 function setLayout(layout) {
   store.state.layout = layout;
   commit();
-  requestAnimationFrame(fitActive);
+  requestAnimationFrame(fitVisible);
 }
 
 function activeTitle() {
@@ -101,9 +102,10 @@ function layoutSwitch() {
 
 export function renderTopbar() {
   const tabs = store.state.layout === 'tabs';
+  const split = splitIndicator(); // na divisão, cada painel já mostra o próprio título
   mount(
     $('#topbar'),
-    tabs ? tabsArea() : [activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
+    tabs ? [tabsArea(), split] : [split || activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),
   );

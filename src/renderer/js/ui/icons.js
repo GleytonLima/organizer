@@ -12,6 +12,8 @@ const PATHS = {
   check: '<path d="M3.5 8.5l3 3 6-7"/>',
   folder: '<path d="M2.25 4.75c0-.83.67-1.5 1.5-1.5h2.6l1.4 1.5h4.5c.83 0 1.5.67 1.5 1.5v5.5c0 .83-.67 1.5-1.5 1.5h-8.5c-.83 0-1.5-.67-1.5-1.5z"/>',
   terminal: '<path d="M3.5 5l3 3-3 3M8.5 11.5h4"/>',
+  split: '<rect x="2" y="3" width="12" height="10" rx="2.5"/><path d="M8 3v10"/>',
+  maximize: '<path d="M9.5 2.75h3.75v3.75M6.5 13.25H2.75V9.5M13.25 2.75L9 7M2.75 13.25L7 9"/>',
 };
 
 export function icon(name, cls = '') {

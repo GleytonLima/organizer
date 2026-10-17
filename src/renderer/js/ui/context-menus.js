@@ -1,5 +1,6 @@
 // Conteúdo dos menus de contexto de terminal, grupo, projeto, comando e tema.
-import { store, findTerm } from '../core/store.js';
+import { store, findTerm, projectTerminals } from '../core/store.js';
+import { splitGroup, splitProject, exitSplit, isSplit } from '../actions/split.js';
 import { restartSession } from '../terminals/sessions.js';
 import { editTerminal, duplicateTerminal, closeTerminal, newTerminal, moveTerminal } from '../actions/terminals.js';
 import { createGroup, renameGroup, deleteGroup } from '../actions/groups.js';
@@ -10,6 +11,14 @@ import { setTheme } from '../themes/apply.js';
 import { showMenu } from './menu.js';
 
 const SEP = { sep: true };
+
+/** "Ver lado a lado" / "Sair do lado a lado" — só quando há 2+ terminais. */
+function splitItem(kind, target, count, show) {
+  if (count < 2) return null;
+  return isSplit(kind, target.id)
+    ? { label: 'Sair do lado a lado', action: exitSplit }
+    : { label: 'Ver lado a lado', action: () => show(target) };
+}
 
 export function terminalMenu(e, id) {
   const { project, group, t } = findTerm(id);
@@ -29,6 +38,7 @@ export function terminalMenu(e, id) {
 
 export function groupMenu(e, group) {
   showMenu(e, [
+    splitItem('group', group, group.terminals.length, splitGroup),
     { label: 'Novo terminal', action: () => newTerminal(group) },
     { label: 'Renomear…', action: () => renameGroup(group) },
     SEP,
@@ -38,6 +48,7 @@ export function groupMenu(e, group) {
 
 export function projectMenu(e, project) {
   showMenu(e, [
+    splitItem('project', project, projectTerminals(project).length, splitProject),
     { label: 'Novo terminal', action: () => newTerminal(project.groups[0]) },
     { label: 'Novo grupo…', action: () => createGroup(project) },
     { label: 'Editar…', action: () => editProject(project) },

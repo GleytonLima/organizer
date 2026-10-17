@@ -1,6 +1,6 @@
 // Painel lateral: projetos → grupos → terminais.
 import { $, el, mount } from '../core/dom.js';
-import { store, projectTerminals } from '../core/store.js';
+import { store } from '../core/store.js';
 import { newTerminal, moveTerminal } from '../actions/terminals.js';
 import { createProject, openProject, toggleProject } from '../actions/projects.js';
 import { iconButton, tintedIcon } from './components.js';
@@ -22,7 +22,6 @@ function projectHead(project) {
     icon('chevron', 'chevron'),
     tintedIcon('folder', project.color, 'project-icon'),
     el('span', { class: 'project-name', text: project.name }),
-    el('span', { class: 'count', text: projectTerminals(project).length || '' }),
     iconButton('plus', 'Novo terminal', () => newTerminal(project.groups[0]), 'reveal'),
     iconButton('more', 'Opções do projeto', (e) => projectMenu(e, project), 'reveal'),
   );

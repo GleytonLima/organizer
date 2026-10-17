@@ -40,6 +40,7 @@ export function migrate(saved, home) {
     layout: s.layout || 'left',
     theme: s.theme || 'grafite',
     activeId: s.activeId || null,
+    split: s.split || null, // visão lado a lado: { kind: 'group' | 'project', id }
     projects: projects.length ? projects : [makeProject({ name: 'Geral', cwd: home })],
     commands: s.commands || DEFAULT_COMMANDS(),
   };

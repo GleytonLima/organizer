@@ -1,7 +1,8 @@
 import { store, commit, findTerm, openTerminals, activeEntry, currentGroup, findGroup } from '../core/store.js';
 import { makeTerminal, uid } from '../core/model.js';
 import { basename, termLabel } from '../core/format.js';
-import { createSession, destroySession, fitActive, focusActive, runningCommand } from '../terminals/sessions.js';
+import { createSession, destroySession, fitVisible, focusActive, runningCommand } from '../terminals/sessions.js';
+import { leaveSplitIfOutside } from './split.js';
 import { openModal, field } from '../ui/modal.js';
 import { confirmDanger } from '../ui/confirm.js';
 
@@ -18,10 +19,11 @@ export function activate(id) {
   if (!entry.project.open) ensureProjectOpen(entry.project);
   entry.group.collapsed = false;
   createSession(entry.t);
+  leaveSplitIfOutside(id);
   store.state.activeId = id;
   commit();
   requestAnimationFrame(() => {
-    fitActive();
+    fitVisible();
     focusActive();
   });
 }

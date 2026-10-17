@@ -24,6 +24,26 @@
   white-space: nowrap;
 }
 
+.split-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--dim);
+  font-size: 12px;
+  white-space: nowrap;
+}
+#app[data-layout='left'] .split-indicator {
+  margin-left: calc(var(--sidebar-w) + var(--gap) - 6px);
+}
+.split-indicator .icon-btn {
+  width: 22px;
+  height: 22px;
+}
+
 /* controle segmentado (layout) */
 .segmented {
   display: flex;
@@ -157,6 +177,22 @@
 .chip:hover {
   background: var(--hover);
   color: var(--text);
+}
+/* ✕ de remover: só ocupa espaço no hover, com transição suave */
+.chip-remove.icon-btn {
+  width: 0;
+  height: 18px;
+  margin-right: -4px;
+  overflow: hidden;
+  transition: width 0.15s, margin 0.15s, opacity 0.15s;
+}
+.chip:hover .chip-remove {
+  width: 18px;
+  margin-left: 4px;
+}
+.chip-remove .icon {
+  width: 12px;
+  height: 12px;
 }
 .chip-add {
   width: 26px;

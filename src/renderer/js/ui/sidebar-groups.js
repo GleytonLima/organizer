@@ -39,7 +39,6 @@ function groupHead(group) {
     },
     icon('chevron', 'chevron'),
     el('span', { class: 'group-name', text: group.name }),
-    el('span', { class: 'count', text: group.terminals.length || '' }),
     iconButton('plus', 'Novo terminal no grupo', () => newTerminal(group), 'reveal'),
     iconButton('more', 'Opções do grupo', (e) => groupMenu(e, group), 'reveal'),
   );

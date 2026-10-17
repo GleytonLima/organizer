@@ -23,11 +23,11 @@ src/preload.js   ponte IPC (window.api)
 src/renderer/
   js/core/       dom, model (fábricas + migração), store (estado, persistência, consultas), format
   js/themes/     paleta, temas, aplicação
-  js/terminals/  sessões xterm+pty, teclado, clipboard
-  js/actions/    terminais, grupos, projetos, comandos salvos
+  js/terminals/  sessões xterm+pty, layout (grade lado a lado), buffer, teclado, clipboard
+  js/actions/    terminais, grupos, projetos, split (lado a lado), comandos salvos
   js/git/        polling de status
   js/api/        handlers da API local (resolve nomes/ids/caminhos)
-  js/ui/         sidebar(+groups), topbar, cmdbar, statusbar, menu, modal, confirm, dnd, componentes
+  js/ui/         sidebar(+groups), topbar, split, cmdbar, statusbar, menu, modal, confirm, dnd, componentes
   styles/        base, layout, sidebar, topbar, overlays, status
 bin/             CLI `bo` (bo.js + lib/: client, commands, mcp, tools, wait) e wrappers bash/cmd
 ```

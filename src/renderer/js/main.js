@@ -4,6 +4,7 @@ import { store, loadState, persistNow, activeEntry, openTerminals } from './core
 import { applyTheme } from './themes/apply.js';
 import { initSessions, createSession } from './terminals/sessions.js';
 import { initKeys } from './terminals/keys.js';
+import { initLayout } from './terminals/layout.js';
 import { activate, newTerminal } from './actions/terminals.js';
 import { startGitPolling } from './git/git.js';
 import { initMenu } from './ui/menu.js';
@@ -24,7 +25,8 @@ async function init() {
   loadState(await api.loadState());
   applyTheme(store.state.theme);
 
-  initSessions($('#terminals'));
+  initSessions($('#terminals'), { onFocus: (id) => id !== store.state.activeId && activate(id) });
+  initLayout($('#terminals'));
   initKeys();
   initMenu();
   initRender();
