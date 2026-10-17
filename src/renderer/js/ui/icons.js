@@ -10,6 +10,8 @@ const PATHS = {
   layoutTabs: '<rect x="2" y="3" width="12" height="10" rx="2.5"/><path d="M2 6.5h12"/>',
   branch: '<circle cx="5" cy="4" r="1.4"/><circle cx="5" cy="12" r="1.4"/><circle cx="11" cy="5.5" r="1.4"/><path d="M5 5.4v5.2M11 6.9c0 2.4-2.2 2.9-5.6 3.6"/>',
   check: '<path d="M3.5 8.5l3 3 6-7"/>',
+  folder: '<path d="M2.25 4.75c0-.83.67-1.5 1.5-1.5h2.6l1.4 1.5h4.5c.83 0 1.5.67 1.5 1.5v5.5c0 .83-.67 1.5-1.5 1.5h-8.5c-.83 0-1.5-.67-1.5-1.5z"/>',
+  terminal: '<path d="M3.5 5l3 3-3 3M8.5 11.5h4"/>',
 };
 
 export function icon(name, cls = '') {

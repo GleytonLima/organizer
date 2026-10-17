@@ -4,7 +4,7 @@ import { store } from '../core/store.js';
 import { termLabel } from '../core/format.js';
 import { activate, newTerminal, closeTerminal, editTerminal, moveTerminal } from '../actions/terminals.js';
 import { toggleGroup } from '../actions/groups.js';
-import { iconButton, dot, terminalMeta } from './components.js';
+import { iconButton, tintedIcon, terminalMeta } from './components.js';
 import { terminalMenu, groupMenu } from './context-menus.js';
 import { draggable, dropTarget } from './dnd.js';
 import { icon } from './icons.js';
@@ -22,7 +22,7 @@ function terminalItem(project, group, t) {
       ...draggable(t.id),
       ...dropTarget((id) => moveTerminal(id, group, t.id)),
     },
-    dot(t.color || project.color),
+    tintedIcon('terminal', t.color || project.color, 'term-icon'),
     el('div', { class: 'term-text' }, el('div', { class: 'term-name', text: termLabel(t) }), el('div', { class: 'term-meta' }, terminalMeta(t))),
     iconButton('close', 'Fechar terminal', () => closeTerminal(t.id), 'reveal'),
   );

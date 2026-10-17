@@ -39,12 +39,17 @@
   cursor: pointer;
 }
 .project-head {
-  height: 28px;
+  height: 30px;
   padding: 0 4px 0 6px;
+  color: var(--text);
+}
+.project-icon {
+  width: 15px;
+  height: 15px;
 }
 .group-head {
-  height: 24px;
-  padding: 0 4px 0 18px;
+  height: 26px;
+  padding: 0 4px 0 4px;
 }
 .project-head:hover,
 .group-head:hover {
@@ -70,7 +75,7 @@
 }
 .project-name {
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 .group-name {
   font-size: 11.5px;
@@ -94,9 +99,21 @@
   flex-direction: column;
   gap: 2px;
 }
+/* linhas-guia neutras da árvore: projeto → grupo → terminal */
 .project-body {
-  margin-top: 2px;
   gap: 6px;
+  margin: 2px 0 0 13px;
+  padding-left: 7px;
+  border-left: 1px solid var(--border);
+}
+.group:not(.headless) > .group-body {
+  margin-left: 10px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border);
+}
+.project:hover > .project-body,
+.group:hover > .group-body {
+  border-left-color: var(--hover);
 }
 .project.collapsed > .project-body,
 .group.collapsed > .group-body {
@@ -108,18 +125,15 @@
   flex-direction: column;
   gap: 2px;
 }
-.group:not(.headless) .term-item {
-  margin-left: 12px;
-}
 .group-empty {
-  margin-left: 34px;
+  margin-left: 10px;
   padding: 4px 0;
   font-size: 11.5px;
   color: var(--faint);
 }
 .project-closed {
   align-self: flex-start;
-  margin-left: 26px;
+  margin-left: 6px;
   padding: 2px 0;
   border: none;
   background: none;
@@ -138,8 +152,8 @@
 .term-item {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 8px 6px 8px 14px;
+  gap: 10px;
+  padding: 7px 6px 7px 10px;
   border-radius: var(--r);
   cursor: pointer;
   transition: background 0.12s;
@@ -150,6 +164,15 @@
 .term-item.active {
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--border);
+}
+.term-icon {
+  width: 14px;
+  height: 14px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.term-item:not(.active) .term-icon {
+  opacity: 0.7;
 }
 .term-text {
   flex: 1;

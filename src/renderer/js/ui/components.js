@@ -11,6 +11,13 @@ export function iconButton(name, title, onClick, cls = '') {
 
 export const dot = (color, cls = '') => el('span', { class: `dot ${cls}`.trim(), style: { background: color } });
 
+/** Ícone colorido (pasta do projeto, terminal). */
+export function tintedIcon(name, color, cls = '') {
+  const node = icon(name, cls);
+  node.style.color = color;
+  return node;
+}
+
 /** Resumo git compacto: branch, mudanças, commits a enviar/baixar. */
 export function gitSummary(cwd, { detailed = false } = {}) {
   const g = gitFor(cwd);

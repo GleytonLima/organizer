@@ -3,7 +3,7 @@ import { $, el, mount } from '../core/dom.js';
 import { store, projectTerminals } from '../core/store.js';
 import { newTerminal, moveTerminal } from '../actions/terminals.js';
 import { createProject, openProject, toggleProject } from '../actions/projects.js';
-import { iconButton, dot } from './components.js';
+import { iconButton, tintedIcon } from './components.js';
 import { projectMenu } from './context-menus.js';
 import { dropTarget } from './dnd.js';
 import { groupSection } from './sidebar-groups.js';
@@ -20,7 +20,7 @@ function projectHead(project) {
       ...dropTarget((id) => moveTerminal(id, project.groups[0])),
     },
     icon('chevron', 'chevron'),
-    dot(project.color),
+    tintedIcon('folder', project.color, 'project-icon'),
     el('span', { class: 'project-name', text: project.name }),
     el('span', { class: 'count', text: projectTerminals(project).length || '' }),
     iconButton('plus', 'Novo terminal', () => newTerminal(project.groups[0]), 'reveal'),
