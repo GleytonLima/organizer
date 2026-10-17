@@ -155,3 +155,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* seletor de período (painel e quadro) */
+.period-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.period-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.period-btn .icon {
+  width: 13px;
+  height: 13px;
+}

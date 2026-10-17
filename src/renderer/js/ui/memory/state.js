@@ -6,7 +6,7 @@ const DEBOUNCE_MS = 200;
 
 export const memoryView = {
   query: '',
-  kind: null, // null (tudo) | 'decision' | 'note'
+  kind: null, // null (tudo) | tipo (memory/kinds.js) | 'review' (marcadas "a revisar")
   result: { mode: 'recentes', items: [] },
   key: null, // projeto+consulta+filtro da última busca
   version: 0, // incrementa após gravar/apagar, forçando nova busca
@@ -22,7 +22,8 @@ export function ensureFresh(project) {
   memoryView.key = key;
   clearTimeout(timer);
   timer = setTimeout(async () => {
-    memoryView.result = await api.memory.search(memoryView.query, { context, kind: memoryView.kind || undefined, limit: 100 });
+    const review = memoryView.kind === 'review';
+    memoryView.result = await api.memory.search(memoryView.query, { context, kind: review ? undefined : memoryView.kind || undefined, needsReview: review, limit: 100 });
     notify();
   }, memoryView.query ? DEBOUNCE_MS : 0);
 }

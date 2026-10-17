@@ -5,7 +5,7 @@ const { waitForOutput } = require('./wait');
 const { formatList, formatTerminal } = require('./format');
 const { mcpConfig } = require('./mcp-config');
 
-const BOOLEAN_FLAGS = new Set(['focus', 'force', 'json', 'help', 'decisions', 'all', 'global']);
+const BOOLEAN_FLAGS = new Set(['focus', 'force', 'json', 'help', 'decisions', 'all', 'global', 'remove']);
 
 function parseArgs(argv) {
   const pos = [];

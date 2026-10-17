@@ -8,6 +8,7 @@ import { iconButton } from '../components.js';
 import { dropTarget } from '../dnd.js';
 import { taskCard } from './card.js';
 import { newTaskDialog, columnsDialog } from './dialogs.js';
+import { periodButton } from './period-button.js';
 
 function column(project, { column: col, tasks }) {
   return el(
@@ -42,6 +43,7 @@ export function renderBoard() {
       el('h2', { class: 'kb-title', text: project.name }),
       waiting ? el('span', { class: 'kb-waiting', text: `${waiting} em espera` }) : null,
       el('span', { class: 'spacer' }),
+      periodButton(),
       el('button', { class: 'btn primary', onclick: () => newTaskDialog(project), text: 'Nova tarefa' }),
       iconButton('settings', 'Configurar colunas', () => columnsDialog(project)),
       iconButton('collapse', 'Recolher para o painel', () => setTaskView('panel')),

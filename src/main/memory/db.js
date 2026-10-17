@@ -4,7 +4,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { userFile } = require('../files');
 const { migrate } = require('./migrations');
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 5;
 let db = null;
 
 // Colunas de escopo e de sync chegam pelas migrações (migrations.js).
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS memories (
   project_id    TEXT,
   project       TEXT,              -- nome do projeto no momento (para leitura humana)
   repo          TEXT,              -- repositório (projetos multi-repo)
-  kind          TEXT NOT NULL CHECK (kind IN ('note', 'decision', 'progress')),
+  kind          TEXT NOT NULL,     -- note | decision | progress | idea | howto (validado em store.js)
   text          TEXT NOT NULL,
   tags          TEXT NOT NULL DEFAULT '',
   source        TEXT,              -- 'agente' | 'você' | nome do terminal

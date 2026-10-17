@@ -1,4 +1,5 @@
-// Ferramentas MCP da memória do projeto: notas e decisões, com busca.
+// Ferramentas MCP da memória do projeto: notas e decisões, com busca e vínculos.
+const { LINK_TOOLS, linksParam } = require('./tools-memory-links');
 const scope = {
   project: { type: 'string', description: 'Projeto (nome ou id). Padrão: o do seu terminal (ou da pasta atual).' },
   all: { type: 'boolean', description: 'Buscar em todos os projetos.' },
@@ -22,7 +23,8 @@ const MEMORY_TOOLS = [
     name: 'record_decision',
     description:
       'Registra uma DECISÃO do projeto numa única frase que inclui o porquê (ex.: "Usamos Postgres porque o time já domina e ' +
-      'precisamos de transações"). Persiste entre sessões. Se ela substitui uma decisão anterior, informe "supersedes" com o id dela.',
+      'precisamos de transações"). Persiste entre sessões. Se ela substitui uma decisão anterior, informe "supersedes" com o id dela. ' +
+      'Se ela se apoia em outra memória (ou se relaciona/contradiz), informe "links" — busque antes com search_memory.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -30,6 +32,7 @@ const MEMORY_TOOLS = [
         repo: { type: 'string', description: 'Repositório a que se refere (padrão: o do seu terminal).' },
         tags: { type: 'string', description: 'Tags separadas por vírgula (ex.: "banco,infra").' },
         supersedes: { type: 'string', description: 'Id da decisão anterior que esta substitui.' },
+        links: linksParam,
         ...writeScope,
         project: scope.project,
       },
@@ -39,10 +42,12 @@ const MEMORY_TOOLS = [
   },
   {
     name: 'remember_note',
-    description: 'Guarda uma nota na memória do projeto (fato útil, convenção, comando, armadilha encontrada). Persiste entre sessões.',
+    description:
+      'Guarda uma memória do projeto. kind "note" (padrão): fato útil, convenção, armadilha; "idea": ideia que surgiu em paralelo ' +
+      '(fica aberta até virar tarefa); "howto": como fazer — como resolvemos um problema, o procedimento interno, a quem recorrer.',
     inputSchema: {
       type: 'object',
-      properties: { text: { type: 'string' }, repo: { type: 'string' }, tags: { type: 'string' }, ...writeScope, project: scope.project },
+      properties: { text: { type: 'string' }, kind: { type: 'string', enum: ['note', 'idea', 'howto'] }, repo: { type: 'string' }, tags: { type: 'string' }, links: linksParam, ...writeScope, project: scope.project },
       required: ['text'],
     },
     run: (request, args) => request('memory_note', args),
@@ -56,7 +61,8 @@ const MEMORY_TOOLS = [
       type: 'object',
       properties: {
         query: { type: 'string' },
-        kind: { type: 'string', enum: ['note', 'decision', 'progress'] },
+        kind: { type: 'string', enum: ['note', 'decision', 'progress', 'idea', 'howto'] },
+        needsReview: { type: 'boolean', description: 'Só as marcadas "a revisar" (algo de que dependem mudou).' },
         scope: scopeFilter,
         repo: { type: 'string' },
         limit: { type: 'number' },
@@ -96,6 +102,7 @@ const MEMORY_TOOLS = [
     inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
     run: (request, args) => request('memory_forget', args),
   },
+  ...LINK_TOOLS,
 ];
 
 module.exports = { MEMORY_TOOLS };

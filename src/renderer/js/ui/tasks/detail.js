@@ -11,6 +11,7 @@ import { icon } from '../icons.js';
 import { selectedTask, closeTask } from './selection.js';
 import { waitingBox } from './detail-waiting.js';
 import { saveProgressDialog } from '../memory/progress.js';
+import { memoriesBox } from './detail-memories.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -91,6 +92,8 @@ export function renderTaskDetail() {
     meta(task),
     el('label', { class: 'td-label', text: 'Descrição' }),
     editable(task, 'description', { multiline: true, placeholder: 'Contexto, critérios de pronto…' }),
+    el('label', { class: 'td-label', text: 'Memórias' }),
+    memoriesBox(task),
     el('label', { class: 'td-label', text: 'Histórico' }),
     history(task),
   ]);

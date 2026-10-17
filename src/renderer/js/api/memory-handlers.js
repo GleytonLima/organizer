@@ -9,6 +9,8 @@ import { memoryContext } from '../memory/context.js';
 import { callerOf, resolveProject, resolveCwd } from './resolve.js';
 import { invalidateMemory } from '../ui/memory/state.js';
 import { saveProgress } from '../memory/progress.js';
+import { memoryLinkHandlers } from './memory-link-handlers.js';
+import { ideaToTask } from '../actions/idea-task.js';
 
 const iso = (ms) => new Date(ms).toISOString();
 const view = ({ createdAt, updatedAt, ...m }) => ({ ...m, createdAt: iso(createdAt), updatedAt: iso(updatedAt) });
@@ -50,19 +52,31 @@ async function remember(p, kind) {
     source: caller ? `agente (${termLabel(caller.t)})` : 'agente',
     taskKey: task?.key || null,
     supersedes: p.supersedes || null,
+    refs: p.links || [],
   });
   invalidateMemory(); // a aba Memória reflete o que o agente gravou
   return view(item);
 }
 
 export const memoryHandlers = {
-  memory_note: (p) => remember(p, 'note'),
+  ...memoryLinkHandlers,
+  /** Nota, ideia ou "como fazer" (`kind`). */
+  memory_note: (p) => remember(p, ['idea', 'howto'].includes(p.kind) ? p.kind : 'note'),
+
+  /** Ideia vira tarefa (já vinculada à ideia). */
+  async memory_idea_to_task(p) {
+    const { project } = context(p);
+    const [idea] = await api.memory.many([p.id]);
+    if (idea?.kind !== 'idea') throw new Error(`Ideia não encontrada: ${p.id}`);
+    const task = await ideaToTask(project, idea, { by: 'agente', open: false });
+    return { key: task.key, title: task.title };
+  },
   memory_decision: (p) => remember(p, 'decision'),
 
   /** Busca no que vale para o projeto (globais + projeto + pastas); `scope` restringe a um escopo. */
   async memory_search(p) {
     const { read } = context(p);
-    const r = await api.memory.search(p.query || '', { ...read, scope: p.scope, kind: p.kind, repo: p.repo, limit: p.limit });
+    const r = await api.memory.search(p.query || '', { ...read, scope: p.scope, kind: p.kind, repo: p.repo, needsReview: !!p.needsReview, limit: p.limit });
     return { ...r, items: r.items.map(view) };
   },
 

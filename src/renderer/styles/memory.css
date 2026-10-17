@@ -55,6 +55,7 @@
 }
 .mem-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 .mem-filters .chip.on {

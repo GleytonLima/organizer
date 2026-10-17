@@ -4,6 +4,7 @@ const store = require('./store');
 const { search } = require('./search');
 const embeddings = require('./embeddings');
 const { closeDb } = require('./db');
+const links = require('./links');
 
 // Vetoriza em segundo plano depois de gravar; uma falha do provedor não afeta a gravação.
 const embedLater = () => embeddings.embedPending()?.catch((err) => console.warn('Embeddings:', err.message));
@@ -23,6 +24,10 @@ function registerMemoryIpc() {
   ipcMain.handle('memory:get', (_e, id) => store.get(id));
   ipcMain.handle('memory:list', (_e, opts) => store.list(opts));
   ipcMain.handle('memory:search', (_e, query, opts) => search(query, opts));
+  ipcMain.handle('memory:links', (_e, id) => links.links(id));
+  ipcMain.handle('memory:many', (_e, refs) => links.many(refs));
+  ipcMain.handle('memory:markReview', (_e, ids, data) => links.markReview(ids, data));
+  ipcMain.handle('memory:confirmReview', (_e, id) => links.confirmReview(id));
 
   ipcMain.handle('memory:settings', () => embeddings.publicSettings());
   ipcMain.handle('memory:saveSettings', (_e, s) => {

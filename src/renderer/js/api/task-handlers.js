@@ -6,6 +6,7 @@ import { allTasks, projectTasks, taskProject, resolveTaskRef } from '../tasks/qu
 import { createTask, moveTask, reportTask, completeTask } from '../actions/tasks.js';
 import { requestInput, suggestReply } from '../actions/task-waiting.js';
 import { callerOf, resolveProject } from './resolve.js';
+import { linkTaskMemories, unlinkTaskMemory, taskMemories } from '../actions/task-memories.js';
 
 const iso = (ms) => new Date(ms).toISOString();
 
@@ -64,14 +65,28 @@ export const taskHandlers = {
     return tasks.sort((a, b) => b.updatedAt - a.updatedAt).map((t) => taskInfo(t));
   },
 
-  task_get(p) {
-    return taskInfo(context(p, { needTask: true }).task, { history: true });
+  /** Tarefa com histórico e as memórias que ela referencia (contexto para o agente). */
+  async task_get(p) {
+    const { task } = context(p, { needTask: true });
+    const memories = (await taskMemories(task)).map((m) => ({ id: m.id, kind: m.kind, text: m.text, review: m.review?.reason ?? null }));
+    return { ...taskInfo(task, { history: true }), memories };
   },
 
-  task_create(p) {
+  async task_create(p) {
     const { project, terminalId } = context(p);
     const columnId = p.column ? resolveColumn(project, p.column).id : undefined;
-    return taskInfo(createTask(project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente' }));
+    const task = createTask(project, { title: p.title, description: p.description || '', columnId, terminalId, by: 'agente' });
+    if (p.memories?.length) await linkTaskMemories(task, p.memories, { by: 'agente' });
+    return taskInfo(task);
+  },
+
+  /** Vincula (ou, com `remove`, desvincula) memórias à tarefa. */
+  async task_link_memory(p) {
+    const { task } = context(p, { needTask: true });
+    const refs = Array.isArray(p.memory) ? p.memory : [p.memory];
+    if (p.remove) for (const r of refs) await unlinkTaskMemory(task, r);
+    else await linkTaskMemories(task, refs, { by: 'agente' });
+    return { ...taskInfo(task), memories: task.memoryRefs?.length || 0 };
   },
 
   task_move(p) {

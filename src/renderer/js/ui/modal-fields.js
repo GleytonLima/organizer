@@ -15,6 +15,8 @@ export const field = {
   /** opts.options: [{ value, label }] */
   select: make('select'),
   color: (key, label, value, opts = {}) => ({ type: 'color', key, label, value: value || DOT_COLORS[0], ...opts }),
+  /** Controle próprio: opts.render(values, f) devolve o nó e grava em values[key]. */
+  custom: (key, label, value, opts = {}) => ({ type: 'custom', key, label, value, ...opts }),
 };
 
 const bind = (f, values) => (e) => (values[f.key] = e.target.value);
@@ -32,6 +34,7 @@ function textInput(f, values) {
 
 const CONTROLS = {
   text: textInput,
+  custom: (f, values) => f.render(values, f),
   folders: folderListControl,
   textarea(f, values) {
     const node = el('textarea', { class: 'input textarea', rows: f.rows || 4, placeholder: f.placeholder || '', oninput: bind(f, values) });

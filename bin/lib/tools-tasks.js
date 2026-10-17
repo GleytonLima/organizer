@@ -23,6 +23,7 @@ const TASK_TOOLS = [
         title: { type: 'string', description: 'Título curto e objetivo.' },
         description: { type: 'string', description: 'Detalhes, critérios de pronto, contexto.' },
         column: { type: 'string', description: 'Nome ou id da coluna inicial (opcional).' },
+        memories: { type: 'array', items: { type: 'string' }, description: 'Ids de memórias que dão contexto à tarefa (decisões, como fazer, a ideia de origem…).' },
         project: projectRef,
       },
       required: ['title'],
@@ -87,9 +88,19 @@ const TASK_TOOLS = [
   },
   {
     name: 'get_task',
-    description: 'Detalhes de uma tarefa, incluindo o histórico completo.',
+    description: 'Detalhes de uma tarefa, incluindo o histórico completo e as MEMÓRIAS vinculadas (decisões, como fazer, ideias): leia-as antes de começar.',
     inputSchema: { type: 'object', properties: { task: taskRef } },
     run: (request, args) => request('task_get', args),
+  },
+  {
+    name: 'link_task_memory',
+    description: 'Vincula memórias à tarefa (ou desvincula, com remove) — ex.: a decisão ou o "como fazer" que quem pegar a tarefa precisa saber.',
+    inputSchema: {
+      type: 'object',
+      properties: { task: taskRef, memory: { type: 'array', items: { type: 'string' }, description: 'Ids de memória.' }, remove: { type: 'boolean' } },
+      required: ['memory'],
+    },
+    run: (request, args) => request('task_link_memory', args),
   },
 ];
 

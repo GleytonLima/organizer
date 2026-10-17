@@ -77,6 +77,7 @@ export function migrate(saved, home) {
     commands: s.commands || DEFAULT_COMMANDS(),
     tasks: s.tasks || [],
     taskView: s.taskView || 'off', // 'off' | 'panel' | 'board'
+    taskPeriod: s.taskPeriod || '7d', // período da lista de tarefas (tasks/period.js)
     sideTab: s.sideTab || 'tasks', // aba do painel lateral: 'tasks' | 'memory'
   };
 }

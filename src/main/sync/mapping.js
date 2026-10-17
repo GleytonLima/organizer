@@ -42,6 +42,9 @@ function toServer(item, world, gidOf) {
     taskKey: item.taskKey || null,
     supersededBy: item.supersededBy ? gidOf(item.supersededBy) || null : null,
     progress: item.progress || null,
+    refs: item.refs || [],
+    review: item.review || null,
+    status: item.status || null,
   };
   if (item.scope === 'project') {
     m.workspace = world.keyOf.get(item.projectId) || null;
@@ -69,6 +72,9 @@ function fromServer(s, world, local, idOf) {
     superseded_by: s.supersededBy ? idOf(s.supersededBy) || null : null,
     progress: s.progress ? JSON.stringify(s.progress) : null,
     author: s.author ? JSON.stringify(s.author) : null,
+    refs: JSON.stringify(s.refs || []),
+    review: s.review ? JSON.stringify(s.review) : null,
+    status: s.status || null,
     source: s.author?.name || local?.source || null,
     project_id: null,
     project: null,
@@ -90,7 +96,7 @@ function fromServer(s, world, local, idOf) {
   return row;
 }
 
-const CONTENT = ['kind', 'scope', 'workspace', 'folder', 'text', 'taskKey', 'supersededBy'];
+const CONTENT = ['kind', 'scope', 'workspace', 'folder', 'text', 'taskKey', 'supersededBy', 'status'];
 
 // JSON com chaves ordenadas: o jsonb do PostgreSQL devolve as chaves em outra ordem.
 const canonical = (v) =>
@@ -103,7 +109,7 @@ function sameContent(mine, server) {
   if (!mine) return false;
   if (CONTENT.some((k) => (mine[k] ?? null) !== (server[k] ?? null))) return false;
   if ((mine.tags || []).join(',') !== (server.tags || []).join(',')) return false;
-  return canonical(mine.progress) === canonical(server.progress);
+  return ['progress', 'refs', 'review'].every((k) => canonical(k === 'refs' ? mine[k] || [] : mine[k]) === canonical(k === 'refs' ? server[k] || [] : server[k]));
 }
 
 module.exports = { buildWorld, toServer, fromServer, sameContent, canonical };

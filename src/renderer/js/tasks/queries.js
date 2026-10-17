@@ -1,6 +1,7 @@
 // Consultas sobre tarefas.
 import { store, projectById, currentProject } from '../core/store.js';
 import { columnsOf, isDoneColumn } from './columns.js';
+import { inPeriod } from './period.js';
 
 export const allTasks = () => store.state.tasks;
 export const taskById = (id) => allTasks().find((t) => t.id === id) || null;
@@ -10,11 +11,11 @@ export const taskProject = (task) => projectById(task.projectId);
 /** Projeto exibido no quadro/painel: o do terminal ativo. */
 export const boardProject = () => currentProject();
 
-/** [{ column, tasks }] na ordem das colunas; tarefas mais recentes primeiro. */
+/** [{ column, tasks }] na ordem das colunas; mais recentes primeiro; só as do período (tasks/period.js). */
 export function tasksByColumn(project) {
   const cols = columnsOf(project);
   const buckets = new Map(cols.map((c) => [c.id, []]));
-  for (const t of projectTasks(project)) (buckets.get(t.columnId) || buckets.get(cols[0].id)).push(t);
+  for (const t of projectTasks(project)) if (inPeriod(project, t)) (buckets.get(t.columnId) || buckets.get(cols[0].id)).push(t);
   return cols.map((column) => ({ column, tasks: buckets.get(column.id).sort((a, b) => b.updatedAt - a.updatedAt) }));
 }
 

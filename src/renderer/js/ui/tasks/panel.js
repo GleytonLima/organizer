@@ -8,6 +8,7 @@ import { icon } from '../icons.js';
 import { dropTarget } from '../dnd.js';
 import { taskCard } from './card.js';
 import { newTaskDialog, columnsDialog } from './dialogs.js';
+import { periodButton } from './period-button.js';
 
 const collapsed = new Set(); // seções recolhidas (estado só da interface)
 
@@ -41,6 +42,7 @@ export function taskTab(project) {
   const waiting = waitingTasks(project);
   return {
     actions: [
+      periodButton(),
       iconButton('plus', 'Nova tarefa', () => newTaskDialog(project)),
       iconButton('settings', 'Configurar colunas', () => columnsDialog(project)),
       iconButton('maximize', 'Abrir quadro', () => setTaskView('board')),

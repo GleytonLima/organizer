@@ -11,8 +11,21 @@ const ACTIONS = {
     run: async () => (await request('task_columns')).columns.map((c) => `${c.name} — ${c.description || ''}`).join('\n'),
   },
   add: {
-    usage: 'add <título...> [--desc D] [--column C]',
-    run: async (pos, o) => line(await request('task_create', { title: pos.join(' '), description: o.desc, column: o.column })),
+    usage: 'add <título...> [--desc D] [--column C] [--memories ID,ID]',
+    run: async (pos, o) =>
+      line(await request('task_create', { title: pos.join(' '), description: o.desc, column: o.column, memories: o.memories ? String(o.memories).split(',') : [] })),
+  },
+  show: {
+    usage: 'show <tarefa>   (detalhes e memórias vinculadas)',
+    run: async ([task]) => {
+      const t = await request('task_get', { task });
+      const mems = t.memories.map((m) => `  [${m.id}] (${m.kind}) ${m.text}${m.review ? '  [a revisar]' : ''}`).join('\n') || '  (nenhuma)';
+      return [line(t), t.description, 'Memórias:', mems].filter(Boolean).join('\n');
+    },
+  },
+  link: {
+    usage: 'link <tarefa> <memória,…> [--remove]',
+    run: async ([task, ids], o) => line(await request('task_link_memory', { task, memory: String(ids || '').split(','), remove: !!o.remove })),
   },
   move: { usage: 'move <tarefa> <coluna...>', run: async ([task, ...col]) => line(await request('task_move', { task, column: col.join(' ') })) },
   report: {

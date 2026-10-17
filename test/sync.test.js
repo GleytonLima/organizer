@@ -109,6 +109,23 @@ suite('memória: sync com o servidor', {
     );
     t.equal([adopted.key, adopted.title, adopted.owner], [task.key, 'Login com refresh token', 'Ana'], 'Retomar faz o claim e recria a tarefa local');
     t.includes(adopted.last, 'Implementar refresh', 'a tarefa retomada traz os próximos passos no histórico');
+
+    // Vínculos, "a revisar" e ideias sincronizam nos dois sentidos.
+    const base = (await a.tool('record_decision', { text: 'Respostas em até 2 s porque o app é interativo.' })).data;
+    const dep = (await a.tool('remember_note', { text: 'Cache de 60 s nas listagens.', links: [{ id: base.id, type: 'depends' }] })).data;
+    const idea = (await a.tool('remember_note', { kind: 'idea', text: 'Painel de latência por rota.' })).data;
+    await sync();
+    const onSrv = (await serverList('workspace=app&kind=note')).find((m) => m.id === dep.gid);
+    t.equal(onSrv?.refs, [{ id: base.gid, type: 'depends' }], 'vínculo sobe para o servidor pelo gid');
+    const links = (await bruno('GET', `/v1/memories/${base.gid}/links`)).data;
+    t.equal(links?.impact?.map((l) => l.id), [dep.gid], 'servidor calcula a cadeia de impacto do que o app enviou');
+    t.equal((await serverList('workspace=app&kind=idea')).find((m) => m.id === idea.gid)?.status, 'open', 'ideia sobe aberta');
+    await bruno('POST', '/v1/memories/review', { ids: [dep.gid], reason: 'Mudou: respostas em até 1 s', source: base.gid });
+    await sync();
+    t.includes((await local(dep.id))?.review?.reason, 'até 1 s', 'marca "a revisar" feita pela web chega ao app');
+    await a.tool('mark_reviewed', { id: dep.id });
+    await sync();
+    t.equal((await serverList('workspace=app&kind=note')).find((m) => m.id === dep.gid)?.review ?? null, null, 'revisar no app tira a marca no servidor');
   } finally {
     srv.stop();
   }
