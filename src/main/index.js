@@ -6,6 +6,7 @@ const { registerGitIpc } = require('./git');
 const { registerSystemIpc } = require('./system');
 const { registerBridgeIpc } = require('./api/bridge');
 const { startApiServer, stopApiServer } = require('./api/server');
+const { registerNotificationIpc } = require('./notifications');
 
 // Uma única instância: duas janelas gravando o mesmo state.json se sobrescreveriam.
 if (!app.requestSingleInstanceLock()) {
@@ -17,6 +18,7 @@ if (!app.requestSingleInstanceLock()) {
   registerGitIpc();
   registerSystemIpc();
   registerBridgeIpc();
+  registerNotificationIpc();
 
   app.whenReady().then(async () => {
     writeRcFile();

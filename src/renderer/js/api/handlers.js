@@ -5,6 +5,7 @@ import { getSession, processStatus, runningCommand, writeWhenReady } from '../te
 import { readLines } from '../terminals/buffer.js';
 import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
 import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd } from './resolve.js';
+import { pushNotification } from '../notify/center.js';
 
 function terminalInfo({ project, group, t }) {
   return {
@@ -71,6 +72,12 @@ export const handlers = {
     const entry = resolveTerminal(p.terminal, callerOf(p));
     activate(entry.t.id);
     return terminalInfo(entry);
+  },
+
+  /** Avisa o usuário (toast + marcação no terminal de origem ou em `terminal`). */
+  notify(p) {
+    const entry = p.terminal ? resolveTerminal(p.terminal, callerOf(p)) : callerOf(p);
+    return pushNotification({ terminalId: entry?.t.id ?? null, label: p.title, body: p.message || 'Terminei' });
   },
 
   /** Fecha o terminal; se houver processo rodando, exige `force: true`. */

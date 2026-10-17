@@ -96,6 +96,14 @@ const COMMANDS = {
       await request('close', { terminal: pos[0], force: !!opts.force });
     },
   },
+  notify: {
+    usage: 'notify [mensagem...] [--title T] [--terminal X]',
+    help: 'Avisa você (toast do Windows + marca no terminal). Ideal para hooks de agentes.',
+    async run({ pos, opts }) {
+      const r = await request('notify', { message: pos.join(' ') || undefined, title: opts.title, terminal: opts.terminal });
+      if (opts.json) console.log(JSON.stringify(r, null, 2));
+    },
+  },
   mcp: {
     usage: 'mcp',
     help: 'Inicia o servidor MCP (stdio) para agentes (Claude Code, Devin…).',

@@ -18,6 +18,7 @@ Projeto (pasta raiz) → Grupos → Terminais. Mudou o formato salvo? Suba `vers
 ```
 src/main/        processo principal (index, window, pty, git, bash, system, files)
 src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
+src/main/notifications.js  toast do Windows + piscar na barra de tarefas
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
 src/renderer/
@@ -27,7 +28,8 @@ src/renderer/
   js/actions/    terminais, grupos, projetos, split (lado a lado), comandos salvos
   js/git/        polling de status
   js/api/        handlers da API local (resolve nomes/ids/caminhos)
-  js/ui/         sidebar(+groups), topbar, split, cmdbar, statusbar, menu, modal, confirm, dnd, componentes
+  js/notify/     central de avisos (center) e fontes: bell, OSC 9/777, comando longo (sources)
+  js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes
   styles/        base, layout, sidebar, topbar, overlays, status
 bin/             CLI `bo` (bo.js + lib/: client, commands, mcp, tools, wait) e wrappers bash/cmd
 ```

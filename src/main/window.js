@@ -48,7 +48,9 @@ function sendToWindow(channel, ...args) {
 function focusWindow() {
   if (!win) return;
   if (win.isMinimized()) win.restore();
+  win.show();
   win.focus();
+  win.flashFrame(false);
 }
 
 module.exports = { createWindow, getWindow, sendToWindow, focusWindow };

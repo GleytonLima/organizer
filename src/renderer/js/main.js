@@ -11,6 +11,7 @@ import { initMenu } from './ui/menu.js';
 import { openModal } from './ui/modal.js';
 import { initRender, renderAll } from './ui/render.js';
 import { initApi } from './api/index.js';
+import { initNotifyCenter } from './notify/center.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -29,6 +30,7 @@ async function init() {
   initLayout($('#terminals'));
   initKeys();
   initMenu();
+  initNotifyCenter({ onOpen: activate });
   initRender();
   $('#btn-empty-new').addEventListener('click', () => newTerminal());
   window.addEventListener('beforeunload', persistNow);

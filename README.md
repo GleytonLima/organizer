@@ -36,12 +36,12 @@ bo read backend --lines 30
 bo close backend --force
 ```
 
-`bo help` lista todos os comandos (`open`, `list`, `send`, `read`, `wait`, `status`, `focus`, `close`).
+`bo help` lista todos os comandos (`open`, `list`, `send`, `read`, `wait`, `status`, `focus`, `close`, `notify`).
 
 ### Servidor MCP
 
 O mesmo script oferece um servidor MCP (`bo mcp`) com as ferramentas `open_terminal`, `list_terminals`,
-`send_input`, `read_output`, `wait_for_output`, `terminal_status`, `focus_terminal` e `close_terminal`.
+`send_input`, `read_output`, `wait_for_output`, `terminal_status`, `focus_terminal`, `close_terminal` e `notify_user`.
 Para registrar no Claude Code, Devin etc., rode num terminal do app:
 
 ```bash
@@ -52,6 +52,18 @@ Rode o agente **dentro de um terminal do Bash Organizer** (ex.: o da pasta `devt
 que ele abrir ficam associados ao grupo dele. `close_terminal` recusa fechar processo em execução sem `force`.
 
 A API escuta só em `127.0.0.1`, com token aleatório a cada início (em `%APPDATA%/Bash Organizer/api.json`).
+
+## Avisos (notificações)
+
+Quando um terminal que você **não está vendo** pede atenção, ele ganha uma bolinha na sidebar (e no grupo/projeto),
+o sino no topo acumula o aviso e, com o app fora de foco, aparece o **toast do Windows** — clicar leva ao terminal.
+
+O que gera aviso:
+- **bell** (``) e as sequências **OSC 9** / **OSC 777;notify** — qualquer CLI que já avise o terminal;
+- **comandos longos** (≥ 15 s) que terminam;
+- **`bo notify "mensagem" [--title T]`** e a ferramenta MCP **`notify_user`**.
+
+Para o Claude Code avisar sempre que termina uma resposta ou precisa de você, use os hooks mostrados por `bo mcp-config`.
 
 ## Atalhos
 

@@ -16,9 +16,19 @@ function mcpConfig() {
     'Outros agentes (Devin, Cursor…), no arquivo de configuração MCP:',
     JSON.stringify(json, null, 2),
     '',
+    'Avisos automáticos do Claude Code (em ~/.claude/settings.json):',
+    JSON.stringify({ hooks: hooksConfig() }, null, 2),
+    '',
     'Dica: rode o agente dentro de um terminal do Bash Organizer para que os terminais',
-    'que ele abrir entrem automaticamente no mesmo grupo.',
+    'que ele abrir entrem automaticamente no mesmo grupo e os avisos apontem para ele.',
   ].join('\n');
+}
+
+/** Hooks: "Stop" = terminou a resposta; "Notification" = precisa de você (permissão, ociosidade). */
+function hooksConfig() {
+  const bo = path.resolve(__dirname, '..', 'bo.cmd').replace(/\\/g, '/');
+  const hook = (message) => [{ hooks: [{ type: 'command', command: `"${bo}" notify --title Claude "${message}"` }] }];
+  return { Stop: hook('Terminei'), Notification: hook('Precisa de você') };
 }
 
 module.exports = { mcpConfig };

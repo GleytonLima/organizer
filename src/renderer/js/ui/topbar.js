@@ -6,9 +6,10 @@ import { fitVisible, processStatus } from '../terminals/sessions.js';
 import { activate, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
 import { createProject, openProject } from '../actions/projects.js';
 import { gitFor, dirtyCount } from '../git/git.js';
-import { iconButton, dot, gitSummary, processBadge } from './components.js';
+import { iconButton, dot, gitSummary, processBadge, unreadDot } from './components.js';
 import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus.js';
 import { splitIndicator } from './split.js';
+import { notificationsButton } from './notifications.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -68,6 +69,7 @@ function tab(project, t) {
     el('span', { class: 'tab-name', text: termLabel(t) }),
     status !== 'idle' ? el('span', { class: `tab-status proc-${status}`, title: status }) : null,
     dirtyCount(g) ? el('span', { class: 'tab-dirty', title: 'alterações pendentes' }) : null,
+    unreadDot([t.id]),
     iconButton('close', 'Fechar', () => closeTerminal(t.id), 'reveal'),
   );
 }
@@ -106,6 +108,7 @@ export function renderTopbar() {
   mount(
     $('#topbar'),
     tabs ? [tabsArea(), split] : [split || activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
+    notificationsButton(),
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),
   );

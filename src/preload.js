@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('api', {
 
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
 
+  showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
+  onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, terminalId) => cb(terminalId)),
+
   // API local: pedidos chegam do main; a resposta volta com o mesmo id.
   onApiRequest: (cb) => ipcRenderer.on('api:request', (_e, id, method, params) => cb(id, method, params)),
   apiRespond: (id, error, result) => ipcRenderer.send('api:response', id, error, result),

@@ -3,6 +3,7 @@ import { el, stop } from '../core/dom.js';
 import { shortPath } from '../core/format.js';
 import { gitFor, dirtyCount } from '../git/git.js';
 import { getSession, processStatus } from '../terminals/sessions.js';
+import { hasUnread } from '../notify/center.js';
 import { icon } from './icons.js';
 
 export function iconButton(name, title, onClick, cls = '') {
@@ -10,6 +11,10 @@ export function iconButton(name, title, onClick, cls = '') {
 }
 
 export const dot = (color, cls = '') => el('span', { class: `dot ${cls}`.trim(), style: { background: color } });
+
+/** Bolinha de aviso não lido para um conjunto de terminais (ou null). */
+export const unreadDot = (terminalIds) =>
+  hasUnread(terminalIds) ? el('span', { class: 'unread-dot', title: 'Aviso não lido' }) : null;
 
 /** Ícone colorido (pasta do projeto, terminal). */
 export function tintedIcon(name, color, cls = '') {

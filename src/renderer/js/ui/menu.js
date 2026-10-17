@@ -1,5 +1,5 @@
 // Menu flutuante (contexto ou dropdown de botão).
-// Item: { label, action, danger?, checked?, swatch? } ou { sep: true }.
+// Item: { label, action, danger?, muted?, checked?, swatch?, hint? } ou { sep: true }.
 import { $, el, mount } from '../core/dom.js';
 import { icon } from './icons.js';
 
@@ -10,7 +10,8 @@ function itemNode(it) {
   return el(
     'div',
     {
-      class: `menu-item${it.danger ? ' danger' : ''}`,
+      class: `menu-item${it.danger ? ' danger' : ''}${it.muted ? ' muted' : ''}`,
+      title: it.label,
       onclick: () => {
         hideMenu();
         it.action();
@@ -18,6 +19,7 @@ function itemNode(it) {
     },
     it.swatch ? el('span', { class: 'menu-swatch', style: { background: it.swatch } }) : null,
     el('span', { class: 'menu-label', text: it.label }),
+    it.hint ? el('span', { class: 'menu-hint', text: it.hint }) : null,
     it.checked ? icon('check', 'menu-check') : null,
   );
 }

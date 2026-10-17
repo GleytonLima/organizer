@@ -78,6 +78,21 @@ const TOOLS = [
     run: (request, args) => request('focus', args),
   },
   {
+    name: 'notify_user',
+    description:
+      'Avisa o usuário com uma notificação do Windows e uma marca no seu terminal. Use ao terminar uma tarefa longa ' +
+      '(ex.: "backend e frontend no ar") ou quando precisar de uma decisão dele.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'Texto curto do aviso.' },
+        title: { type: 'string', description: 'Prefixo opcional (ex.: "Claude").' },
+      },
+      required: ['message'],
+    },
+    run: (request, args) => request('notify', args),
+  },
+  {
     name: 'close_terminal',
     description: 'Fecha um terminal. Se houver processo em execução, falha a menos que force=true.',
     inputSchema: {

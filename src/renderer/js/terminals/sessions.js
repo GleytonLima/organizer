@@ -6,6 +6,7 @@ import { currentTheme } from '../themes/apply.js';
 import { refreshGit } from '../git/git.js';
 import { terminalKeyHandler } from './keys.js';
 import { copyOrPaste } from './clipboard.js';
+import { attachNotifySources, commandFinished } from '../notify/sources.js';
 
 // id -> { term, fit, host, head, exited, running: { cmd, since } | null, lastExit: number | null }
 const sessions = new Map();
@@ -69,6 +70,7 @@ export function createSession(t) {
   const s = { term, fit, host, head, exited: false, running: null, lastExit: null };
   sessions.set(t.id, s);
   registerShellIntegration(t.id, s);
+  attachNotifySources(t.id, term);
   term.onData((data) => {
     if (!s.exited) api.ptyWrite(t.id, data);
     else if (data === '\r') restartSession(t.id);
@@ -119,7 +121,11 @@ function registerShellIntegration(id, s) {
     const [kind, ...rest] = data.split(';');
     const arg = rest.join(';');
     if (kind === 'start') s.running = { cmd: arg, since: Date.now() };
-    else if (kind === 'end') [s.running, s.lastExit] = [null, Number(arg) || 0];
+    else if (kind === 'end') {
+      const finished = s.running;
+      [s.running, s.lastExit] = [null, Number(arg) || 0];
+      commandFinished(id, finished, s.lastExit);
+    }
     notify();
     return true;
   });
