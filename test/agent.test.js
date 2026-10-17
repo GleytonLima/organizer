@@ -130,6 +130,18 @@ suite('agente via ACP', {
   t.check(await t.waitFor(async () => (await view()).includes('Comando /resumir executado (modelo forte, esforço max)')), 'o comando vai ao agente com o modelo e o esforço escolhidos');
   await t.waitFor(async () => (await state()) === 'pronto');
 
+  // "/model" sem argumento abre o seletor de modelos (como no CLI); com argumento vai ao agente
+  await typeIn('/model');
+  await t.js(`SE.getSession(${sid}).view.sendBtn.click()`);
+  t.equal(await t.waitFor(popupRows), ['Rápido Respostas curtas', 'Forte Para tarefas difíceis'], '/model sozinho abre a lista de modelos');
+  t.equal(await t.js(`return SE.getSession(${sid}).view.textarea.value`), '', 'a caixa fica limpa');
+  await key('Escape');
+  t.check(!(await view()).includes('Comando /model'), '/model sozinho não vai ao agente');
+  await typeIn('/model rapido');
+  await t.js(`SE.getSession(${sid}).view.sendBtn.click()`);
+  t.check(await t.waitFor(async () => (await view()).includes('Comando /model executado')), '/model com argumento segue para o agente');
+  await t.waitFor(async () => (await state()) === 'pronto');
+
   // modo: em "Aceitar edições" o agente não pede permissão
   await openPicker('mode');
   await t.waitFor(popupRows);

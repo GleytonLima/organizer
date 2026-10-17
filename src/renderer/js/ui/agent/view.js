@@ -4,7 +4,7 @@
 import { el, mount } from '../../core/dom.js';
 import { icon } from '../icons.js';
 import { resumeDialog } from './resume-dialog.js';
-import { configPickers } from './config-pickers.js';
+import { configPickers, pickerForCommand } from './config-pickers.js';
 import { attachSlash } from './slash.js';
 
 const TOOL_ICON = { read: 'search', search: 'search', edit: 'note', delete: 'trash', move: 'folder', execute: 'terminal', fetch: 'cloud', think: 'memory' };
@@ -55,6 +55,7 @@ function build(s) {
   const sendBtn = el('button', { class: 'btn primary', onclick: () => submit() }, icon('send'), 'Enviar');
   const stopBtn = el('button', { class: 'btn', onclick: () => s.cancel(), text: 'Interromper' });
   function submit() {
+    if (pickerForCommand(s, textarea.value, textarea)) return void (textarea.value = '');
     try {
       s.send(textarea.value);
       textarea.value = '';
