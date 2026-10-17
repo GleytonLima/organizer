@@ -8,6 +8,7 @@ const { registerBridgeIpc } = require('./api/bridge');
 const { startApiServer, stopApiServer } = require('./api/server');
 const { registerNotificationIpc } = require('./notifications');
 const { registerMemoryIpc, closeMemory } = require('./memory');
+const { registerSyncIpc, stopSync } = require('./sync');
 
 // Pasta de dados alternativa (testes, ou um segundo perfil isolado): BO_USER_DATA=<pasta>.
 if (process.env.BO_USER_DATA) app.setPath('userData', process.env.BO_USER_DATA);
@@ -24,6 +25,7 @@ if (!app.requestSingleInstanceLock()) {
   registerBridgeIpc();
   registerNotificationIpc();
   registerMemoryIpc();
+  registerSyncIpc();
 
   app.whenReady().then(async () => {
     writeRcFile();
@@ -35,6 +37,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on('will-quit', () => {
     killAll();
     stopApiServer();
+    stopSync();
     closeMemory();
   });
 }

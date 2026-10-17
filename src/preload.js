@@ -33,6 +33,20 @@ contextBridge.exposeInMainWorld('api', {
     saveSettings: (s) => ipcRenderer.invoke('memory:saveSettings', s),
     testEmbeddings: () => ipcRenderer.invoke('memory:testEmbeddings'),
     reindex: () => ipcRenderer.invoke('memory:reindex'),
+    onChanged: (cb) => ipcRenderer.on('memory:changed', () => cb()),
+  },
+
+  // Sync da memória com o bo-memory-server.
+  sync: {
+    settings: () => ipcRenderer.invoke('sync:settings'),
+    saveSettings: (s) => ipcRenderer.invoke('sync:saveSettings', s),
+    test: () => ipcRenderer.invoke('sync:test'),
+    status: () => ipcRenderer.invoke('sync:status'),
+    now: () => ipcRenderer.invoke('sync:now'),
+    setContext: (ctx) => ipcRenderer.send('sync:context', ctx),
+    resolve: (id, choice, text) => ipcRenderer.invoke('sync:resolve', id, choice, text),
+    claim: (id) => ipcRenderer.invoke('sync:claim', id),
+    onStatus: (cb) => ipcRenderer.on('sync:status', (_e, s) => cb(s)),
   },
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),

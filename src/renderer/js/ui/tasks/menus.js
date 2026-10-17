@@ -4,6 +4,7 @@ import { taskProject } from '../../tasks/queries.js';
 import { moveTask, deleteTask } from '../../actions/tasks.js';
 import { showMenu } from '../menu.js';
 import { openTask } from './selection.js';
+import { saveProgressDialog } from '../memory/progress.js';
 
 export function taskMenu(e, task) {
   const moves = columnsOf(taskProject(task))
@@ -11,6 +12,7 @@ export function taskMenu(e, task) {
     .map((c) => ({ label: `Mover para “${c.name}”`, action: () => moveTask(task, c.id) }));
   showMenu(e, [
     { label: 'Abrir', action: () => openTask(task.id) },
+    { label: 'Salvar progresso…', action: () => saveProgressDialog(taskProject(task), task) },
     ...(moves.length ? [{ sep: true }, ...moves] : []),
     { sep: true },
     { label: 'Excluir', danger: true, action: () => deleteTask(task) },

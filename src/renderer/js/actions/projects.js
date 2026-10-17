@@ -15,6 +15,11 @@ const projectFields = (p) => [
     hint: 'Os repositórios (e outras pastas, como devtools) deste projeto, onde quer que estejam clonados. A primeira é a pasta padrão dos novos terminais.',
   }),
   field.color('color', 'Cor', p.color),
+  field.text('syncKey', 'Chave de sincronização', p.syncKey || '', {
+    placeholder: 'ex.: bash-organizer (vazio = memória só nesta máquina)',
+    hint: 'Projetos com a mesma chave compartilham memórias pelo servidor de memória, entre máquinas e devs.',
+    mono: true,
+  }),
 ];
 
 /** Aplica nome, cor e pastas; a primeira pasta vira a pasta padrão (cwd). */
@@ -23,6 +28,7 @@ function applyFields(project, v) {
   Object.assign(project, {
     name: v.name.trim() || project.name || basename(repos[0]?.path) || 'Projeto',
     color: v.color,
+    syncKey: String(v.syncKey || '').trim().toLowerCase(),
     repos,
     cwd: repos[0]?.path || project.cwd || store.info.home,
   });
@@ -87,6 +93,12 @@ export async function editProject(project) {
   applyFields(project, v);
   commit();
   refreshAllGit();
+}
+
+/** Chave de sincronização da memória (projetos com a mesma chave compartilham memórias pelo servidor). */
+export function setSyncKey(project, key) {
+  project.syncKey = String(key || '').trim().toLowerCase();
+  commit();
 }
 
 /** Acrescenta pastas ao projeto, ignorando as que ele já tem. `folders`: [{ name?, path }]. */

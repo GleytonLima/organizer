@@ -25,6 +25,7 @@ const TOOLS = [
       properties: {
         name: { type: 'string' },
         repos: { type: 'array', items: { type: 'string' }, description: 'Caminhos das pastas (absolutos, ~/... ou /c/...).' },
+        syncKey: { type: 'string', description: 'Chave de sincronização da memória com o servidor do time (ex.: "bash-organizer"); "" desliga.' },
       },
       required: ['name'],
     },

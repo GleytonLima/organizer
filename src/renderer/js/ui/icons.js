@@ -1,5 +1,7 @@
 // Ícones de traço fino (16×16) usados na interface.
 const PATHS = {
+  cloud: '<path d="M4.75 12.25a2.75 2.75 0 0 1-.4-5.47 3.75 3.75 0 0 1 7.3-.6 2.9 2.9 0 0 1 .1 5.8z"/>',
+  progress: '<circle cx="8" cy="8" r="5.25"/><path d="M7 5.9v4.2L10.2 8z"/>',
   plus: '<path d="M8 3.5v9M3.5 8h9"/>',
   more: '<circle cx="3.5" cy="8" r=".6"/><circle cx="8" cy="8" r=".6"/><circle cx="12.5" cy="8" r=".6"/>',
   close: '<path d="M4.75 4.75l6.5 6.5M11.25 4.75l-6.5 6.5"/>',

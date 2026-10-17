@@ -2,17 +2,19 @@
 // Arquivo: <userData>/memory.db — separado do state.json e persistente entre sessões.
 const { DatabaseSync } = require('node:sqlite');
 const { userFile } = require('../files');
+const { migrate } = require('./migrations');
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 let db = null;
 
-const SCHEMA = `
+// Colunas de escopo e de sync chegam pelas migrações (migrations.js).
+const TABLE = `
 CREATE TABLE IF NOT EXISTS memories (
   id            TEXT PRIMARY KEY,
   project_id    TEXT,
   project       TEXT,              -- nome do projeto no momento (para leitura humana)
   repo          TEXT,              -- repositório (projetos multi-repo)
-  kind          TEXT NOT NULL CHECK (kind IN ('note', 'decision')),
+  kind          TEXT NOT NULL CHECK (kind IN ('note', 'decision', 'progress')),
   text          TEXT NOT NULL,
   tags          TEXT NOT NULL DEFAULT '',
   source        TEXT,              -- 'agente' | 'você' | nome do terminal
@@ -22,7 +24,9 @@ CREATE TABLE IF NOT EXISTS memories (
   updated_at    INTEGER NOT NULL,
   embedding     BLOB,              -- Float32Array (opcional)
   embedding_model TEXT
-);
+);`;
+
+const SCHEMA = `
 CREATE INDEX IF NOT EXISTS memories_project ON memories(project_id, kind, updated_at);
 
 CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
@@ -46,19 +50,12 @@ function openDb() {
   if (db) return db;
   db = new DatabaseSync(userFile('memory.db'));
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+  db.exec(TABLE);
   db.exec(SCHEMA);
-  migrate(db);
+  migrate(db, () => db.exec(TABLE));
+  db.exec(SCHEMA); // gatilhos/índices que uma migração tenha recriado a tabela sem
   db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   return db;
-}
-
-/** v2: escopos (global | project | folder). Memórias antigas continuam como "project". */
-function migrate(db) {
-  const cols = new Set(db.prepare('PRAGMA table_info(memories)').all().map((c) => c.name));
-  if (!cols.has('scope')) db.exec("ALTER TABLE memories ADD COLUMN scope TEXT NOT NULL DEFAULT 'project'");
-  if (!cols.has('folder')) db.exec('ALTER TABLE memories ADD COLUMN folder TEXT');
-  if (!cols.has('folder_key')) db.exec('ALTER TABLE memories ADD COLUMN folder_key TEXT');
-  db.exec('CREATE INDEX IF NOT EXISTS memories_scope ON memories(scope, folder_key)');
 }
 
 function closeDb() {

@@ -13,6 +13,7 @@ import { initRender, renderAll } from './ui/render.js';
 import { initApi } from './api/index.js';
 import { initNotifyCenter } from './notify/center.js';
 import { initTasksUi } from './ui/tasks/index.js';
+import { initMemorySync } from './memory/sync.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -41,6 +42,7 @@ async function init() {
   renderAll();
   initApi(); // depois de restaurar: pedidos já encontram os terminais
   startGitPolling();
+  initMemorySync();
 
   if (!store.info.bash) {
     openModal({

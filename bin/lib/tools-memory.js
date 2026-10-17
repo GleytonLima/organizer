@@ -56,7 +56,7 @@ const MEMORY_TOOLS = [
       type: 'object',
       properties: {
         query: { type: 'string' },
-        kind: { type: 'string', enum: ['note', 'decision'] },
+        kind: { type: 'string', enum: ['note', 'decision', 'progress'] },
         scope: scopeFilter,
         repo: { type: 'string' },
         limit: { type: 'number' },
@@ -71,6 +71,24 @@ const MEMORY_TOOLS = [
     description: 'Lista as decisões vigentes do projeto (as substituídas ficam de fora). Bom para se contextualizar no início de uma sessão.',
     inputSchema: { type: 'object', properties: { repo: { type: 'string' }, scope: scopeFilter, ...scope } },
     run: (request, args) => request('memory_decisions', args),
+  },
+  {
+    name: 'save_progress',
+    description:
+      'Salva o PROGRESSO de uma tarefa para ela ser retomada depois — por você ou por outro dev, em outra máquina (ex.: antes de ' +
+      'encerrar o dia ou sair de férias): onde parou e os próximos passos. Uma por tarefa; salvar de novo atualiza. ' +
+      'Repo e branch vêm do seu terminal.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', description: 'Onde parou (ex.: "Login feito; falta o refresh token").' },
+        nextSteps: { type: 'array', items: { type: 'string' }, description: 'Próximos passos, em ordem.' },
+        task: { type: 'string', description: 'Tarefa (chave, ex.: "BO-12"). Padrão: a tarefa atual do seu terminal.' },
+        project: scope.project,
+      },
+      required: ['status'],
+    },
+    run: (request, args) => request('memory_progress', args),
   },
   {
     name: 'forget_memory',

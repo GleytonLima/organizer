@@ -10,6 +10,7 @@ import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
 import { selectedTask, closeTask } from './selection.js';
 import { waitingBox } from './detail-waiting.js';
+import { saveProgressDialog } from '../memory/progress.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -81,6 +82,7 @@ export function renderTaskDetail() {
       el('span', { class: 'task-key', text: task.key }),
       columnSelect(task),
       el('span', { class: 'spacer' }),
+      iconButton('progress', 'Salvar progresso (para retomar em outra máquina)', () => saveProgressDialog(taskProject(task), task)),
       iconButton('trash', 'Excluir tarefa', async () => (await deleteTask(task)) && closeTask(), 'td-delete'),
       iconButton('collapse', 'Fechar', closeTask),
     ),

@@ -8,6 +8,7 @@ import { resolveTaskRef, currentTaskOf } from '../tasks/queries.js';
 import { memoryContext } from '../memory/context.js';
 import { callerOf, resolveProject, resolveCwd } from './resolve.js';
 import { invalidateMemory } from '../ui/memory/state.js';
+import { saveProgress } from '../memory/progress.js';
 
 const iso = (ms) => new Date(ms).toISOString();
 const view = ({ createdAt, updatedAt, ...m }) => ({ ...m, createdAt: iso(createdAt), updatedAt: iso(updatedAt) });
@@ -70,6 +71,24 @@ export const memoryHandlers = {
     const { read } = context(p);
     return (await api.memory.list({ ...read, scope: p.scope, kind: 'decision', repo: p.repo, limit: p.limit || 100 })).map(view);
   },
+
+  /** Progresso da tarefa (atual do terminal ou `task`) para retomar em outra máquina. */
+  async memory_progress(p) {
+    const { caller, project } = context(p);
+    const task = p.task ? resolveTaskRef(p.task, { project }) : caller && currentTaskOf(caller.t.id);
+    if (!task) throw new Error('Informe a tarefa ("task", ex.: BO-12): este terminal não tem tarefa atual.');
+    const item = await saveProgress(project, task, {
+      status: p.status,
+      nextSteps: p.nextSteps || [],
+      cwd: caller?.t.cwd || p.fromCwd || project.cwd,
+      source: caller ? `agente (${termLabel(caller.t)})` : 'agente',
+    });
+    invalidateMemory();
+    return view(item);
+  },
+
+  /** Sincroniza agora com o servidor de memória (se configurado) e devolve o estado. */
+  memory_sync: () => api.sync.now(),
 
   async memory_forget(p) {
     const r = await api.memory.remove(p.id);

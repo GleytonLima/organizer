@@ -7,7 +7,7 @@ import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
 import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd, resolveRepo } from './resolve.js';
 import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
-import { addProject, addFoldersToProject } from '../actions/projects.js';
+import { addProject, addFoldersToProject, setSyncKey } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
 
 function terminalInfo({ project, group, t }) {
@@ -29,6 +29,7 @@ const describeProject = (project) => ({
   name: project.name,
   cwd: project.cwd,
   repos: (project.repos || []).map((r) => ({ name: r.name, path: r.path })),
+  syncKey: project.syncKey || null,
   open: project.open,
   groups: project.groups.map((group) => ({
     id: group.id,
@@ -59,9 +60,10 @@ export const handlers = {
       }),
     );
     const existing = projects().find((x) => x.name.toLowerCase() === p.name.trim().toLowerCase());
-    if (!existing) return describeProject(addProject({ name: p.name.trim(), repos }));
-    addFoldersToProject(existing, repos);
-    return describeProject(existing);
+    const project = existing || addProject({ name: p.name.trim(), repos });
+    if (existing) addFoldersToProject(existing, repos);
+    if (p.syncKey != null) setSyncKey(project, p.syncKey);
+    return describeProject(project);
   },
 
   /** Abre um terminal (no grupo de quem pediu, ou em `group`, criado se não existir). */

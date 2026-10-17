@@ -106,13 +106,14 @@ const COMMANDS = {
     },
   },
   project: {
-    usage: 'project add <nome> <pasta...>',
-    help: 'Cria um projeto com pastas (ou acrescenta pastas a um existente).',
+    usage: 'project add <nome> <pasta...> [--sync-key CHAVE]',
+    help: 'Cria um projeto com pastas (ou acrescenta pastas a um existente); --sync-key liga o sync da memória.',
     async run({ pos, opts }) {
       const [action, name, ...folders] = pos;
-      if (action !== 'add' || !name) throw new Error('uso: bo project add <nome> <pasta...>');
-      const r = await request('project_create', { name, repos: folders.map((f) => path.resolve(f)) });
-      print(opts, r, (p) => `${p.name}: ${p.repos.map((x) => x.name).join(', ') || '(sem pastas)'}`);
+      if (action !== 'add' || !name) throw new Error('uso: bo project add <nome> <pasta...> [--sync-key CHAVE]');
+      const syncKey = opts['sync-key'] === true ? '' : opts['sync-key'];
+      const r = await request('project_create', { name, repos: folders.map((f) => path.resolve(f)), syncKey });
+      print(opts, r, (p) => `${p.name}: ${p.repos.map((x) => x.name).join(', ') || '(sem pastas)'}${p.syncKey ? `  (sync: ${p.syncKey})` : ''}`);
     },
   },
   task: {

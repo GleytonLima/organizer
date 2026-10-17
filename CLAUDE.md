@@ -16,13 +16,15 @@ Projeto (nome + `repos`: lista explícita de pastas, não uma pasta raiz) → Gr
 "Projeto em foco" (`state.focusProjectId`, `currentProject()`): painel, chips e novo terminal seguem o foco. Tarefas em `state.tasks` (projectId, columnId); colunas em `project.taskColumns`.
 "Em espera" é `task.needsInput` (não é coluna).
 Memória fica no `memory.db` (processo principal), com escopo global | project | folder (pasta por caminho; ver `src/main/memory/scope.js`); o renderer resolve projeto/repo/tarefa e chama via IPC (`api.memory`).
+Sync (contrato em `../bo-memory-server/docs/API.md`): projeto sincroniza pela `project.syncKey` (workspace no servidor), pasta pelo remote git normalizado, global vai para o time; sem chave/remote fica só local. Conflito é marcado (`conflict`) e o usuário resolve (minha / do servidor / mescla); "Retomar" faz claim do progresso e cria a tarefa local (`actions/task-adopt.js`).
 Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — não converter caminhos MSYS à mão. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
 
 ## Estrutura
 ```
 src/main/        processo principal (index, window, pty, git, bash, system, files)
 src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
-src/main/memory/  memória: db (node:sqlite + FTS5), store (notas/decisões), search (texto/híbrida), embeddings (opcional)
+src/main/memory/  memória: db + migrations (node:sqlite + FTS5), store (notas/decisões/progresso), search (texto/híbrida), embeddings (opcional)
+src/main/sync/   sync da memória com o bo-memory-server: settings (URL + token no safeStorage), client, remote, mapping, rows, engine (push → pull a cada 30 s)
 src/main/notifications.js  toast do Windows + piscar na barra de tarefas
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
@@ -49,6 +51,7 @@ Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/comma
 
 ## Testes
 `npm test` (ou `node test/run.js <suíte>`): sobe o app de verdade com dados isolados e verifica pelo MCP/CLI/renderer.
+A suíte `sync` sobe o `../bo-memory-server/bin/bo-memory-server.exe` contra o PostgreSQL de testes (docker compose); sem eles, é pulada.
 Mudou um comportamento coberto? Ajuste ou acrescente verificações no `test/<área>.test.js`; reuse o contexto do `harness.js`.
 No processo principal, chame o `bo` só de forma assíncrona (`t.bo`): `execFileSync` trava a própria API.
 
