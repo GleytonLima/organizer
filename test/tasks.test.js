@@ -148,5 +148,15 @@ suite('tarefas', {
   t.includes(await t.js(`return document.querySelector('#taskpanel .chip-memory').textContent`), 'Memória: Decisão X', 'o chip mostra a memória escolhida');
   await t.js(`document.querySelector('#taskpanel .chip-memory .chip-x').click()`);
   t.check(await t.waitFor(async () => (await titles()).length > 1), 'o × tira o filtro por memória');
+  // aviso de tarefa (ex.: "Concluída") no sino: clicar abre a gaveta da tarefa e marca como lido
+  await t.js(`const c = await import('./js/notify/center.js'); c.clearNotifications();
+    const tk = S.store.state.tasks.find((x) => x.key === ${JSON.stringify(tagged.key)});
+    c.pushNotification({ taskId: tk.id, label: tk.key, body: 'Concluída: ' + tk.title });`);
+  await t.js(`document.querySelector('.bell-btn').click()`);
+  await t.waitFor(() => t.js(`return [...document.querySelectorAll('.menu-item')].some((b) => b.textContent.includes('Concluída: História do Jira'))`));
+  await t.js(`[...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Concluída: História do Jira')).click()`);
+  t.includes(await t.waitFor(() => t.js(`const d = document.querySelector('#task-detail:not(.hidden) .task-key'); return d && d.textContent`)), tagged.key, 'clicar no aviso de uma tarefa abre a tarefa');
+  t.equal(await t.js(`return (await import('./js/notify/center.js')).unreadCount()`), 0, 'e o aviso fica lido');
+  await t.js(`SEL.closeTask()`, TASK_UI);
   await t.js(`S.store.state.taskScope = 'project'; A.setTaskView('off')`, TASK_UI);
 });

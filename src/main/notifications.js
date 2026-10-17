@@ -7,7 +7,7 @@ const APP_ID = app.isPackaged ? 'com.bashorganizer.app' : process.execPath;
 
 const alive = new Set(); // evita que o GC descarte o toast antes do clique
 
-function showToast({ title, body, terminalId }) {
+function showToast({ id, title, body }) {
   const win = getWindow();
   if (win && !win.isFocused()) win.flashFrame(true);
   if (!Notification.isSupported()) return false;
@@ -17,7 +17,7 @@ function showToast({ title, body, terminalId }) {
   toast.on('click', () => {
     release();
     focusWindow();
-    sendToWindow('notify:clicked', terminalId);
+    sendToWindow('notify:clicked', id);
   });
   toast.on('close', release);
   toast.on('failed', release);

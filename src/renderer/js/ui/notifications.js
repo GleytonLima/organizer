@@ -1,9 +1,8 @@
-// Sino da barra superior: contador de não lidos e lista dos avisos recentes.
+// Sino da barra superior: contador de não lidos e lista dos avisos recentes. Clicar num aviso abre a
+// tarefa (aviso de tarefa) ou o terminal que o gerou, e o marca como lido.
 import { el } from '../core/dom.js';
-import { findTerm } from '../core/store.js';
 import { timeAgo } from '../core/format.js';
-import { activate } from '../actions/terminals.js';
-import { recentNotifications, unreadCount, clearNotifications } from '../notify/center.js';
+import { recentNotifications, unreadCount, clearNotifications, openNotification } from '../notify/center.js';
 import { iconButton } from './components.js';
 import { showMenu } from './menu.js';
 
@@ -17,7 +16,7 @@ function notificationsMenu(e) {
       label: `${n.title} — ${n.body}`,
       hint: timeAgo(n.at),
       muted: n.read,
-      action: () => n.terminalId && findTerm(n.terminalId) && activate(n.terminalId),
+      action: () => openNotification(n.id),
     })),
     { sep: true },
     { label: 'Limpar avisos', action: clearNotifications },

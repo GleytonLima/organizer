@@ -71,7 +71,7 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
-  onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, terminalId) => cb(terminalId)),
+  onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, id) => cb(id)),
 
   // API local: pedidos chegam do main; a resposta volta com o mesmo id.
   onApiRequest: (cb) => ipcRenderer.on('api:request', (_e, id, method, params) => cb(id, method, params)),

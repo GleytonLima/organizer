@@ -13,6 +13,7 @@ import { initRender, renderAll } from './ui/render.js';
 import { initApi } from './api/index.js';
 import { initNotifyCenter } from './notify/center.js';
 import { initTasksUi } from './ui/tasks/index.js';
+import { openTaskFromNotice } from './ui/tasks/selection.js';
 import { initMemorySync } from './memory/sync.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
@@ -32,7 +33,7 @@ async function init() {
   initLayout($('#terminals'));
   initKeys();
   initMenu();
-  initNotifyCenter({ onOpen: activate });
+  initNotifyCenter({ openTerminal: activate, openTask: openTaskFromNotice });
   initTasksUi();
   initRender();
   $('#btn-empty-new').addEventListener('click', () => newTerminal());

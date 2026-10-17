@@ -19,4 +19,4 @@ export function stampOrigin(task, terminalId) {
   if (g?.repo) task.repo = g.repo;
 }
 
-export const notifyAbout = (task, body) => pushNotification({ terminalId: task.terminalId, label: task.key, body });
+export const notifyAbout = (task, body) => pushNotification({ terminalId: task.terminalId, taskId: task.id, label: task.key, body });
