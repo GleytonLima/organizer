@@ -1,8 +1,11 @@
 const { BrowserWindow, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { userFile, readJson, writeJsonAtomic } = require('./files');
 
 const WINDOW_FILE = () => userFile('window.json');
+// Empacotado, o ícone vem do .exe; em desenvolvimento, do build/icon.png.
+const DEV_ICON = path.join(__dirname, '..', '..', 'build', 'icon.png');
 let win = null;
 
 function createWindow() {
@@ -13,6 +16,7 @@ function createWindow() {
     minHeight: 400,
     backgroundColor: '#101113',
     title: 'Bash Organizer',
+    ...(fs.existsSync(DEV_ICON) && { icon: DEV_ICON }),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),

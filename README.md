@@ -65,6 +65,26 @@ O que gera aviso:
 
 Para o Claude Code avisar sempre que termina uma resposta ou precisa de você, use os hooks mostrados por `bo mcp-config`.
 
+## Gerar o executável
+
+```bash
+npm run dist
+```
+
+Gera em `dist/`:
+- `Bash Organizer-Setup-<versão>.exe` — instalador **por usuário** (não pede admin), cria atalhos no Menu Iniciar e na
+  área de trabalho. Prefira este: o atalho do Menu Iniciar é o que permite ao Windows mostrar os **toasts**.
+- `Bash Organizer-Portable-<versão>.exe` — um único `.exe`, sem instalação (os toasts podem não aparecer).
+
+`npm run pack` gera só a pasta `dist/win-unpacked` (mais rápido, para testar). `npm run icon` regenera o ícone
+a partir de `build/icon.svg`.
+
+Os executáveis **não são assinados**: o Windows mostra o aviso do SmartScreen ("Mais informações → Executar assim mesmo").
+Em máquinas corporativas com AppLocker/WDAC, um `.exe` não assinado pode ser bloqueado — nesse caso peça liberação à TI
+ou rode a partir do código (`npm install` + `npm start`).
+
+Para testar com dados isolados (sem mexer nos seus projetos): `BO_USER_DATA=<pasta> "Bash Organizer.exe"`.
+
 ## Atalhos
 
 | Atalho | Ação |

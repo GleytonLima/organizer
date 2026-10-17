@@ -1,13 +1,17 @@
 {
   "name": "git-bash-organizer",
+  "productName": "Bash Organizer",
   "version": "0.1.0",
   "description": "Gerenciador desktop de terminais Git Bash",
   "main": "src/main/index.js",
-  "scripts": {
-    "start": "electron ."
-  },
-  "author": "",
+  "author": "Gleyton",
   "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "icon": "electron build/render-icon.js",
+    "pack": "electron-builder --win --dir",
+    "dist": "electron-builder --win"
+  },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-web-links": "^0.12.0",
@@ -15,7 +19,43 @@
     "node-pty": "^1.1.0"
   },
   "devDependencies": {
-    "electron": "^44.8.0"
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3"
   },
-  "productName": "Bash Organizer"
+  "build": {
+    "appId": "com.bashorganizer.app",
+    "productName": "Bash Organizer",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "bin/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "bin/**",
+      "node_modules/node-pty/**"
+    ],
+    "npmRebuild": false,
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Bash Organizer",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
+  }
 }

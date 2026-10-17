@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Ícone do Bash Organizer: prompt >_ sobre grafite, com um ponto de aviso -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24262b"/>
+      <stop offset="1" stop-color="#141518"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bg)"/>
+  <rect x="24.5" y="24.5" width="463" height="463" rx="111.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+  <path d="M146 186 L226 256 L146 326" fill="none" stroke="#e4e4e7" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M262 334 H366" fill="none" stroke="#e4e4e7" stroke-width="40" stroke-linecap="round"/>
+  <circle cx="372" cy="150" r="30" fill="#7aa2f7"/>
+</svg>

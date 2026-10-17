@@ -1,13 +1,17 @@
 // Servidor MCP mínimo (JSON-RPC 2.0 sobre stdio, uma mensagem por linha).
+const path = require('path');
 const readline = require('readline');
 const { request } = require('./client');
 const { TOOLS } = require('./tools');
+// Em desenvolvimento, package.json está na raiz; empacotado, dentro do app.asar (vizinho de app.asar.unpacked).
 const version = (() => {
-  try {
-    return require('../../package.json').version;
-  } catch {
-    return '0.0.0'; // empacotado: package.json fica dentro do .asar
+  const candidates = ['../../package.json', path.join(__dirname.replace('app.asar.unpacked', 'app.asar'), '..', '..', 'package.json')];
+  for (const file of candidates) {
+    try {
+      return require(file).version;
+    } catch {}
   }
+  return '0.0.0';
 })();
 
 const INSTRUCTIONS = [

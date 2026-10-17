@@ -31,8 +31,13 @@ src/renderer/
   js/notify/     central de avisos (center) e fontes: bell, OSC 9/777, comando longo (sources)
   js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes
   styles/        base, layout, sidebar, topbar, overlays, status
+build/           ícone (icon.svg → icon.png via render-icon.js) e recursos do electron-builder
 bin/             CLI `bo` (bo.js + lib/: client, commands, mcp, tools, wait) e wrappers bash/cmd
 ```
 
 ## API local
 Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/commands.js`) e no MCP (`bin/lib/tools.js`).
+
+## Empacotamento
+`npm run dist` (electron-builder, config em package.json → build). `bin/**` e `node-pty` ficam fora do .asar
+(asarUnpack): executáveis e scripts precisam existir em disco. Caminhos para eles: troque `app.asar` por `app.asar.unpacked`.
