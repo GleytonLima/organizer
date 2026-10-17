@@ -59,6 +59,7 @@ Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/comma
 A suíte `sync` sobe o `../bo-memory-server/bin/bo-memory-server.exe` contra o PostgreSQL de testes (docker compose); sem eles, é pulada.
 Mudou um comportamento coberto? Ajuste ou acrescente verificações no `test/<área>.test.js`; reuse o contexto do `harness.js`.
 No processo principal, chame o `bo` só de forma assíncrona (`t.bo`): `execFileSync` trava a própria API.
+Interface com input real (cliques, teclado, arrastar): `npm run test:ui` — Playwright `_electron` em `test/ui/*.spec.js` (fixture abre o app com dados isolados). Use para o que depende de foco/mouse; o resto fica no harness (mais rápido).
 
 ## Empacotamento
 `npm run dist` (electron-builder, config em package.json → build). `bin/**` e `node-pty` ficam fora do .asar

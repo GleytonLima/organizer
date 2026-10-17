@@ -61,6 +61,8 @@ export function openModal({ title, message, fields = [], content = null, collect
     document.addEventListener('keydown', onKey, true);
     document.body.classList.add('modal-open');
     backdrop.classList.remove('hidden');
-    requestAnimationFrame(() => (form.querySelector('input, textarea') || form.querySelector('[type=submit]'))?.focus());
+    // foco já, não no próximo quadro: o que você digita logo após abrir não pode se perder (a 1ª letra ia
+    // para o terminal — achado pela suíte de interface com Playwright)
+    (form.querySelector('input, textarea') || form.querySelector('[type=submit]'))?.focus();
   });
 }
