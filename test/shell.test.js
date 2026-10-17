@@ -53,4 +53,20 @@ suite('shell: sinais OSC 6973', {
     return norm(c) === tmp ? c : null;
   });
   t.check(cwd, 'cd /tmp atualiza a pasta do terminal para %TEMP% (formato Windows)', `esperado ${tmp}`);
+
+  // zoom: Ctrl + (sem Shift) aumenta, Ctrl − diminui até um limite, Ctrl 0 volta a 100%
+  const press = async (keyCode, times = 1) => {
+    for (let i = 0; i < times; i++) {
+      t.wc.sendInputEvent({ type: 'keyDown', keyCode, modifiers: ['control'] });
+      t.wc.sendInputEvent({ type: 'keyUp', keyCode, modifiers: ['control'] });
+      await t.wait(60);
+    }
+  };
+  const zoom = () => Math.round(t.wc.getZoomFactor() * 100);
+  await press('=');
+  t.equal(zoom(), 110, 'Ctrl + (tecla =, sem Shift) aumenta o zoom');
+  await press('-', 12);
+  t.equal(zoom(), 67, 'Ctrl − para no mínimo legível (67%)');
+  await press('0');
+  t.equal(zoom(), 100, 'Ctrl 0 volta a 100%');
 });
