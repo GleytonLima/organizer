@@ -62,4 +62,13 @@ suite('projetos', {
   t.equal(projectsOf, ['outro-app', 'outro-app'], 'as duas tarefas caem no projeto da pasta');
   const viaTerminal = await agent.tool('create_task', { title: 'Do agente' });
   t.equal(viaTerminal.data?.project, 'minha-app', 'com terminal, o projeto do terminal vence a pasta');
+
+  // Projeto em foco: clicar no cabeçalho foca; a seta só recolhe/expande.
+  const heads = () => t.js(`return [...document.querySelectorAll('#sidebar .project-head')].map((h) => h.innerText.trim())`);
+  const idx = (await heads()).findIndex((x) => x.includes('outro-app'));
+  await t.js(`document.querySelectorAll('#sidebar .project-head')[${idx}].click()`);
+  t.equal(await t.js(`return S.store.state.focusProjectId`), 'p2', 'clicar no cabeçalho do projeto o coloca em foco');
+  await t.js(`document.querySelectorAll('#sidebar .project-head')[${idx}].querySelector('.chevron-btn').click()`);
+  const after = await t.js(`const p = S.store.state.projects.find((x) => x.id === 'p2'); return [p.collapsed, S.store.state.focusProjectId]`);
+  t.equal(after, [true, 'p2'], 'a seta recolhe o projeto sem mudar o foco');
 });

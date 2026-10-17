@@ -11,6 +11,7 @@ const SUITES = [
   { name: 'shell' },
   { name: 'tasks' },
   { name: 'memory', runs: 2 },
+  { name: 'memory-scopes' },
   { name: 'projects' },
   { name: 'split' },
 ];
@@ -76,7 +77,7 @@ async function main() {
 
   console.log('\nResumo');
   for (const s of summary) {
-    console.log(`  ${s.ok ? '✓' : '✗'} ${s.name.padEnd(10)} ${s.passed}/${s.total}${s.ok ? '' : `  (dados mantidos em ${s.dir})`}`);
+    console.log(`  ${s.ok ? '✓' : '✗'} ${s.name.padEnd(14)} ${s.passed}/${s.total}${s.ok ? '' : `  (dados mantidos em ${s.dir})`}`);
   }
   const failed = summary.filter((s) => !s.ok).length;
   console.log(failed ? `\n${failed} suíte(s) falharam.` : '\nTudo passou.');
