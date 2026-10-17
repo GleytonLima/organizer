@@ -1,5 +1,6 @@
 // Comandos salvos: atalhos que rodam no terminal ativo.
-import { store, uid, commit } from '../core/store.js';
+import { store, commit } from '../core/store.js';
+import { uid } from '../core/model.js';
 import { openModal, field } from '../ui/modal.js';
 
 export async function editCommand(c = null) {

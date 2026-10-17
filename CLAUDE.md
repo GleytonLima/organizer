@@ -11,16 +11,20 @@
 - Cores vêm do tema (`js/themes/themes.js`); nada de cor fixa em CSS fora dos tokens.
 - Sem destaques berrantes nem cards com barra colorida à esquerda: cor de terminal/workspace é só uma bolinha.
 
+## Modelo
+Projeto (pasta raiz) → Grupos → Terminais. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
+
 ## Estrutura
 ```
 src/main/        processo principal (index, window, pty, git, bash, system, files)
+src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
 src/renderer/
-  js/core/       dom, store (estado + persistência), format
+  js/core/       dom, model (fábricas + migração), store (estado, persistência, consultas), format
   js/themes/     paleta, temas, aplicação
   js/terminals/  sessões xterm+pty, teclado, clipboard
-  js/actions/    terminais, workspaces, comandos salvos
+  js/actions/    terminais, grupos, projetos, comandos salvos
   js/git/        polling de status
-  js/ui/         sidebar, topbar, cmdbar, statusbar, menu, modal, componentes
-  styles/        base, layout, sidebar, topbar, overlays
+  js/ui/         sidebar(+groups), topbar, cmdbar, statusbar, menu, modal, confirm, dnd, componentes
+  styles/        base, layout, sidebar, topbar, overlays, status
 ```

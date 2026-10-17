@@ -7,11 +7,24 @@ import { refreshGit } from '../git/git.js';
 import { terminalKeyHandler } from './keys.js';
 import { copyOrPaste } from './clipboard.js';
 
-const sessions = new Map(); // id -> { term, fit, host, exited }
+// id -> { term, fit, host, exited, running: { cmd, since } | null, lastExit: number | null }
+const sessions = new Map();
 let container = null;
 
 export const getSession = (id) => sessions.get(id);
 export const activeSession = () => sessions.get(store.state.activeId);
+
+/** Comando em execução no terminal (texto), ou null se estiver no prompt. */
+export const runningCommand = (id) => sessions.get(id)?.running?.cmd || null;
+
+/** Estado resumido do processo: 'running' | 'error' | 'exited' | 'idle'. */
+export function processStatus(id) {
+  const s = sessions.get(id);
+  if (!s) return 'idle';
+  if (s.exited) return 'exited';
+  if (s.running) return 'running';
+  return s.lastExit ? 'error' : 'idle';
+}
 
 export function initSessions(node) {
   container = node;
@@ -20,6 +33,7 @@ export function initSessions(node) {
     const s = sessions.get(id);
     if (!s || s.exited) return;
     s.exited = true;
+    s.running = null;
     s.term.write('\r\n\x1b[2m[processo encerrado — Enter para reiniciar]\x1b[0m\r\n');
     notify();
   });
@@ -46,15 +60,9 @@ export function createSession(t) {
   term.loadAddon(new WebLinksAddon.WebLinksAddon((_e, url) => window.open(url)));
   term.open(host);
 
-  const s = { term, fit, host, exited: false };
+  const s = { term, fit, host, exited: false, running: null, lastExit: null };
   sessions.set(t.id, s);
-
-  // O hook do bash emite OSC 7 com o $PWD a cada prompt.
-  term.parser.registerOscHandler(7, (data) => {
-    const m = /^file:\/\/[^/]*(\/.*)$/.exec(data);
-    if (m) onCwdChange(t.id, m[1]);
-    return true;
-  });
+  registerShellIntegration(t.id, s);
   term.onData((data) => {
     if (!s.exited) api.ptyWrite(t.id, data);
     else if (data === '\r') restartSession(t.id);
@@ -85,11 +93,29 @@ async function spawn(t, s) {
   if (t.startup) api.ptyWrite(t.id, t.startup + '\r');
 }
 
+// Sequências emitidas pelo src/main/shell/bash-init.sh.
+function registerShellIntegration(id, s) {
+  s.term.parser.registerOscHandler(7, (data) => {
+    const m = /^file:\/\/[^/]*(\/.*)$/.exec(data);
+    if (m) onCwdChange(id, m[1]);
+    return true;
+  });
+  s.term.parser.registerOscHandler(6973, (data) => {
+    const [kind, ...rest] = data.split(';');
+    const arg = rest.join(';');
+    if (kind === 'start') s.running = { cmd: arg, since: Date.now() };
+    else if (kind === 'end') [s.running, s.lastExit] = [null, Number(arg) || 0];
+    notify();
+    return true;
+  });
+}
+
 export function restartSession(id) {
   const s = sessions.get(id);
   const entry = findTerm(id);
   if (!s || !entry) return;
   api.ptyKill(id);
+  Object.assign(s, { running: null, lastExit: null });
   s.exited = false;
   s.term.reset();
   spawn(entry.t, s);

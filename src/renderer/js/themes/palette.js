@@ -1,4 +1,4 @@
-// Cores (suaves) que o usuário pode dar a workspaces e terminais.
+// Cores (suaves) que o usuário pode dar a projetos e terminais.
 export const DOT_COLORS = ['#86a8e8', '#8cc79f', '#e2c08d', '#d9965b', '#e5787a', '#c49be0', '#7cc5c8', '#9b9ca3'];
 
 // Cores ANSI base do terminal, por tipo de tema.

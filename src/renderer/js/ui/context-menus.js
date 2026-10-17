@@ -1,32 +1,52 @@
-// Conteúdo dos menus de contexto de terminal, workspace, comando e tema.
+// Conteúdo dos menus de contexto de terminal, grupo, projeto, comando e tema.
 import { store, findTerm } from '../core/store.js';
 import { restartSession } from '../terminals/sessions.js';
-import { editTerminal, duplicateTerminal, closeTerminal, newTerminal } from '../actions/terminals.js';
-import { editWorkspace, openWorkspace, closeWorkspace, deleteWorkspace } from '../actions/workspaces.js';
+import { editTerminal, duplicateTerminal, closeTerminal, newTerminal, moveTerminal } from '../actions/terminals.js';
+import { createGroup, renameGroup, deleteGroup } from '../actions/groups.js';
+import { editProject, openProject, closeProject, deleteProject } from '../actions/projects.js';
 import { editCommand, moveCommand, removeCommand } from '../actions/commands.js';
 import { THEMES } from '../themes/themes.js';
 import { setTheme } from '../themes/apply.js';
 import { showMenu } from './menu.js';
 
+const SEP = { sep: true };
+
 export function terminalMenu(e, id) {
+  const { project, group, t } = findTerm(id);
+  const moveTo = project.groups
+    .filter((g) => g !== group)
+    .map((g) => ({ label: `Mover para “${g.name}”`, action: () => moveTerminal(id, g) }));
   showMenu(e, [
     { label: 'Editar…', action: () => editTerminal(id) },
     { label: 'Duplicar', action: () => duplicateTerminal(id) },
     { label: 'Reiniciar', action: () => restartSession(id) },
-    { label: 'Abrir pasta', action: () => api.openPath(findTerm(id).t.cwd) },
-    { sep: true },
+    { label: 'Abrir pasta', action: () => api.openPath(t.cwd) },
+    ...(moveTo.length ? [SEP, ...moveTo] : []),
+    SEP,
     { label: 'Fechar', danger: true, action: () => closeTerminal(id) },
   ]);
 }
 
-export function workspaceMenu(e, ws) {
+export function groupMenu(e, group) {
   showMenu(e, [
-    { label: 'Novo terminal', action: () => newTerminal(ws) },
-    { label: 'Editar…', action: () => editWorkspace(ws) },
-    ws.open ? { label: 'Fechar workspace', action: () => closeWorkspace(ws) } : { label: 'Abrir workspace', action: () => openWorkspace(ws) },
-    { label: 'Abrir pasta', action: () => api.openPath(ws.cwd) },
-    { sep: true },
-    { label: 'Excluir', danger: true, action: () => deleteWorkspace(ws) },
+    { label: 'Novo terminal', action: () => newTerminal(group) },
+    { label: 'Renomear…', action: () => renameGroup(group) },
+    SEP,
+    { label: 'Excluir grupo', danger: true, action: () => deleteGroup(group) },
+  ]);
+}
+
+export function projectMenu(e, project) {
+  showMenu(e, [
+    { label: 'Novo terminal', action: () => newTerminal(project.groups[0]) },
+    { label: 'Novo grupo…', action: () => createGroup(project) },
+    { label: 'Editar…', action: () => editProject(project) },
+    project.open
+      ? { label: 'Fechar projeto', action: () => closeProject(project) }
+      : { label: 'Abrir projeto', action: () => openProject(project) },
+    { label: 'Abrir pasta', action: () => api.openPath(project.cwd) },
+    SEP,
+    { label: 'Excluir projeto', danger: true, action: () => deleteProject(project) },
   ]);
 }
 
@@ -35,7 +55,7 @@ export function commandMenu(e, c) {
     { label: 'Editar…', action: () => editCommand(c) },
     { label: 'Mover para a esquerda', action: () => moveCommand(c, -1) },
     { label: 'Mover para a direita', action: () => moveCommand(c, 1) },
-    { sep: true },
+    SEP,
     { label: 'Remover', danger: true, action: () => removeCommand(c) },
   ]);
 }

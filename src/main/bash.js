@@ -17,24 +17,10 @@ const BASH = findBash();
 const GIT_ROOT = BASH ? path.resolve(path.dirname(BASH), '..') : null;
 const rcFile = () => userFile('bash-init.sh');
 
-// Reproduz o startup de um login shell do Git Bash e adiciona um hook que
-// informa o diretório atual ao app via OSC 7 a cada prompt.
-const RC = `# gerado pelo Bash Organizer — não editar
-[ -f /etc/profile ] && . /etc/profile
-if [ -f ~/.bash_profile ]; then . ~/.bash_profile
-elif [ -f ~/.bash_login ]; then . ~/.bash_login
-elif [ -f ~/.profile ]; then . ~/.profile
-elif [ -f ~/.bashrc ]; then . ~/.bashrc
-fi
-__bo_osc7() { printf '\\033]7;file://localhost%s\\007' "$PWD"; }
-case ";\${PROMPT_COMMAND};" in
-  *";__bo_osc7;"*) ;;
-  *) PROMPT_COMMAND="__bo_osc7\${PROMPT_COMMAND:+;\$PROMPT_COMMAND}" ;;
-esac
-`;
-
+// O script fica em src/main/shell/ e é copiado para userData: o bash não lê de dentro do .asar.
 function writeRcFile() {
-  fs.writeFileSync(rcFile(), RC.replace(/\r\n/g, '\n'));
+  const rc = fs.readFileSync(path.join(__dirname, 'shell', 'bash-init.sh'), 'utf8');
+  fs.writeFileSync(rcFile(), rc.replace(/\r\n/g, '\n'));
 }
 
 function msysToWindows(p) {

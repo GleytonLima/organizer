@@ -19,7 +19,7 @@
   text-transform: uppercase;
   color: var(--faint);
 }
-.ws-list {
+.project-list {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -28,56 +28,96 @@
   padding: 4px 0 12px;
 }
 
-/* ---------- workspace ---------- */
-.ws-head {
+/* ---------- cabeçalhos (projeto e grupo) ---------- */
+.project-head,
+.group-head {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 4px 0 6px;
   border-radius: var(--r-sm);
   color: var(--dim);
   cursor: pointer;
 }
-.ws-head:hover {
+.project-head {
+  height: 28px;
+  padding: 0 4px 0 6px;
+}
+.group-head {
+  height: 24px;
+  padding: 0 4px 0 18px;
+}
+.project-head:hover,
+.group-head:hover {
   color: var(--text);
 }
-.ws-chevron {
+.chevron {
   width: 14px;
   height: 14px;
   color: var(--faint);
   transition: transform 0.15s;
 }
-.ws.collapsed .ws-chevron {
+.project.collapsed > .project-head .chevron,
+.group.collapsed > .group-head .chevron {
   transform: rotate(-90deg);
 }
-.ws-name {
+.project-name,
+.group-name {
   flex: 1;
   min-width: 0;
-  font-weight: 600;
-  font-size: 12.5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ws-count {
+.project-name {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.group-name {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.count {
   font-size: 11px;
   color: var(--faint);
   padding: 0 4px;
 }
-.ws-head:hover .ws-count {
+.project-head:hover > .count,
+.group-head:hover > .count {
   display: none;
 }
-.ws-body {
+
+/* ---------- corpo ---------- */
+.project-body,
+.group-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: 2px;
 }
-.ws.collapsed .ws-body {
+.project-body {
+  margin-top: 2px;
+  gap: 6px;
+}
+.project.collapsed > .project-body,
+.group.collapsed > .group-body {
   display: none;
 }
-.ws-closed {
+.group.headless,
+.group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.group:not(.headless) .term-item {
+  margin-left: 12px;
+}
+.group-empty {
+  margin-left: 34px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+.project-closed {
   align-self: flex-start;
   margin-left: 26px;
   padding: 2px 0;
@@ -87,8 +127,11 @@
   font-size: 12px;
   cursor: pointer;
 }
-.ws-closed:hover {
+.project-closed:hover {
   color: var(--text);
+}
+.drop-over {
+  background: var(--hover);
 }
 
 /* ---------- terminal ---------- */
@@ -134,8 +177,4 @@
 .term-path {
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.term-item.exited .term-name {
-  color: var(--faint);
-  text-decoration: line-through;
 }

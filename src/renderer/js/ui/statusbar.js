@@ -8,7 +8,8 @@ export function renderStatusbar() {
     $('#statusbar'),
     entry
       ? [
-          el('span', { text: entry.ws.name }),
+          el('span', { text: entry.project.name }),
+          entry.project.groups.length > 1 ? [el('span', { class: 'sep', text: '/' }), el('span', { text: entry.group.name })] : null,
           el('span', { class: 'sep', text: '/' }),
           el('button', { class: 'link', title: 'Abrir no Explorer', onclick: () => api.openPath(entry.t.cwd), text: shortPath(entry.t.cwd) }),
         ]

@@ -1,12 +1,10 @@
-// Estado da aplicação, persistência e notificação de mudanças.
-import { DOT_COLORS } from '../themes/palette.js';
+// Estado da aplicação, persistência, notificação de mudanças e consultas.
+import { migrate } from './model.js';
 
 export const store = {
   state: null,
   info: { bash: null, home: '' },
 };
-
-export const uid = () => Math.random().toString(36).slice(2, 10);
 
 // ---------- assinaturas ----------
 const listeners = new Set();
@@ -43,50 +41,37 @@ export function commit() {
   notify();
 }
 
-// ---------- criação / normalização ----------
-export function newWorkspace(fields = {}) {
-  return {
-    id: uid(),
-    name: 'Workspace',
-    color: DOT_COLORS[0],
-    cwd: store.info.home,
-    open: true,
-    collapsed: false,
-    terminals: [],
-    ...fields,
-  };
-}
-
 export function loadState(saved) {
-  const s = saved || {};
-  store.state = {
-    version: 1,
-    layout: s.layout || 'left',
-    theme: s.theme || 'grafite',
-    activeId: s.activeId || null,
-    workspaces: s.workspaces?.length ? s.workspaces : [newWorkspace({ name: 'Geral' })],
-    commands: s.commands || [
-      { id: uid(), label: 'status', cmd: 'git status' },
-      { id: uid(), label: 'log', cmd: 'git log --oneline -15 --graph' },
-      { id: uid(), label: 'pull', cmd: 'git pull' },
-    ],
-  };
+  store.state = migrate(saved, store.info.home);
 }
 
 // ---------- consultas ----------
-export const allTerminals = () => store.state.workspaces.flatMap((ws) => ws.terminals.map((t) => ({ ws, t })));
-export const openTerminals = () => allTerminals().filter((x) => x.ws.open);
-export const wsById = (id) => store.state.workspaces.find((w) => w.id === id);
+export const projects = () => store.state.projects;
+export const projectById = (id) => projects().find((p) => p.id === id);
 
-export function findTerm(id) {
-  for (const ws of store.state.workspaces) {
-    const t = ws.terminals.find((x) => x.id === id);
-    if (t) return { ws, t };
+/** Todos os terminais, com projeto e grupo: [{ project, group, t }]. */
+export const allTerminals = () =>
+  projects().flatMap((project) => project.groups.flatMap((group) => group.terminals.map((t) => ({ project, group, t }))));
+
+export const openTerminals = () => allTerminals().filter((x) => x.project.open);
+export const projectTerminals = (project) => project.groups.flatMap((g) => g.terminals);
+
+export const findTerm = (id) => (id ? allTerminals().find((x) => x.t.id === id) || null : null);
+
+export function findGroup(id) {
+  for (const project of projects()) {
+    const group = project.groups.find((g) => g.id === id);
+    if (group) return { project, group };
   }
   return null;
 }
 
-export const activeEntry = () => (store.state.activeId ? findTerm(store.state.activeId) : null);
+export const activeEntry = () => findTerm(store.state.activeId);
 
-export const currentWs = () =>
-  activeEntry()?.ws || store.state.workspaces.find((w) => w.open) || store.state.workspaces[0];
+export const currentProject = () => activeEntry()?.project || projects().find((p) => p.open) || projects()[0];
+
+/** Grupo do terminal ativo se ele for do projeto; senão, o primeiro grupo do projeto. */
+export function currentGroup(project = currentProject()) {
+  const act = activeEntry();
+  return act?.project === project ? act.group : project?.groups[0];
+}

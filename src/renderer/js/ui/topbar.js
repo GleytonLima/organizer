@@ -1,13 +1,13 @@
 // Barra superior: título do terminal ativo (modo painel) ou abas (modo abas), tema e layout.
 import { $, el, mount } from '../core/dom.js';
-import { store, commit, activeEntry, currentWs, wsById } from '../core/store.js';
+import { store, commit, activeEntry, currentProject, currentGroup, projectById, projectTerminals } from '../core/store.js';
 import { termLabel } from '../core/format.js';
-import { fitActive } from '../terminals/sessions.js';
+import { fitActive, processStatus } from '../terminals/sessions.js';
 import { activate, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
-import { createWorkspace, openWorkspace } from '../actions/workspaces.js';
+import { createProject, openProject } from '../actions/projects.js';
 import { gitFor, dirtyCount } from '../git/git.js';
-import { iconButton, dot, gitSummary } from './components.js';
-import { terminalMenu, workspaceMenu, themeMenu } from './context-menus.js';
+import { iconButton, dot, gitSummary, processBadge } from './components.js';
+import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -27,29 +27,32 @@ function activeTitle() {
   return el(
     'div',
     { class: 'active-title' },
-    dot(entry.t.color || entry.ws.color),
+    dot(entry.t.color || entry.project.color),
     el('span', { class: 'title', text: termLabel(entry.t) }),
+    processBadge(entry.t.id),
     gitSummary(entry.t.cwd, { detailed: true }),
   );
 }
 
-function workspaceSelect(ws) {
+function projectSelect(project) {
   const onchange = (e) => {
-    if (e.target.value === '__new') return createWorkspace();
-    const target = wsById(e.target.value);
-    if (target.open && target.terminals.length) activate(target.terminals[0].id);
-    else openWorkspace(target);
+    if (e.target.value === '__new') return createProject();
+    const target = projectById(e.target.value);
+    const first = projectTerminals(target)[0];
+    if (target.open && first) activate(first.id);
+    else openProject(target);
   };
   return el(
     'select',
-    { class: 'ws-select', title: 'Workspace', onchange },
-    store.state.workspaces.map((w) => el('option', { value: w.id, selected: w === ws, text: w.name })),
-    el('option', { value: '__new', text: 'Novo workspace…' }),
+    { class: 'ws-select', title: 'Projeto', onchange },
+    store.state.projects.map((p) => el('option', { value: p.id, selected: p === project, text: p.name })),
+    el('option', { value: '__new', text: 'Novo projeto…' }),
   );
 }
 
-function tab(ws, t) {
+function tab(project, t) {
   const g = gitFor(t.cwd);
+  const status = processStatus(t.id);
   return el(
     'div',
     {
@@ -60,22 +63,31 @@ function tab(ws, t) {
       oncontextmenu: (e) => terminalMenu(e, t.id),
       onauxclick: (e) => e.button === 1 && closeTerminal(t.id),
     },
-    dot(t.color || ws.color),
+    dot(t.color || project.color),
     el('span', { class: 'tab-name', text: termLabel(t) }),
+    status !== 'idle' ? el('span', { class: `tab-status proc-${status}`, title: status }) : null,
     dirtyCount(g) ? el('span', { class: 'tab-dirty', title: 'alterações pendentes' }) : null,
     iconButton('close', 'Fechar', () => closeTerminal(t.id), 'reveal'),
   );
 }
 
+function groupTabs(project, group, labeled) {
+  return [
+    labeled ? el('button', { class: 'tab-group', onclick: (e) => groupMenu(e, group), oncontextmenu: (e) => groupMenu(e, group), text: group.name }) : null,
+    group.terminals.map((t) => tab(project, t)),
+  ];
+}
+
 function tabsArea() {
-  const ws = currentWs();
+  const project = currentProject();
+  const labeled = project.groups.length > 1;
   return el(
     'div',
     { class: 'tabs-area' },
-    workspaceSelect(ws),
-    iconButton('more', 'Opções do workspace', (e) => workspaceMenu(e, ws)),
-    el('div', { class: 'tabs' }, ws?.open ? ws.terminals.map((t) => tab(ws, t)) : null),
-    iconButton('plus', 'Novo terminal (Ctrl+Shift+T)', () => newTerminal(ws)),
+    projectSelect(project),
+    iconButton('more', 'Opções do projeto', (e) => projectMenu(e, project)),
+    el('div', { class: 'tabs' }, project.open ? project.groups.map((g) => groupTabs(project, g, labeled)) : null),
+    iconButton('plus', 'Novo terminal (Ctrl+Shift+T)', () => newTerminal(currentGroup(project))),
   );
 }
 
@@ -91,8 +103,7 @@ export function renderTopbar() {
   const tabs = store.state.layout === 'tabs';
   mount(
     $('#topbar'),
-    tabs ? tabsArea() : activeTitle(),
-    el('div', { class: 'spacer' }),
+    tabs ? tabsArea() : [activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),
   );

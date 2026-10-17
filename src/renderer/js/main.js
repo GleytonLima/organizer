@@ -10,12 +10,12 @@ import { initMenu } from './ui/menu.js';
 import { openModal } from './ui/modal.js';
 import { initRender, renderAll } from './ui/render.js';
 
-/** Recria os terminais dos workspaces abertos e volta ao último ativo. */
+/** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
   openTerminals().forEach(({ t }) => createSession(t));
-  const target = activeEntry()?.ws.open ? activeEntry() : openTerminals()[0];
+  const target = activeEntry()?.project.open ? activeEntry() : openTerminals()[0];
   if (target) activate(target.t.id);
-  else newTerminal(store.state.workspaces[0]);
+  else newTerminal(store.state.projects[0].groups[0]);
 }
 
 async function init() {
