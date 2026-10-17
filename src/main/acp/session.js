@@ -17,6 +17,7 @@ const { organizerEnv } = require('../pty');
 const { childEnv } = require('../env');
 const { PermissionGate } = require('./permissions');
 const { promptBlocks } = require('./prompt-blocks');
+const { parseMcpServers } = require('./mcp-servers');
 
 const PROTOCOL_VERSION = 1;
 
@@ -55,9 +56,11 @@ class AgentSession {
   }
 
   /** MCP do Bash Organizer: só o que precisa para falar com a API como este terminal. */
+  /** O MCP do Bash Organizer e os extras do perfil (ex.: Playwright). */
   mcpServers() {
     const { BO_API_URL, BO_API_TOKEN } = organizerEnv(this.id);
-    return BO_API_URL ? [boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id })] : [];
+    const bo = BO_API_URL ? [boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id })] : [];
+    return [...bo, ...parseMcpServers(this.profile.mcp)];
   }
 
   async start() {

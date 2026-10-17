@@ -321,3 +321,11 @@
   overflow-y: auto;
   margin: 4px 0 8px;
 }
+
+/* perfil de agente: servidores MCP (caixa + "Adicionar Playwright") */
+.mcp-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}

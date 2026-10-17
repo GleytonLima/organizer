@@ -102,6 +102,9 @@ const HANDLERS = {
   initialize: () => ({ protocolVersion: 1, agentCapabilities: { loadSession: true, promptCapabilities: { image: true }, sessionCapabilities: { list: {} } }, authMethods: [] }),
   'session/new': (p) => {
     const sessionId = `fake-${Date.now()}-${p.mcpServers.length}`;
+    // servidores MCP recebidos (o teste confere os extras do perfil)
+    if (process.env.FAKE_MCP_LOG) fs.appendFileSync(process.env.FAKE_MCP_LOG, `${JSON.stringify(p.mcpServers.map(({ name, command, args }) => ({ name, command, args })))}
+`);
     setTimeout(() => update(sessionId, { sessionUpdate: 'available_commands_update', availableCommands: COMMANDS }), 20);
     return { sessionId, modes: { currentModeId: mode, availableModes: MODES }, configOptions: configOptions() };
   },

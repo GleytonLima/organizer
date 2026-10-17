@@ -7,6 +7,8 @@ const { suite, seed } = require('./harness');
 
 process.env.BO_ACP_AGENT = JSON.stringify([process.execPath, path.join(__dirname, 'fixtures', 'fake-acp-agent.js')]);
 process.env.FAKE_ACP_STORE = path.join(process.env.BO_TEST_DIR || os.tmpdir(), 'acp-sessions.json');
+const MCP_LOG = path.join(process.env.BO_TEST_DIR || os.tmpdir(), 'acp-mcp.log');
+process.env.FAKE_MCP_LOG = MCP_LOG;
 
 /** App reaberto: o terminal de agente continua a última sessão; dá para retomar outra ou abrir nova. */
 async function reopened(t) {
@@ -181,7 +183,7 @@ suite('agente via ACP', {
 
   // perfis: um agente próprio com variáveis e modo padrão
   const second = await t.js(`const P = await import('./js/agents/profiles.js');
-    P.saveProfile({ label: 'Fake 2', command: 'fake-acp', args: '--acp', env: 'FAKE_GREETING=Olá do perfil', mode: 'plan' });
+    P.saveProfile({ label: 'Fake 2', command: 'fake-acp', args: '--acp', env: 'FAKE_GREETING=Olá do perfil', mode: 'plan', mcp: P.PLAYWRIGHT_MCP });
     const p = P.agentProfiles().find((x) => x.label === 'Fake 2');
     (await import('./js/actions/terminals.js')).newAgentTerminal(S.projectById('pA').groups[0], p.id);
     return S.store.state.activeId;`);
@@ -192,4 +194,12 @@ suite('agente via ACP', {
   t.check(await t.waitFor(async () => (await s2('s.body.innerText')).includes('Olá do perfil')), 'variáveis do perfil chegam ao agente');
   await s2(`s.answer(1, 'reject')`);
   await t.waitFor(async () => (await s2('s.state')) === 'pronto');
+
+  // servidores MCP do perfil: chegam no session/new junto do Bash Organizer (npx via "cmd /c" no Windows)
+  const servers = require('fs').readFileSync(MCP_LOG, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).at(-1);
+  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright'], 'o agente recebe o MCP do Bash Organizer e o Playwright do perfil');
+  const pw = servers.find((x) => x.name === 'playwright');
+  t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@latest'] : ['npx', '@playwright/mcp@latest'], 'comando do servidor MCP (npx pelo cmd no Windows)');
+  const bad = await t.js(`try { (await import('./js/agents/profiles.js')).saveProfile({ label: 'X', command: 'x', mcp: 'sem dois pontos' }); return null; } catch (e) { return e.message; }`);
+  t.includes(bad || '', 'linha 1', 'linha de MCP inválida é recusada ao salvar o perfil');
 });

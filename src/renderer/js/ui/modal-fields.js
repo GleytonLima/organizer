@@ -37,7 +37,7 @@ const CONTROLS = {
   custom: (f, values) => f.render(values, f),
   folders: folderListControl,
   textarea(f, values) {
-    const node = el('textarea', { class: 'input textarea', rows: f.rows || 4, placeholder: f.placeholder || '', oninput: bind(f, values) });
+    const node = el('textarea', { class: `input textarea${f.mono ? ' mono' : ''}`, rows: f.rows || 4, placeholder: f.placeholder || '', oninput: bind(f, values) });
     node.value = values[f.key];
     return node;
   },
