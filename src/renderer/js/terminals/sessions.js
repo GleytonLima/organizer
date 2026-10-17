@@ -112,14 +112,13 @@ async function spawn(t, s) {
 
 // Sequências emitidas pelo src/main/shell/bash-init.sh.
 function registerShellIntegration(id, s) {
-  s.term.parser.registerOscHandler(7, (data) => {
-    const m = /^file:\/\/[^/]*(\/.*)$/.exec(data);
-    if (m) onCwdChange(id, m[1]);
-    return true;
-  });
   s.term.parser.registerOscHandler(6973, (data) => {
     const [kind, ...rest] = data.split(';');
     const arg = rest.join(';');
+    if (kind === 'cwd') {
+      onCwdChange(id, arg.trim().replace(/\//g, '\\')); // trim: descarta a quebra de linha do `pwd -W`
+      return true;
+    }
     if (kind === 'start') s.running = { cmd: arg, since: Date.now() };
     else if (kind === 'end') {
       const finished = s.running;
@@ -152,11 +151,9 @@ export function destroySession(id) {
   sessions.delete(id);
 }
 
-async function onCwdChange(id, msysPath) {
+async function onCwdChange(id, cwd) {
   const entry = findTerm(id);
-  if (!entry) return;
-  const cwd = await api.fromMsys(msysPath);
-  if (cwd === entry.t.cwd) return;
+  if (!entry || !cwd || cwd === entry.t.cwd) return;
   entry.t.cwd = cwd;
   persist();
   await refreshGit(cwd);

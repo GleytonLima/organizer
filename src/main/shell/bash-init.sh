@@ -1,8 +1,10 @@
 # Bash Organizer — integração com o shell (copiado para %APPDATA% a cada início).
 # Reproduz o startup de um login shell do Git Bash e emite sequências que o app entende:
-#   OSC 7;file://host/caminho        diretório atual (a cada prompt)
+#   OSC 6973;cwd;<C:/caminho>         diretório atual em formato Windows (a cada prompt)
 #   OSC 6973;start;<comando>          um comando começou a executar
 #   OSC 6973;end;<código de saída>    o comando terminou
+# O caminho vem de `pwd -W` (embutido no bash do Git, sem subprocesso): respeita os pontos de
+# montagem do MSYS (ex.: /tmp → %TEMP%), que uma conversão ingênua de /c/... erraria.
 
 [ -f /etc/profile ] && . /etc/profile
 if [ -f ~/.bash_profile ]; then . ~/.bash_profile
@@ -21,7 +23,7 @@ __bo_precmd() {
   local ec=$?
   [ "$__bo_state" = 0 ] && printf '\033]6973;end;%s\007' "$ec"
   __bo_state=2
-  printf '\033]7;file://localhost%s\007' "$PWD"
+  printf '\033]6973;cwd;'; builtin pwd -W; printf '\007' # a quebra de linha do pwd é descartada pelo app
 }
 
 __bo_arm() { __bo_state=1; }

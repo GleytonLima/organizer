@@ -24,28 +24,28 @@ export function tintedIcon(name, color, cls = '') {
   return node;
 }
 
-/** Resumo git compacto: branch, mudanças, commits a enviar/baixar. */
-export function gitSummary(cwd, { detailed = false } = {}) {
-  const g = gitFor(cwd);
+/** Detalhe git de um status já obtido: branch, mudanças, commits a enviar/baixar. */
+export function gitDetail(g, { repo = null } = {}) {
   if (!g?.branch) return null;
   const dirty = dirtyCount(g);
   return el(
     'span',
-    { class: 'git' },
+    { class: 'git', title: g.root || '' },
+    repo ? el('span', { class: 'git-repo', text: repo }) : null,
     icon('branch', 'git-icon'),
     el('span', { class: 'git-branch', text: g.branch }),
     g.conflicts ? el('span', { class: 'git-conflict', text: `${g.conflicts} conflito(s)` }) : null,
-    dirty
-      ? el('span', {
-          class: 'git-dirty',
-          title: `${g.staged} staged · ${g.changes} modificados · ${g.untracked} novos`,
-          text: detailed ? `${dirty} alteraç${dirty > 1 ? 'ões' : 'ão'}` : `•${dirty}`,
-        })
-      : null,
+    dirty ? el('span', { class: 'git-dirty', title: `${g.staged} staged · ${g.changes} modificados · ${g.untracked} novos`, text: `•${dirty}` }) : null,
     g.ahead ? el('span', { class: 'git-sync', title: 'commits para enviar', text: `↑${g.ahead}` }) : null,
     g.behind ? el('span', { class: 'git-sync', title: 'commits para baixar', text: `↓${g.behind}` }) : null,
   );
 }
+
+/** Resumo git de uma pasta, com o nome do repositório (projetos podem ter vários repos). */
+export const gitSummary = (cwd) => {
+  const g = gitFor(cwd);
+  return gitDetail(g, { repo: g?.repo });
+};
 
 /** Estado do processo do terminal: em execução, erro ou encerrado. Null quando ocioso. */
 export function processBadge(id) {

@@ -5,6 +5,7 @@ import { editCommand, removeCommand } from '../actions/commands.js';
 import { commandMenu } from './context-menus.js';
 import { iconButton } from './components.js';
 import { icon } from './icons.js';
+import { repoStrip } from './repos.js';
 
 const chip = (c) =>
   el(
@@ -28,5 +29,7 @@ export function renderCmdbar() {
     $('#cmdbar'),
     store.state.commands.map(chip),
     el('button', { class: 'chip chip-add', title: 'Novo comando', onclick: () => editCommand() }, icon('plus')),
+    el('span', { class: 'spacer' }),
+    repoStrip(),
   );
 }

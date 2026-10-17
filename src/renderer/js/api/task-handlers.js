@@ -25,6 +25,7 @@ function taskInfo(task, { history = false } = {}) {
       ? { question: task.needsInput.question, since: iso(task.needsInput.at), suggestion: task.needsInput.suggestion?.text ?? null }
       : null,
     terminal: origin ? termLabel(origin.t) : null,
+    repo: task.repo ?? null,
     branch: task.branch ?? null,
     lastReport: last?.text ?? null,
     updatedAt: iso(task.updatedAt),

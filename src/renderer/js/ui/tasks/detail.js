@@ -54,7 +54,7 @@ function meta(task) {
     'div',
     { class: 'td-meta' },
     item('Terminal', origin ? el('button', { class: 'link', onclick: stop(() => activate(origin.t.id)) }, icon('terminal'), termLabel(origin.t)) : el('span', { text: '—' })),
-    item('Branch', el('span', { text: task.branch || '—' })),
+    item('Repositório', el('span', { text: task.repo ? `${task.repo} · ${task.branch || '?'}` : task.branch || '—' })),
     item('Progresso', el('span', { text: task.progress == null ? '—' : `${task.progress}%` })),
     item('Criada', el('span', { text: timeAgo(task.createdAt) })),
   );

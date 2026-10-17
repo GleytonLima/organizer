@@ -19,7 +19,9 @@ function progressBar(value) {
 function originChips(task) {
   const origin = findTerm(task.terminalId);
   return [
-    task.branch ? el('span', { class: 'task-chip', title: 'Branch' }, icon('branch'), el('span', { text: task.branch })) : null,
+    task.branch
+      ? el('span', { class: 'task-chip', title: 'Repositório e branch' }, icon('branch'), el('span', { text: task.repo ? `${task.repo} · ${task.branch}` : task.branch }))
+      : null,
     origin
       ? el('button', { class: 'task-chip link', title: 'Abrir terminal de origem', onclick: stop(() => activate(origin.t.id)) }, icon('terminal'), el('span', { text: termLabel(origin.t) }))
       : null,

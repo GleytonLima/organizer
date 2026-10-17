@@ -7,6 +7,7 @@ import { destroySession } from '../terminals/sessions.js';
 import { openModal, field } from '../ui/modal.js';
 import { confirmDanger, describeTerminals, hasRunning } from '../ui/confirm.js';
 import { activate, newTerminal, ensureProjectOpen } from './terminals.js';
+import { rescanRepos } from '../git/git.js';
 
 const projectFields = (p) => [
   field.text('name', 'Nome', p.name, { placeholder: 'minha-app' }),
@@ -58,6 +59,7 @@ export async function createProject() {
   });
   store.state.projects.push(project);
   newTerminal(project.groups[0]);
+  rescanRepos();
 }
 
 export async function editProject(project) {
@@ -65,6 +67,7 @@ export async function editProject(project) {
   if (!v) return;
   Object.assign(project, { name: v.name.trim() || project.name, cwd: v.cwd.trim() || project.cwd, color: v.color });
   commit();
+  rescanRepos();
 }
 
 export async function deleteProject(project) {

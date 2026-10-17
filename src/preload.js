@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('api', {
   openPath: (p) => ipcRenderer.send('shell:openPath', p),
 
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
+  gitRepos: (dir) => ipcRenderer.invoke('git:repos', dir),
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
   onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, terminalId) => cb(terminalId)),

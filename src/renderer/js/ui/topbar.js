@@ -6,7 +6,7 @@ import { fitVisible, processStatus } from '../terminals/sessions.js';
 import { activate, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
 import { createProject, openProject } from '../actions/projects.js';
 import { gitFor, dirtyCount } from '../git/git.js';
-import { iconButton, dot, gitSummary, processBadge, unreadDot } from './components.js';
+import { iconButton, dot, processBadge, unreadDot } from './components.js';
 import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus.js';
 import { splitIndicator } from './split.js';
 import { notificationsButton } from './notifications.js';
@@ -33,7 +33,6 @@ function activeTitle() {
     dot(entry.t.color || entry.project.color),
     el('span', { class: 'title', text: termLabel(entry.t) }),
     processBadge(entry.t.id),
-    gitSummary(entry.t.cwd, { detailed: true }),
   );
 }
 

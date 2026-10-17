@@ -9,13 +9,14 @@ export function logTask(task, by, type, text) {
   task.updatedAt = Date.now();
 }
 
-/** Associa a tarefa ao terminal do agente e guarda a branch em que ele está trabalhando. */
+/** Associa a tarefa ao terminal do agente e guarda o repositório e a branch em que ele está trabalhando. */
 export function stampOrigin(task, terminalId) {
   if (!terminalId) return;
   task.terminalId = terminalId;
   const entry = findTerm(terminalId);
-  const branch = entry && gitFor(entry.t.cwd)?.branch;
-  if (branch) task.branch = branch;
+  const g = entry && gitFor(entry.t.cwd);
+  if (g?.branch) task.branch = g.branch;
+  if (g?.repo) task.repo = g.repo;
 }
 
 export const notifyAbout = (task, body) => pushNotification({ terminalId: task.terminalId, label: task.key, body });
