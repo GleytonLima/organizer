@@ -47,6 +47,16 @@ export function applyUpdate(s, u) {
   }
 }
 
+// Rótulos das opções de permissão pelo tipo (o adaptador manda em inglês, ex.: "Yes, and don't ask
+// again for Open Terminal commands"); o texto original fica em `detail`. Tipo desconhecido: mantém.
+const OPTION_LABEL = { allow_once: 'Permitir', allow_always: 'Permitir sempre', reject_once: 'Recusar', reject_always: 'Recusar sempre' };
+
+/** Item de pedido de permissão, ligado à ferramenta que o pediu (toolCallId). */
+export function permissionItem(ev) {
+  const options = (ev.options || []).map((o) => ({ ...o, name: OPTION_LABEL[o.kind] || o.name, detail: o.name }));
+  return { type: 'permission', requestId: ev.requestId, toolCallId: ev.toolCall?.toolCallId ?? null, title: ev.toolCall?.title || 'Ação do agente', options, answer: undefined };
+}
+
 /** Há um pedido de permissão sem resposta? */
 export const waitingYou = (s) => s.items.some((i) => i.type === 'permission' && i.answer === undefined);
 

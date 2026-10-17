@@ -7,7 +7,7 @@ import { notify, persist } from '../core/store.js';
 import { profileById } from '../agents/profiles.js';
 import { renderAgentView } from '../ui/agent/view.js';
 import { onPrompt, onPermission, onPermissionAnswered, onTurnEnd } from '../actions/agent-tasks.js';
-import { applyUpdate, waitingYou, transcriptText } from './agent-transcript.js';
+import { applyUpdate, permissionItem, waitingYou, transcriptText } from './agent-transcript.js';
 
 const STATE_LABEL = { iniciando: 'iniciando…', pronto: 'pronto', trabalhando: 'trabalhando…', encerrado: 'encerrado' };
 
@@ -25,7 +25,7 @@ function handle(s, ev) {
   else if (ev.type === 'config') s.config = ev.options;
   else if (ev.type === 'update') applyUpdate(s, ev.update);
   else if (ev.type === 'permission') {
-    const item = { type: 'permission', requestId: ev.requestId, title: ev.toolCall?.title || 'Ação do agente', options: ev.options || [], answer: undefined };
+    const item = permissionItem(ev);
     s.items.push(item);
     onPermission(s.id, item);
   } else if (ev.type === 'permission-answered') {

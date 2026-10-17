@@ -167,6 +167,26 @@
   display: flex;
   gap: 8px;
 }
+/* ferramenta que pediu permissão: um bloco só (linha da ferramenta + pedido) */
+.ag-tool-block {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--raised);
+  overflow: hidden;
+}
+.ag-tool-block.open {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+}
+.ag-tool-block > .ag-tool {
+  border: 0;
+  border-radius: 0;
+}
+.ag-tool-block > .ag-permission {
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
 .ag-error {
   padding: 8px 12px;
   border-radius: var(--r);

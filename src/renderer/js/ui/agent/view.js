@@ -11,31 +11,48 @@ const TOOL_ICON = { read: 'search', search: 'search', edit: 'note', delete: 'tra
 const STATUS_LABEL = { pending: 'aguardando', in_progress: 'em andamento', completed: 'feito', failed: 'falhou' };
 const ALLOW = new Set(['allow_once', 'allow_always']);
 
-function permissionItem(s, i) {
+// Pedido de permissão: aparece dentro do bloco da ferramenta que o pediu (ou sozinho, se ela não veio).
+function permissionItem(s, i, { nested = false } = {}) {
   const chosen = i.options.find((o) => o.optionId === i.answer);
   return el(
     'div',
     { class: `ag-permission${i.answer === undefined ? ' open' : ''}` },
-    el('div', { class: 'ag-permission-title' }, icon('pause'), el('span', { text: `Pede permissão: ${i.title}` })),
+    el('div', { class: 'ag-permission-title' }, icon('pause'), el('span', { text: nested ? 'Pede permissão' : `Pede permissão: ${i.title}` })),
     i.answer === undefined
       ? el(
           'div',
           { class: 'ag-permission-actions' },
-          i.options.map((o) => el('button', { class: `btn small${ALLOW.has(o.kind) ? ' primary' : ''}`, onclick: () => s.answer(i.requestId, o.optionId), text: o.name })),
+          i.options.map((o) => el('button', { class: `btn small${ALLOW.has(o.kind) ? ' primary' : ''}`, title: o.detail || '', onclick: () => s.answer(i.requestId, o.optionId), text: o.name })),
         )
       : el('div', { class: 'ag-muted', text: chosen ? `Respondido: ${chosen.name}` : 'Cancelado' }),
   );
+}
+
+const permissionsOf = (s, tool) => s.items.filter((p) => p.type === 'permission' && p.toolCallId === tool.id);
+const hasTool = (s, id) => id != null && s.items.some((t) => t.type === 'tool' && t.id === id);
+
+function toolItem(s, i) {
+  const asks = permissionsOf(s, i);
+  const waiting = asks.some((p) => p.answer === undefined);
+  const row = el(
+    'div',
+    { class: `ag-tool ${i.status}` },
+    icon(TOOL_ICON[i.kind] || 'settings'),
+    el('span', { class: 'ag-tool-title', text: i.title }),
+    el('span', { class: 'ag-chip', text: waiting ? 'aguardando você' : STATUS_LABEL[i.status] || i.status }),
+  );
+  if (!asks.length) return row;
+  return el('div', { class: `ag-tool-block${waiting ? ' open' : ''}` }, row, asks.map((p) => permissionItem(s, p, { nested: true })));
 }
 
 const ITEM = {
   user: (_s, i) => el('div', { class: 'ag-user' }, el('div', { class: 'ag-who', text: 'Você' }), el('div', { class: 'ag-text', text: i.text })),
   agent: (s, i) => el('div', { class: 'ag-agent' }, el('div', { class: 'ag-who', text: s.label }), el('div', { class: 'ag-text', text: i.text })),
   thought: (_s, i) => el('div', { class: 'ag-thought', title: i.text, text: i.text }),
-  tool: (_s, i) =>
-    el('div', { class: `ag-tool ${i.status}` }, icon(TOOL_ICON[i.kind] || 'settings'), el('span', { class: 'ag-tool-title', text: i.title }), el('span', { class: 'ag-chip', text: STATUS_LABEL[i.status] || i.status })),
+  tool: toolItem,
   plan: (_s, i) =>
     el('ol', { class: 'ag-plan' }, i.entries.map((e) => el('li', { class: e.status }, e.status === 'completed' ? icon('check') : el('span', { class: 'ag-dot' }), el('span', { text: e.content })))),
-  permission: permissionItem,
+  permission: (s, i) => (hasTool(s, i.toolCallId) ? null : permissionItem(s, i)),
   error: (_s, i) => el('div', { class: 'ag-error', text: i.text }),
   note: (_s, i) => el('div', { class: 'ag-muted', text: i.text }),
   turn: (_s, i) => (i.stopReason === 'end_turn' ? null : el('div', { class: 'ag-muted', text: i.stopReason === 'cancelled' ? 'Interrompido.' : `Turno encerrado: ${i.stopReason}` })),

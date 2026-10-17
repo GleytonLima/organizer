@@ -67,9 +67,14 @@ async function prompt(id, { sessionId, prompt: blocks }) {
     const r = await ask('session/request_permission', {
       sessionId,
       toolCall: { toolCallId: 't1', title: 'Editar config.json', kind: 'edit' },
-      options: [{ optionId: 'allow', name: 'Permitir', kind: 'allow_once' }, { optionId: 'reject', name: 'Recusar', kind: 'reject_once' }],
+      // em inglês, como o adaptador do Claude (o app traduz pelo tipo)
+      options: [
+        { optionId: 'allow', name: 'Yes', kind: 'allow_once' },
+        { optionId: 'allow-always', name: "Yes, and don't ask again for Edit commands", kind: 'allow_always' },
+        { optionId: 'reject', name: 'No', kind: 'reject_once' },
+      ],
     });
-    allowed = r?.outcome?.outcome === 'selected' && r.outcome.optionId === 'allow';
+    allowed = r?.outcome?.outcome === 'selected' && r.outcome.optionId.startsWith('allow');
   }
   if (cancelled) return send({ id, result: { stopReason: 'cancelled' } });
   update(sessionId, { sessionUpdate: 'tool_call_update', toolCallId: 't1', status: allowed ? 'completed' : 'failed' });

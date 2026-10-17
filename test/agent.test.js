@@ -52,8 +52,11 @@ suite('agente via ACP', {
   const waiting = await t.waitFor(async () => (await task())?.waiting);
   const created = await task();
   t.equal(created?.title, 'Ajuste a config de cache para 60 s', 'o 1º pedido cria a tarefa do terminal');
-  t.check(waiting?.question.includes('Editar config.json') && waiting.choices.map((c) => c.label).join() === 'Permitir,Recusar', 'pedido de permissão deixa a tarefa Em espera com as opções', JSON.stringify(waiting));
-  t.includes(await view(), 'Pede permissão: Editar config.json', 'a conversa mostra o pedido com botões');
+  t.check(waiting?.question.includes('Editar config.json') && waiting.choices.map((c) => c.label).join() === 'Permitir,Permitir sempre,Recusar', 'pedido de permissão deixa a tarefa Em espera com as opções', JSON.stringify(waiting));
+  const block = await t.js(`const b = SE.getSession(${JSON.stringify(id)}).body.querySelector('.ag-tool-block.open'); return b && { tool: b.querySelector('.ag-tool-title').textContent, ask: b.querySelector('.ag-permission-title').textContent, chip: b.querySelector('.ag-chip').textContent, buttons: [...b.querySelectorAll('.ag-permission-actions button')].map((x) => [x.textContent, x.title]) }`);
+  t.equal(block?.tool, 'Editar config.json', 'o pedido aparece dentro do bloco da ferramenta que o fez');
+  t.equal([block?.ask, block?.chip], ['Pede permissão', 'aguardando você'], 'a ferramenta fica "aguardando você" enquanto o pedido está aberto');
+  t.equal(block?.buttons?.[1], ['Permitir sempre', "Yes, and don't ask again for Edit commands"], 'opções em português (o texto original do agente fica na dica)');
   await t.js(`S.store.state.taskView = 'panel'; S.store.state.sideTab = 'tasks'; S.commit();`);
   await t.wait(300);
   await shot('espera');
