@@ -1,9 +1,12 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   loadState: () => ipcRenderer.invoke('state:load'),
   saveState: (state) => ipcRenderer.send('state:save', state),
   saveStateSync: (state) => ipcRenderer.sendSync('state:saveSync', state),
+
+  // caminho no disco de um arquivo arrastado/escolhido (vazio para um print colado)
+  filePath: (file) => webUtils.getPathForFile(file),
 
   ptyInfo: () => ipcRenderer.invoke('pty:info'),
   ptyCreate: (opts) => ipcRenderer.invoke('pty:create', opts),
@@ -43,7 +46,7 @@ contextBridge.exposeInMainWorld('api', {
   // Sessões de agente via ACP (Agent Client Protocol): terminal do tipo "agente".
   acp: {
     start: (id, opts) => ipcRenderer.invoke('acp:start', id, opts),
-    prompt: (id, text) => ipcRenderer.invoke('acp:prompt', id, text),
+    prompt: (id, text, attachments) => ipcRenderer.invoke('acp:prompt', id, text, attachments),
     cancel: (id) => ipcRenderer.invoke('acp:cancel', id),
     permission: (id, requestId, optionId) => ipcRenderer.invoke('acp:permission', id, requestId, optionId),
     setMode: (id, modeId) => ipcRenderer.invoke('acp:setMode', id, modeId),

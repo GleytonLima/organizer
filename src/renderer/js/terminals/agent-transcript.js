@@ -9,10 +9,19 @@ function appendText(s, type, text) {
   else s.items.push({ type, text });
 }
 
+/** Imagem de uma mensagem sua (ao continuar uma sessão, o agente a reenvia). */
+function userImage(s, c) {
+  let last = s.items.at(-1);
+  if (last?.type !== 'user') s.items.push((last = { type: 'user', text: '' }));
+  const url = c.data ? `data:${c.mimeType};base64,${c.data}` : c.uri;
+  (last.attachments ||= []).push({ kind: 'image', name: 'imagem', url });
+}
+
 export function applyUpdate(s, u) {
   const text = u.content?.type === 'text' ? u.content.text : '';
   switch (u.sessionUpdate) {
     case 'user_message_chunk':
+      if (u.content?.type === 'image') return userImage(s, u.content);
       return appendText(s, 'user', text);
     case 'agent_message_chunk':
       return appendText(s, 'agent', text);

@@ -35,6 +35,9 @@
     opacity: 0.35;
   }
 }
+.ag-log > * {
+  flex-shrink: 0; /* blocos com overflow: hidden encolheriam até sumir com a conversa cheia */
+}
 .ag-log {
   flex: 1;
   min-height: 0;
@@ -263,4 +266,48 @@
 }
 .ag-status {
   flex-wrap: wrap;
+}
+
+/* anexos: prints, imagens e PDFs (na caixa e nas suas mensagens) */
+.ag-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ag-user .ag-attachments {
+  margin-bottom: 6px;
+}
+.ag-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 4px 6px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--raised);
+  font-size: 12px;
+  color: var(--dim);
+}
+.ag-attachment img {
+  width: 44px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+.ag-attachment > .icon {
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+}
+.ag-attachment-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ag-clip {
+  margin-right: auto;
+}
+.dropping > .ag-composer {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }

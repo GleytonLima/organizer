@@ -16,6 +16,7 @@ const { agentCommand, boMcpServer } = require('./agents');
 const { organizerEnv } = require('../pty');
 const { childEnv } = require('../env');
 const { PermissionGate } = require('./permissions');
+const { promptBlocks } = require('./prompt-blocks');
 
 const PROTOCOL_VERSION = 1;
 
@@ -131,12 +132,18 @@ class AgentSession {
     return (r?.sessions || []).map((s) => ({ sessionId: s.sessionId, title: s.title || null, updatedAt: s.updatedAt || null }));
   }
 
-  /** Um turno: o texto do usuário; os eventos chegam por `emit` e o fim por { type: 'turn' }. */
-  async prompt(text) {
+  /** Um turno: texto e anexos do usuário; os eventos chegam por `emit` e o fim por { type: 'turn' }. */
+  async prompt(text, attachments = []) {
     if (!this.sessionId) throw new Error('A sessão do agente ainda não está pronta.');
+    let prompt;
+    try {
+      prompt = promptBlocks(text, attachments, this.caps);
+    } catch (err) {
+      return this.emit({ type: 'error', message: err.message });
+    }
     this.state('trabalhando');
     try {
-      const r = await this.rpc.request('session/prompt', { sessionId: this.sessionId, prompt: [{ type: 'text', text }] });
+      const r = await this.rpc.request('session/prompt', { sessionId: this.sessionId, prompt });
       this.emit({ type: 'turn', stopReason: r?.stopReason || 'end_turn' });
     } catch (err) {
       this.emit({ type: 'error', message: err.message });

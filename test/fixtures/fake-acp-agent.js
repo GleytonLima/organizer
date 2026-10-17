@@ -52,6 +52,13 @@ async function prompt(id, { sessionId, prompt: blocks }) {
   cancelled = false;
   remember(sessionId, 'user', text);
   update(sessionId, { sessionUpdate: 'plan', entries: [{ content: 'Ler a config', priority: 'high', status: 'completed' }, { content: 'Editar a config', priority: 'high', status: 'pending' }] });
+  // anexos: conta as imagens e lista os arquivos (links para o disco)
+  const images = blocks.filter((b) => b.type === 'image' && b.data && b.mimeType);
+  const links = blocks.filter((b) => b.type === 'resource_link');
+  if (images.length || links.length) {
+    say(sessionId, `Recebi ${images.length} imagem(ns) e ${links.length} arquivo(s)${links.map((l) => ` ${l.name} <${l.uri}>`).join('')}.`);
+    return send({ id, result: { stopReason: 'end_turn' } });
+  }
   if (text.startsWith('/')) {
     say(sessionId, `Comando ${text.split(' ')[0]} executado (modelo ${config.model}, esforço ${config.effort}).`);
     return send({ id, result: { stopReason: 'end_turn' } });
@@ -92,7 +99,7 @@ function loadSession(id, { sessionId }) {
 }
 
 const HANDLERS = {
-  initialize: () => ({ protocolVersion: 1, agentCapabilities: { loadSession: true, sessionCapabilities: { list: {} } }, authMethods: [] }),
+  initialize: () => ({ protocolVersion: 1, agentCapabilities: { loadSession: true, promptCapabilities: { image: true }, sessionCapabilities: { list: {} } }, authMethods: [] }),
   'session/new': (p) => {
     const sessionId = `fake-${Date.now()}-${p.mcpServers.length}`;
     setTimeout(() => update(sessionId, { sessionUpdate: 'available_commands_update', availableCommands: COMMANDS }), 20);

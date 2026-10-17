@@ -145,6 +145,24 @@ suite('agente via ACP', {
   t.check(await t.waitFor(async () => (await view()).includes('Comando /model executado')), '/model com argumento segue para o agente');
   await t.waitFor(async () => (await state()) === 'pronto');
 
+  // anexos: print colado (Ctrl+V) vai como imagem; PDF vai como link para o arquivo no disco
+  const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const paste = (name, type, b64) =>
+    t.js(`const ta = SE.getSession(${sid}).view.textarea; const dt = new DataTransfer();
+      dt.items.add(new File([Uint8Array.from(atob(${JSON.stringify(b64)}), (c) => c.charCodeAt(0))], ${JSON.stringify(name)}, { type: ${JSON.stringify(type)} }));
+      ta.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));`);
+  const chips = () => t.js(`return [...SE.getSession(${sid}).view.files.chips.querySelectorAll('.ag-attachment')].map((c) => [c.textContent, !!c.querySelector('img')])`);
+  await paste('print.png', 'image/png', PNG);
+  t.equal(await t.waitFor(async () => ((await chips()).length ? chips() : null)), [['print.png', true]], 'colar um print mostra a miniatura na caixa');
+  await paste('doc.pdf', 'application/pdf', 'JVBERi0=');
+  t.check(await t.waitFor(async () => (await view()).includes('Não foi possível anexar doc.pdf')), 'arquivo sem caminho no disco (colado) avisa em vez de sumir');
+  await t.js(`const v = SE.getSession(${sid}).view; v.files.list.push({ kind: 'file', name: 'manual.pdf', mimeType: 'application/pdf', path: 'C:\\\\docs\\\\manual.pdf' }); v.textarea.value = 'Veja o print e o manual'; v.sendBtn.click();`);
+  t.check(await t.waitFor(async () => (await view()).includes('Recebi 1 imagem(ns) e 1 arquivo(s) manual.pdf <file:///C:/docs/manual.pdf>')), 'o agente recebe a imagem e o link do PDF', (await view()).slice(-300));
+  t.equal(await chips(), [], 'a caixa fica sem anexos depois de enviar');
+  const sent = await t.js(`const u = [...SE.getSession(${sid}).body.querySelectorAll('.ag-user')].at(-1); return [...u.querySelectorAll('.ag-attachment')].map((c) => [c.textContent, !!c.querySelector('img')])`);
+  t.equal(sent, [['print.png', true], ['manual.pdf', false]], 'sua mensagem mostra os anexos enviados');
+  await t.waitFor(async () => (await state()) === 'pronto');
+
   // modo: em "Aceitar edições" o agente não pede permissão
   await openPicker('mode');
   await t.waitFor(popupRows);

@@ -73,15 +73,15 @@ export function createAgentSession(t, { container, onFocus }) {
       return profileById(t.agent).label;
     },
     stateLabel: () => (s.state === 'trabalhando' && waitingYou(s) ? 'aguardando você' : STATE_LABEL[s.state] || s.state),
-    /** Envia uma mensagem ao agente (também usado por "responder no terminal de origem"). */
-    send(text) {
+    /** Envia uma mensagem ao agente, com anexos opcionais (`ui/agent/attachments.js`); também usado por "responder no terminal de origem". */
+    send(text, attachments = []) {
       const clean = String(text || '').trim();
-      if (!clean) return;
+      if (!clean && !attachments.length) return;
       if (s.state !== 'pronto') throw new Error(s.state === 'trabalhando' ? 'O agente ainda está trabalhando.' : 'A sessão do agente não está pronta.');
-      s.items.push({ type: 'user', text: clean });
-      onPrompt(t.id, clean);
+      s.items.push({ type: 'user', text: clean, attachments: attachments.map(({ kind, name, url, path }) => ({ kind, name, url, path })) });
+      onPrompt(t.id, clean || `Anexos: ${attachments.map((a) => a.name).join(', ')}`);
       s.render();
-      return api.acp.prompt(t.id, clean);
+      return api.acp.prompt(t.id, clean, attachments.map(({ url, ...a }) => a));
     },
     answer: (requestId, optionId) => api.acp.permission(t.id, requestId, optionId),
     cancel: () => api.acp.cancel(t.id),

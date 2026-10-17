@@ -6,6 +6,7 @@ import { icon } from '../icons.js';
 import { resumeDialog } from './resume-dialog.js';
 import { configPickers, pickerForCommand } from './config-pickers.js';
 import { attachSlash } from './slash.js';
+import { attachmentsBox, attachmentChip } from './attachments.js';
 
 const TOOL_ICON = { read: 'search', search: 'search', edit: 'note', delete: 'trash', move: 'folder', execute: 'terminal', fetch: 'cloud', think: 'memory' };
 const STATUS_LABEL = { pending: 'aguardando', in_progress: 'em andamento', completed: 'feito', failed: 'falhou' };
@@ -46,7 +47,14 @@ function toolItem(s, i) {
 }
 
 const ITEM = {
-  user: (_s, i) => el('div', { class: 'ag-user' }, el('div', { class: 'ag-who', text: 'Você' }), el('div', { class: 'ag-text', text: i.text })),
+  user: (_s, i) =>
+    el(
+      'div',
+      { class: 'ag-user' },
+      el('div', { class: 'ag-who', text: 'Você' }),
+      i.attachments?.length ? el('div', { class: 'ag-attachments' }, i.attachments.map((a) => attachmentChip(a))) : null,
+      i.text ? el('div', { class: 'ag-text', text: i.text }) : null,
+    ),
   agent: (s, i) => el('div', { class: 'ag-agent' }, el('div', { class: 'ag-who', text: s.label }), el('div', { class: 'ag-text', text: i.text })),
   thought: (_s, i) => el('div', { class: 'ag-thought', title: i.text, text: i.text }),
   tool: toolItem,
@@ -71,23 +79,26 @@ function build(s) {
   });
   const sendBtn = el('button', { class: 'btn primary', onclick: () => submit() }, icon('send'), 'Enviar');
   const stopBtn = el('button', { class: 'btn', onclick: () => s.cancel(), text: 'Interromper' });
+  const files = attachmentsBox({ onError: (text) => (s.items.push({ type: 'error', text }), s.render()) });
   function submit() {
-    if (pickerForCommand(s, textarea.value, textarea)) return void (textarea.value = '');
+    if (!files.list.length && pickerForCommand(s, textarea.value, textarea)) return void (textarea.value = '');
     try {
-      s.send(textarea.value);
+      s.send(textarea.value, files.list);
       textarea.value = '';
+      files.clear();
     } catch (err) {
       s.items.push({ type: 'error', text: err.message });
       s.render();
     }
   }
   attachSlash(s, textarea);
+  files.bind(textarea, s.body);
   const view = {
     status: el('div', { class: 'ag-status' }),
     log: el('div', { class: 'ag-log' }),
-    textarea, sendBtn, stopBtn,
+    textarea, sendBtn, stopBtn, files,
   };
-  mount(s.body, view.status, view.log, el('div', { class: 'ag-composer' }, textarea, el('div', { class: 'ag-buttons' }, stopBtn, sendBtn)));
+  mount(s.body, view.status, view.log, el('div', { class: 'ag-composer' }, files.chips, textarea, el('div', { class: 'ag-buttons' }, files.button, stopBtn, sendBtn)));
   return view;
 }
 

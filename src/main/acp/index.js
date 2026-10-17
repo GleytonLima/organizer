@@ -27,8 +27,8 @@ function stop(id) {
 
 function registerAcpIpc() {
   ipcMain.handle('acp:start', (_e, id, opts) => start(id, opts));
-  ipcMain.handle('acp:prompt', (_e, id, text) => {
-    session(id).prompt(text); // não espera o turno: os eventos chegam por acp:event
+  ipcMain.handle('acp:prompt', (_e, id, text, attachments) => {
+    session(id).prompt(text, attachments); // não espera o turno: os eventos chegam por acp:event
     return true;
   });
   ipcMain.handle('acp:cancel', (_e, id) => session(id).cancel());
