@@ -1,5 +1,6 @@
 // Diálogos da memória: nova/editar nota ou decisão, substituir decisão e configurar embeddings.
 import { projectRepos } from '../../git/git.js';
+import { folderLabel } from '../../memory/context.js';
 import { cleanError } from '../../core/errors.js';
 import { openModal, field } from '../modal.js';
 import { confirmDanger } from '../confirm.js';
@@ -7,7 +8,17 @@ import { invalidateMemory } from './state.js';
 
 const DECISION_HINT = 'Uma frase com o porquê (máx. 280). Ex.: "Usamos Postgres porque o time já domina."';
 
-const repoOptions = (project) => [{ value: '', label: '— nenhum —' }, ...projectRepos(project).map((r) => ({ value: r.name, label: r.name }))];
+// "Onde vale": projeto (padrão), uma das pastas do projeto (vale em qualquer projeto que a inclua) ou global.
+const whereOptions = (project, item) => {
+  const folders = projectRepos(project).map((r) => ({ value: `folder:${r.path}`, label: `Pasta ${r.name} (em qualquer projeto que a use)` }));
+  // uma memória de pasta que não está mais neste projeto continua selecionável
+  if (item?.scope === 'folder' && !folders.some((f) => f.value === `folder:${item.folder}`)) {
+    folders.push({ value: `folder:${item.folder}`, label: `Pasta ${folderLabel(project, item.folder)}` });
+  }
+  return [{ value: 'project', label: `Projeto ${project.name}` }, ...folders, { value: 'global', label: 'Global (todos os projetos)' }];
+};
+const whereOf = (item) => (!item ? 'project' : item.scope === 'folder' ? `folder:${item.folder}` : item.scope || 'project');
+const parseWhere = (where) => (where.startsWith('folder:') ? { scope: 'folder', folder: where.slice(7) } : { scope: where });
 
 async function save(run) {
   try {
@@ -26,14 +37,14 @@ export async function newMemoryDialog(project, kind, { supersedes = null } = {})
     message: supersedes ? `Substitui: “${supersedes.text}”` : null,
     fields: [
       decision ? field.text('text', 'Decisão', '', { hint: DECISION_HINT }) : field.textarea('text', 'Nota', '', { rows: 5 }),
-      field.select('repo', 'Repositório', supersedes?.repo || '', { options: repoOptions(project) }),
+      field.select('where', 'Onde vale', whereOf(supersedes), { options: whereOptions(project, supersedes) }),
       field.text('tags', 'Tags', supersedes?.tags?.join(', ') || '', { placeholder: 'banco, infra' }),
     ],
     submit: 'Salvar',
   });
   if (!v?.text?.trim()) return;
   await save(() =>
-    api.memory.add({ projectId: project.id, project: project.name, kind, text: v.text, repo: v.repo || null, tags: v.tags, source: 'você', supersedes: supersedes?.id }),
+    api.memory.add({ ...parseWhere(v.where), projectId: project.id, project: project.name, kind, text: v.text, tags: v.tags, source: 'você', supersedes: supersedes?.id }),
   );
 }
 
@@ -43,7 +54,7 @@ export async function editMemoryDialog(project, item) {
     title: decision ? 'Editar decisão' : 'Editar nota',
     fields: [
       decision ? field.text('text', 'Decisão', item.text, { hint: DECISION_HINT }) : field.textarea('text', 'Nota', item.text, { rows: 6 }),
-      field.select('repo', 'Repositório', item.repo || '', { options: repoOptions(project) }),
+      field.select('where', 'Onde vale', whereOf(item), { options: whereOptions(project, item) }),
       field.text('tags', 'Tags', item.tags.join(', ')),
     ],
     submit: 'Salvar',
@@ -51,7 +62,7 @@ export async function editMemoryDialog(project, item) {
   });
   if (v === 'delete') return deleteMemory(item);
   if (!v) return;
-  await save(() => api.memory.update(item.id, { text: v.text, repo: v.repo || null, tags: v.tags }));
+  await save(() => api.memory.update(item.id, { ...parseWhere(v.where), projectId: item.projectId || project.id, text: v.text, tags: v.tags }));
 }
 
 export async function deleteMemory(item) {

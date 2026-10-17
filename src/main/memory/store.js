@@ -1,9 +1,10 @@
-// Operações da memória: notas e decisões (uma frase, com o porquê).
+// Operações da memória: notas e decisões (uma frase, com o porquê), com escopo (ver scope.js).
 const crypto = require('crypto');
 const { openDb } = require('./db');
+const { normalizeScope, contextClause } = require('./scope');
 
 const DECISION_MAX = 280;
-const COLUMNS = 'id, project_id, project, repo, kind, text, tags, source, task_key, superseded_by, created_at, updated_at, embedding_model';
+const COLUMNS = 'id, scope, folder, project_id, project, repo, kind, text, tags, source, task_key, superseded_by, created_at, updated_at, embedding_model';
 
 const now = () => Date.now();
 const normTags = (tags) => (Array.isArray(tags) ? tags : String(tags || '').split(','))
@@ -20,6 +21,8 @@ function validateDecision(text) {
 const toItem = (r) =>
   r && {
     id: r.id,
+    scope: r.scope,
+    folder: r.folder,
     projectId: r.project_id,
     project: r.project,
     repo: r.repo,
@@ -38,34 +41,41 @@ function get(id) {
   return toItem(openDb().prepare(`SELECT ${COLUMNS} FROM memories WHERE id = ?`).get(id));
 }
 
-/** Cria uma memória. `supersedes`: id de uma decisão anterior que esta substitui. */
-function add({ projectId = null, project = null, repo = null, kind = 'note', text, tags, source = null, taskKey = null, supersedes = null }) {
+/**
+ * Cria uma memória. `scope`: 'project' (padrão) | 'folder' (com `folder`) | 'global'.
+ * `supersedes`: id de uma decisão anterior que esta substitui.
+ */
+function add({ scope, folder = null, projectId = null, project = null, repo = null, kind = 'note', text, tags, source = null, taskKey = null, supersedes = null }) {
   const clean = String(text || '').trim();
   if (!clean) throw new Error('A memória precisa de um texto.');
   if (!['note', 'decision'].includes(kind)) throw new Error('Tipo inválido: use "note" ou "decision".');
   if (kind === 'decision') validateDecision(clean);
   // Valida antes de gravar: um supersedes inválido não pode deixar a decisão nova registrada.
   if (supersedes && !get(supersedes)) throw new Error(`Decisão a substituir não encontrada: ${supersedes}`);
+  const sc = normalizeScope({ scope, projectId, folder });
   const id = crypto.randomUUID().slice(0, 8);
   const t = now();
   const db = openDb();
-  db.prepare(`INSERT INTO memories (id, project_id, project, repo, kind, text, tags, source, task_key, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, projectId, project, repo, kind, clean, normTags(tags), source, taskKey, t, t);
+  db.prepare(`INSERT INTO memories (id, scope, folder, folder_key, project_id, project, repo, kind, text, tags, source, task_key, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, sc.scope, sc.folder, sc.folderKey, sc.projectId, sc.scope === 'global' ? null : project, repo, kind, clean, normTags(tags), source, taskKey, t, t);
   if (supersedes) {
     db.prepare('UPDATE memories SET superseded_by = ?, updated_at = ? WHERE id = ?').run(id, t, supersedes);
   }
   return get(id);
 }
 
-function update(id, { text, tags, repo }) {
+/** Edita texto, tags, repo e/ou escopo (`scope`, `folder`, `projectId`). */
+function update(id, { text, tags, repo, scope, folder, projectId }) {
   const cur = get(id);
   if (!cur) throw new Error(`Memória não encontrada: ${id}`);
   const next = { text: text != null ? String(text).trim() : cur.text, tags: tags != null ? normTags(tags) : cur.tags.join(','), repo: repo ?? cur.repo };
   if (cur.kind === 'decision') validateDecision(next.text);
+  const sc = normalizeScope({ scope: scope ?? cur.scope, folder: folder ?? cur.folder, projectId: projectId ?? cur.projectId });
   const changedText = next.text !== cur.text;
   openDb()
-    .prepare(`UPDATE memories SET text = ?, tags = ?, repo = ?, updated_at = ?${changedText ? ', embedding = NULL, embedding_model = NULL' : ''} WHERE id = ?`)
-    .run(next.text, next.tags, next.repo, now(), id);
+    .prepare(`UPDATE memories SET text = ?, tags = ?, repo = ?, scope = ?, folder = ?, folder_key = ?, project_id = ?, updated_at = ?${changedText ? ', embedding = NULL, embedding_model = NULL' : ''} WHERE id = ?`)
+    .run(next.text, next.tags, next.repo, sc.scope, sc.folder, sc.folderKey, sc.projectId, now(), id);
   return get(id);
 }
 
@@ -75,8 +85,11 @@ function remove(id) {
   return { removed: id };
 }
 
-/** Filtro comum: projeto, tipo, repo e se inclui decisões substituídas. */
-function filters({ projectId, kind, repo, includeSuperseded = false }, alias = '') {
+/**
+ * Filtro comum. `context` = { projectId, folders } → o que vale para o projeto (global + projeto + pastas);
+ * `scope` restringe a um escopo; `kind`, `repo`; decisões substituídas ficam de fora por padrão.
+ */
+function filters({ context, projectId, scope, kind, repo, includeSuperseded = false }, alias = '') {
   const where = [];
   const args = [];
   const col = (c) => (alias ? `${alias}.${c}` : c);
@@ -85,7 +98,12 @@ function filters({ projectId, kind, repo, includeSuperseded = false }, alias = '
     where.push(`${col(c)} = ?`);
     args.push(value);
   };
-  equals('project_id', projectId);
+  const ctx = contextClause(context || (projectId && { projectId, folders: [] }), col);
+  if (ctx) {
+    where.push(ctx.sql);
+    args.push(...ctx.args);
+  }
+  equals('scope', scope);
   equals('kind', kind);
   equals('repo', repo);
   if (!includeSuperseded) where.push(`${col('superseded_by')} IS NULL`);

@@ -1,5 +1,6 @@
 // Estado da aba Memória (só da interface): consulta, filtro e resultados da última busca.
 import { notify } from '../../core/store.js';
+import { memoryContext } from '../../memory/context.js';
 
 const DEBOUNCE_MS = 200;
 
@@ -15,12 +16,13 @@ let timer = null;
 
 /** Busca de novo se projeto, consulta, filtro ou dados mudaram desde a última vez. */
 export function ensureFresh(project) {
-  const key = [project.id, memoryView.query, memoryView.kind, memoryView.version].join('|');
+  const context = memoryContext(project); // globais + projeto + pastas do projeto
+  const key = [project.id, context.folders.join(';'), memoryView.query, memoryView.kind, memoryView.version].join('|');
   if (key === memoryView.key) return;
   memoryView.key = key;
   clearTimeout(timer);
   timer = setTimeout(async () => {
-    memoryView.result = await api.memory.search(memoryView.query, { projectId: project.id, kind: memoryView.kind || undefined, limit: 100 });
+    memoryView.result = await api.memory.search(memoryView.query, { context, kind: memoryView.kind || undefined, limit: 100 });
     notify();
   }, memoryView.query ? DEBOUNCE_MS : 0);
 }

@@ -68,7 +68,13 @@ export function findGroup(id) {
 
 export const activeEntry = () => findTerm(store.state.activeId);
 
-export const currentProject = () => activeEntry()?.project || projects().find((p) => p.open) || projects()[0];
+/**
+ * Projeto em foco: o último projeto clicado na sidebar ou o do terminal ativo (ativar um terminal
+ * foca o projeto dele). Painel de tarefas/memória, chips de repositório e "novo terminal" o seguem —
+ * inclusive projetos ainda sem terminais.
+ */
+export const currentProject = () =>
+  projectById(store.state.focusProjectId) || activeEntry()?.project || projects().find((p) => p.open) || projects()[0];
 
 /** Origem da visão lado a lado ({ label, terminals }), ou null se não houver divisão válida. */
 export function splitSource() {

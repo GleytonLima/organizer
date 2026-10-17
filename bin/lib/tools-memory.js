@@ -1,8 +1,21 @@
 // Ferramentas MCP da memória do projeto: notas e decisões, com busca.
 const scope = {
-  project: { type: 'string', description: 'Projeto (nome ou id). Padrão: o do seu terminal.' },
+  project: { type: 'string', description: 'Projeto (nome ou id). Padrão: o do seu terminal (ou da pasta atual).' },
   all: { type: 'boolean', description: 'Buscar em todos os projetos.' },
 };
+
+// Onde a memória vale. Leitura sempre traz o que vale para o projeto: globais + projeto + pastas dele.
+const writeScope = {
+  scope: {
+    type: 'string',
+    enum: ['project', 'folder', 'global'],
+    description:
+      'Onde vale: "project" (padrão) = este projeto; "folder" = uma pasta/repositório, em qualquer projeto que a inclua ' +
+      '(ex.: convenção do repo backend); "global" = todos os projetos (ex.: preferências do usuário).',
+  },
+  folder: { type: 'string', description: 'Para scope "folder": nome de uma pasta do projeto (ex.: "backend") ou caminho. Padrão: o repositório do seu terminal.' },
+};
+const scopeFilter = { type: 'string', enum: ['project', 'folder', 'global'], description: 'Restringir a um escopo (opcional).' };
 
 const MEMORY_TOOLS = [
   {
@@ -17,6 +30,7 @@ const MEMORY_TOOLS = [
         repo: { type: 'string', description: 'Repositório a que se refere (padrão: o do seu terminal).' },
         tags: { type: 'string', description: 'Tags separadas por vírgula (ex.: "banco,infra").' },
         supersedes: { type: 'string', description: 'Id da decisão anterior que esta substitui.' },
+        ...writeScope,
         project: scope.project,
       },
       required: ['text'],
@@ -28,7 +42,7 @@ const MEMORY_TOOLS = [
     description: 'Guarda uma nota na memória do projeto (fato útil, convenção, comando, armadilha encontrada). Persiste entre sessões.',
     inputSchema: {
       type: 'object',
-      properties: { text: { type: 'string' }, repo: { type: 'string' }, tags: { type: 'string' }, project: scope.project },
+      properties: { text: { type: 'string' }, repo: { type: 'string' }, tags: { type: 'string' }, ...writeScope, project: scope.project },
       required: ['text'],
     },
     run: (request, args) => request('memory_note', args),
@@ -36,13 +50,14 @@ const MEMORY_TOOLS = [
   {
     name: 'search_memory',
     description:
-      'Busca na memória do projeto (notas e decisões). Consulte ANTES de propor algo que já pode ter sido decidido. ' +
+      'Busca na memória (notas e decisões globais, do projeto e das pastas dele). Consulte ANTES de propor algo que já pode ter sido decidido. ' +
       'Busca por texto (sem diferenciar acentos) e, se configurado, por similaridade.',
     inputSchema: {
       type: 'object',
       properties: {
         query: { type: 'string' },
         kind: { type: 'string', enum: ['note', 'decision'] },
+        scope: scopeFilter,
         repo: { type: 'string' },
         limit: { type: 'number' },
         ...scope,
@@ -54,7 +69,7 @@ const MEMORY_TOOLS = [
   {
     name: 'list_decisions',
     description: 'Lista as decisões vigentes do projeto (as substituídas ficam de fora). Bom para se contextualizar no início de uma sessão.',
-    inputSchema: { type: 'object', properties: { repo: { type: 'string' }, ...scope } },
+    inputSchema: { type: 'object', properties: { repo: { type: 'string' }, scope: scopeFilter, ...scope } },
     run: (request, args) => request('memory_decisions', args),
   },
   {

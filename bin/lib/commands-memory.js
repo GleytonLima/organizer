@@ -1,15 +1,21 @@
 // `bo mem <ação>`: memória do projeto pela linha de comando (mesmos métodos do MCP).
 const { request } = require('./client');
 
-const line = (m) => `${m.kind === 'decision' ? '◆' : '•'} [${m.id}] ${m.text}${m.repo ? `  (${m.repo})` : ''}`;
+const where = (m) => (m.scope === 'global' ? 'global' : m.scope === 'folder' ? `pasta ${m.folder.split(/[\\/]/).pop()}` : m.repo);
+const line = (m) => `${m.kind === 'decision' ? '◆' : '•'} [${m.id}] ${m.text}${where(m) ? `  (${where(m)})` : ''}`;
+/** --global | --folder [nome/caminho] → escopo da memória (padrão: projeto). */
+const scopeOf = (o) => (o.global ? { scope: 'global' } : o.folder ? { scope: 'folder', folder: o.folder === true ? undefined : o.folder } : {});
 const lines = (items, empty) => items.map(line).join('\n') || empty;
 
 const ACTIONS = {
   decide: {
-    usage: 'decide <frase com o porquê...> [--repo R] [--tags a,b] [--supersedes ID]',
-    run: async (pos, o) => line(await request('memory_decision', { text: pos.join(' '), repo: o.repo, tags: o.tags, supersedes: o.supersedes })),
+    usage: 'decide <frase com o porquê...> [--global | --folder [pasta]] [--tags a,b] [--supersedes ID]',
+    run: async (pos, o) => line(await request('memory_decision', { text: pos.join(' '), ...scopeOf(o), repo: o.repo, tags: o.tags, supersedes: o.supersedes })),
   },
-  note: { usage: 'note <texto...> [--repo R] [--tags a,b]', run: async (pos, o) => line(await request('memory_note', { text: pos.join(' '), repo: o.repo, tags: o.tags })) },
+  note: {
+    usage: 'note <texto...> [--global | --folder [pasta]] [--tags a,b]',
+    run: async (pos, o) => line(await request('memory_note', { text: pos.join(' '), ...scopeOf(o), repo: o.repo, tags: o.tags })),
+  },
   search: {
     usage: 'search <consulta...> [--decisions] [--all]',
     run: async (pos, o) => {
@@ -21,7 +27,7 @@ const ACTIONS = {
   forget: { usage: 'forget <id>', run: async ([id]) => JSON.stringify(await request('memory_forget', { id })) },
 };
 
-const help = () => ['bo mem — memória do projeto (◆ decisão, • nota)', ...Object.values(ACTIONS).map((a) => `  bo mem ${a.usage}`)].join('\n');
+const help = () => ['bo mem — memória (◆ decisão, • nota); escopos: projeto (padrão), --folder, --global', ...Object.values(ACTIONS).map((a) => `  bo mem ${a.usage}`)].join('\n');
 
 async function runMemory({ pos, opts }) {
   const [name, ...rest] = pos;

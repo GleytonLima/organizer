@@ -3,7 +3,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const { userFile } = require('../files');
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 let db = null;
 
 const SCHEMA = `
@@ -47,8 +47,18 @@ function openDb() {
   db = new DatabaseSync(userFile('memory.db'));
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  migrate(db);
   db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   return db;
+}
+
+/** v2: escopos (global | project | folder). Memórias antigas continuam como "project". */
+function migrate(db) {
+  const cols = new Set(db.prepare('PRAGMA table_info(memories)').all().map((c) => c.name));
+  if (!cols.has('scope')) db.exec("ALTER TABLE memories ADD COLUMN scope TEXT NOT NULL DEFAULT 'project'");
+  if (!cols.has('folder')) db.exec('ALTER TABLE memories ADD COLUMN folder TEXT');
+  if (!cols.has('folder_key')) db.exec('ALTER TABLE memories ADD COLUMN folder_key TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS memories_scope ON memories(scope, folder_key)');
 }
 
 function closeDb() {

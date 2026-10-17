@@ -56,8 +56,10 @@ export async function closeProject(project) {
   shutdown(project);
 }
 
+/** Clique no projeto: foca-o (painel, chips e "novo terminal" passam a segui-lo) e recolhe/expande. */
 export function toggleProject(project) {
   project.collapsed = !project.collapsed;
+  store.state.focusProjectId = project.id;
   commit();
 }
 

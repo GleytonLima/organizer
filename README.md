@@ -84,12 +84,16 @@ Persistente entre sessões, em `%APPDATA%/Bash Organizer/memory.db` (SQLite embu
 - **Decisões**: uma frase com o porquê (máx. 280 caracteres, sem quebra de linha) — um mini ADR.
   Uma decisão nova pode **substituir** outra; a antiga sai das vigentes e fica no histórico.
 - **Notas**: texto livre (convenções, comandos, armadilhas).
+- **Escopos** — onde a memória vale: **projeto** (padrão), **pasta** (um repositório, em *qualquer* projeto que o
+  inclua — repos são compartilhados) ou **global** (todos os projetos, ex.: suas preferências). A leitura junta
+  tudo o que vale para o projeto: globais + projeto + pastas dele. `bo mem decide … --folder backend` / `--global`.
 - Cada memória tem projeto, **repositório** (detectado pelo git do terminal do agente), tarefa atual e tags.
 - **Busca por texto** sempre ligada (FTS5, ignora acentos). **Embeddings opcionais** (⚙ na aba Memória):
   Ollama local ou API compatível com OpenAI; com eles ligados a busca vira híbrida. A chave de API fica
   criptografada com o cofre do Windows. Se o provedor cair, a busca continua por texto.
 
-Painel lateral → aba **Memória** (busca, filtro Tudo/Decisões/Notas). MCP: `record_decision`, `remember_note`,
+Painel lateral → aba **Memória** (busca, filtro Tudo/Decisões/Notas; no diálogo, "Onde vale").
+O painel mostra o **projeto em foco**: clique num projeto na sidebar (mesmo sem terminais) para focá-lo. MCP: `record_decision`, `remember_note`,
 `search_memory`, `list_decisions`, `forget_memory`. Terminal: `bo mem decide|note|search|decisions|forget`.
 
 ## Onde os dados ficam

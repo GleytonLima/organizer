@@ -1,6 +1,7 @@
 // Aba "Memória" do painel lateral: busca, filtro (tudo/decisões/notas) e lista.
 import { el } from '../../core/dom.js';
 import { timeAgo } from '../../core/format.js';
+import { scopeLabel } from '../../memory/context.js';
 import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
 import { showMenu } from '../menu.js';
@@ -24,7 +25,8 @@ function itemMenu(e, project, m) {
 }
 
 function memoryItem(project, m) {
-  const meta = [m.repo, m.taskKey, m.source, timeAgo(m.updatedAt)].filter(Boolean).join(' · ');
+  const where = scopeLabel(project, m); // "global" / "pasta backend"; projeto = sem rótulo
+  const meta = [m.scope === 'project' ? m.repo : null, m.taskKey, m.source, timeAgo(m.updatedAt)].filter(Boolean).join(' · ');
   return el(
     'article',
     { class: `mem-item ${m.kind}`, ondblclick: () => editMemoryDialog(project, m), oncontextmenu: (e) => itemMenu(e, project, m) },
@@ -33,7 +35,7 @@ function memoryItem(project, m) {
       'div',
       { class: 'mem-text' },
       el('div', { class: 'mem-body', text: m.text }),
-      el('div', { class: 'mem-meta', text: meta }),
+      el('div', { class: 'mem-meta' }, where ? el('span', { class: `mem-scope ${m.scope}`, text: where }) : null, meta),
       m.tags.length ? el('div', { class: 'mem-tags' }, m.tags.map((t) => el('span', { class: 'mem-tag', text: t }))) : null,
     ),
     iconButton('more', 'Opções', (e) => itemMenu(e, project, m), 'reveal'),

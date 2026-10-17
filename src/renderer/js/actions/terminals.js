@@ -21,6 +21,7 @@ export function activate(id) {
   createSession(entry.t);
   leaveSplitIfOutside(id);
   store.state.activeId = id;
+  store.state.focusProjectId = entry.project.id; // ativar um terminal foca o projeto dele
   commit();
   requestAnimationFrame(() => {
     fitVisible();

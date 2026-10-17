@@ -12,9 +12,10 @@
 - Sem destaques berrantes nem cards com barra colorida à esquerda: cor de terminal/workspace é só uma bolinha.
 
 ## Modelo
-Projeto (nome + `repos`: lista explícita de pastas, não uma pasta raiz) → Grupos → Terminais. Tarefas em `state.tasks` (projectId, columnId); colunas em `project.taskColumns`.
+Projeto (nome + `repos`: lista explícita de pastas, não uma pasta raiz) → Grupos → Terminais.
+"Projeto em foco" (`state.focusProjectId`, `currentProject()`): painel, chips e novo terminal seguem o foco. Tarefas em `state.tasks` (projectId, columnId); colunas em `project.taskColumns`.
 "Em espera" é `task.needsInput` (não é coluna).
-Memória fica no `memory.db` (processo principal); o renderer resolve projeto/repo/tarefa e chama via IPC (`api.memory`).
+Memória fica no `memory.db` (processo principal), com escopo global | project | folder (pasta por caminho; ver `src/main/memory/scope.js`); o renderer resolve projeto/repo/tarefa e chama via IPC (`api.memory`).
 Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — não converter caminhos MSYS à mão. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
 
 ## Estrutura
