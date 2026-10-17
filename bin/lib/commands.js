@@ -5,7 +5,7 @@ const { waitForOutput } = require('./wait');
 const { formatList, formatTerminal } = require('./format');
 const { mcpConfig } = require('./mcp-config');
 
-const BOOLEAN_FLAGS = new Set(['focus', 'force', 'json', 'help']);
+const BOOLEAN_FLAGS = new Set(['focus', 'force', 'json', 'help', 'decisions', 'all']);
 
 function parseArgs(argv) {
   const pos = [];
@@ -108,6 +108,11 @@ const COMMANDS = {
     usage: 'task <list|columns|add|move|report|wait|done|waiting> …',
     help: 'Quadro de tarefas do projeto (bo task, sem argumentos, mostra a ajuda).',
     run: (args) => require('./commands-task').runTask(args),
+  },
+  mem: {
+    usage: 'mem <decide|note|search|decisions|forget> …',
+    help: 'Memória do projeto: decisões (uma frase com o porquê) e notas, com busca.',
+    run: (args) => require('./commands-memory').runMemory(args),
   },
   mcp: {
     usage: 'mcp',

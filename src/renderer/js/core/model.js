@@ -68,5 +68,6 @@ export function migrate(saved, home) {
     commands: s.commands || DEFAULT_COMMANDS(),
     tasks: s.tasks || [],
     taskView: s.taskView || 'off', // 'off' | 'panel' | 'board'
+    sideTab: s.sideTab || 'tasks', // aba do painel lateral: 'tasks' | 'memory'
   };
 }

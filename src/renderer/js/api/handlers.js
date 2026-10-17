@@ -7,6 +7,7 @@ import { activate, addTerminal, removeTerminal } from '../actions/terminals.js';
 import { callerOf, resolveProject, resolveGroup, resolveTerminal, resolveCwd } from './resolve.js';
 import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
+import { memoryHandlers } from './memory-handlers.js';
 
 function terminalInfo({ project, group, t }) {
   return {
@@ -36,6 +37,7 @@ const describeProject = (project) => ({
 
 export const handlers = {
   ...taskHandlers,
+  ...memoryHandlers,
 
   /** Projetos, grupos e terminais; `caller` é o terminal que pediu. */
   list(p) {

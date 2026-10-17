@@ -22,6 +22,19 @@ contextBridge.exposeInMainWorld('api', {
   gitStatus: (cwd) => ipcRenderer.invoke('git:status', cwd),
   gitRepos: (dir) => ipcRenderer.invoke('git:repos', dir),
 
+  memory: {
+    add: (data) => ipcRenderer.invoke('memory:add', data),
+    update: (id, data) => ipcRenderer.invoke('memory:update', id, data),
+    remove: (id) => ipcRenderer.invoke('memory:remove', id),
+    get: (id) => ipcRenderer.invoke('memory:get', id),
+    list: (opts) => ipcRenderer.invoke('memory:list', opts),
+    search: (query, opts) => ipcRenderer.invoke('memory:search', query, opts),
+    settings: () => ipcRenderer.invoke('memory:settings'),
+    saveSettings: (s) => ipcRenderer.invoke('memory:saveSettings', s),
+    testEmbeddings: () => ipcRenderer.invoke('memory:testEmbeddings'),
+    reindex: () => ipcRenderer.invoke('memory:reindex'),
+  },
+
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
   onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, terminalId) => cb(terminalId)),
 

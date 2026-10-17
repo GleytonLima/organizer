@@ -13,12 +13,15 @@
 
 ## Modelo
 Projeto (pasta raiz) → Grupos → Terminais. Tarefas em `state.tasks` (projectId, columnId); colunas em `project.taskColumns`.
-"Em espera" é `task.needsInput` (não é coluna). Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
+"Em espera" é `task.needsInput` (não é coluna).
+Memória fica no `memory.db` (processo principal); o renderer resolve projeto/repo/tarefa e chama via IPC (`api.memory`).
+Pasta do terminal vem do bash em formato Windows (`pwd -W`, OSC 6973;cwd) — não converter caminhos MSYS à mão. Mudou o formato salvo? Suba `version` e migre em `core/model.js`.
 
 ## Estrutura
 ```
 src/main/        processo principal (index, window, pty, git, bash, system, files)
 src/main/api/    servidor HTTP local (127.0.0.1 + token) e ponte main→renderer
+src/main/memory/  memória: db (node:sqlite + FTS5), store (notas/decisões), search (texto/híbrida), embeddings (opcional)
 src/main/notifications.js  toast do Windows + piscar na barra de tarefas
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
 src/preload.js   ponte IPC (window.api)
@@ -31,11 +34,12 @@ src/renderer/
   js/api/        handlers da API local (resolve nomes/ids/caminhos)
   js/tasks/      quadro de tarefas: colunas por projeto (columns), consultas (queries), histórico/origem (history)
   js/notify/     central de avisos (center) e fontes: bell, OSC 9/777, comando longo (sources)
+  js/ui/memory/  aba Memória do painel lateral (busca, filtros, diálogos, embeddings)
   js/ui/tasks/   painel, quadro, cartão, gaveta de detalhe (+ espera), diálogos (nova tarefa, colunas)
   js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes
-  styles/        base, layout, sidebar, topbar, overlays, status, tasks, tasks-board, tasks-detail
+  styles/        base, layout, sidebar, topbar, overlays, status, tasks, tasks-board, tasks-detail, memory
 build/           ícone (icon.svg → icon.png via render-icon.js) e recursos do electron-builder
-bin/             CLI `bo` (bo.js + lib/: client, commands(+task), mcp, tools(+tasks), wait) e wrappers bash/cmd
+bin/             CLI `bo` (bo.js + lib/: client, commands(+task, +memory), mcp, tools(+tasks, +memory), wait) e wrappers bash/cmd
 ```
 
 ## API local

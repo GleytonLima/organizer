@@ -1,0 +1,147 @@
+/* ---------- abas do painel lateral ---------- */
+.tp-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.tp-tab {
+  height: 24px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.tp-tab:hover {
+  color: var(--text);
+}
+.tp-tab.on {
+  background: var(--hover);
+  color: var(--text);
+  font-weight: 600;
+}
+#taskpanel > .tp-project {
+  padding: 6px 8px 0;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* ---------- memória ---------- */
+.mem-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--faint);
+}
+.mem-search:focus-within {
+  border-color: var(--dim);
+}
+.mem-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+.mem-filters {
+  display: flex;
+  gap: 6px;
+}
+.mem-filters .chip.on {
+  background: var(--hover);
+  color: var(--text);
+  border-color: var(--dim);
+}
+.mem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mem-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 6px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.mem-item:hover {
+  border-color: color-mix(in srgb, var(--text) 18%, var(--border));
+}
+.mem-icon {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--faint);
+}
+.mem-item.decision .mem-icon {
+  color: var(--notify);
+}
+.mem-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mem-body {
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mem-item.note .mem-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--dim);
+}
+.mem-meta,
+.mem-mode,
+.mem-empty {
+  font-size: 11px;
+  color: var(--faint);
+}
+.mem-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mem-tag {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--hover);
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 18px;
+}
+.mem-warning {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+  font-size: 12px;
+}
+.mem-empty {
+  padding: 18px 6px;
+  text-align: center;
+  line-height: 1.5;
+}
+.mem-mode {
+  text-align: center;
+  padding-top: 4px;
+}
+.mem-item:not(:hover) > .reveal {
+  display: none;
+}

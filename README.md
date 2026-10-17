@@ -20,7 +20,8 @@ npm start
 - **Lado a lado**: no menu de contexto de um grupo ou projeto, "Ver lado a lado" mostra todos os seus terminais
   ao mesmo tempo, em grade. Ativar um terminal de fora (ou o ✕ no topo) volta ao normal.
 - **Comandos salvos**: barra de atalhos que executa no terminal ativo (duplo clique edita, ✕ remove com confirmação).
-- **Git**: branch, mudanças (●), commits a enviar/baixar (↑↓) e conflitos, atualizados a cada 3 s.
+- **Git multi-repo**: os repositórios da pasta do projeto aparecem como chips (repo, branch, mudanças, ↑↓);
+  cada terminal mostra o repo e a branch em que está.
 - Arrastar terminais para reordenar ou mover entre grupos.
 
 ## Agentes de IA e CLI `bo`
@@ -70,6 +71,26 @@ coluna, descrição, histórico, terminal de origem e branch git).
 Ferramentas MCP: `list_columns`, `create_task`, `move_task`, `report_progress`, `request_input`, `complete_task`,
 `list_tasks`, `get_task`, `list_waiting_tasks`, `suggest_reply`. No terminal: `bo task` (list, columns, add, move,
 report, wait, done, waiting).
+
+## Memória do projeto (decisões e notas)
+
+Persistente entre sessões, em `%APPDATA%/Bash Organizer/memory.db` (SQLite embutido, sem dependência nativa extra).
+
+- **Decisões**: uma frase com o porquê (máx. 280 caracteres, sem quebra de linha) — um mini ADR.
+  Uma decisão nova pode **substituir** outra; a antiga sai das vigentes e fica no histórico.
+- **Notas**: texto livre (convenções, comandos, armadilhas).
+- Cada memória tem projeto, **repositório** (detectado pelo git do terminal do agente), tarefa atual e tags.
+- **Busca por texto** sempre ligada (FTS5, ignora acentos). **Embeddings opcionais** (⚙ na aba Memória):
+  Ollama local ou API compatível com OpenAI; com eles ligados a busca vira híbrida. A chave de API fica
+  criptografada com o cofre do Windows. Se o provedor cair, a busca continua por texto.
+
+Painel lateral → aba **Memória** (busca, filtro Tudo/Decisões/Notas). MCP: `record_decision`, `remember_note`,
+`search_memory`, `list_decisions`, `forget_memory`. Terminal: `bo mem decide|note|search|decisions|forget`.
+
+## Onde os dados ficam
+
+`%APPDATA%/Bash Organizer/`: `state.json` (projetos, grupos, terminais, tarefas, comandos, tema),
+`memory.db` (memória), `memory-settings.json` (embeddings), `window.json`, `api.json` (porta/token da sessão).
 
 ## Avisos (notificações)
 

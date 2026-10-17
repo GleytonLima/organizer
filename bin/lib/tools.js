@@ -1,6 +1,7 @@
 // Ferramentas MCP: cada uma mapeia para um método da API local.
 const { waitForOutput } = require('./wait');
 const { TASK_TOOLS } = require('./tools-tasks');
+const { MEMORY_TOOLS } = require('./tools-memory');
 
 const terminalRef = {
   type: 'string',
@@ -105,4 +106,4 @@ const TOOLS = [
   },
 ];
 
-module.exports = { TOOLS: [...TOOLS, ...TASK_TOOLS] };
+module.exports = { TOOLS: [...TOOLS, ...TASK_TOOLS, ...MEMORY_TOOLS] };

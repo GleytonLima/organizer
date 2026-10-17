@@ -1,5 +1,6 @@
 // Atende os pedidos da API local repassados pelo processo principal.
 import { handlers } from './handlers.js';
+import { cleanError } from '../core/errors.js';
 
 export function initApi() {
   api.onApiRequest(async (id, method, params) => {
@@ -8,7 +9,7 @@ export function initApi() {
     try {
       api.apiRespond(id, null, await handler(params || {}));
     } catch (err) {
-      api.apiRespond(id, err.message || String(err));
+      api.apiRespond(id, cleanError(err));
     }
   });
 }

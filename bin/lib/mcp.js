@@ -22,6 +22,8 @@ const INSTRUCTIONS = [
   'O app também tem um quadro de tarefas (kanban) por projeto que o usuário acompanha: registre trabalho relevante com',
   'create_task, consulte list_columns para entender o fluxo e mova com move_task, relate andamento com report_progress,',
   'use request_input quando precisar de uma decisão e complete_task ao terminar.',
+  'Há também uma memória persistente do projeto: no início, rode list_decisions para se contextualizar; antes de propor',
+  'algo, consulte search_memory; registre decisões tomadas com record_decision (uma frase com o porquê) e fatos úteis com remember_note.',
 ].join(' ');
 
 const write = (msg) => process.stdout.write(JSON.stringify(msg) + '\n');

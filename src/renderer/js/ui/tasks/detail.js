@@ -1,5 +1,5 @@
 // Gaveta de detalhe da tarefa (à direita): título, coluna, espera/resposta, descrição e histórico.
-import { $, el, mount, stop } from '../../core/dom.js';
+import { $, el, remount, stop } from '../../core/dom.js';
 import { findTerm } from '../../core/store.js';
 import { termLabel, timeAgo } from '../../core/format.js';
 import { columnsOf } from '../../tasks/columns.js';
@@ -68,19 +68,6 @@ const history = (task) =>
       el('li', { class: `td-event ev-${h.type}` }, el('div', { class: 'td-event-meta', text: `${h.by} · ${timeAgo(h.at)}` }), el('div', { text: h.text })),
     ),
   );
-
-/** Re-render preservando foco e cursor do campo em edição. */
-function remount(node, children) {
-  const active = document.activeElement;
-  const key = node.contains(active) ? active.dataset.draft : null;
-  const sel = key ? [active.selectionStart, active.selectionEnd] : null;
-  mount(node, children);
-  const again = key && node.querySelector(`[data-draft="${key}"]`);
-  if (again) {
-    again.focus();
-    again.setSelectionRange?.(...sel);
-  }
-}
 
 export function renderTaskDetail() {
   const node = $('#task-detail');

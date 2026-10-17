@@ -1,7 +1,7 @@
-// Painel lateral de tarefas (estilo lista agrupada): "Em espera" no topo e uma seção por coluna.
-import { $, el, mount } from '../../core/dom.js';
-import { store, notify } from '../../core/store.js';
-import { boardProject, tasksByColumn, waitingTasks, taskById } from '../../tasks/queries.js';
+// Aba "Tarefas" do painel lateral (lista agrupada): "Em espera" no topo e uma seção por coluna.
+import { el } from '../../core/dom.js';
+import { notify } from '../../core/store.js';
+import { tasksByColumn, waitingTasks, taskById } from '../../tasks/queries.js';
 import { moveTask, setTaskView } from '../../actions/tasks.js';
 import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
@@ -9,7 +9,7 @@ import { dropTarget } from '../dnd.js';
 import { taskCard } from './card.js';
 import { newTaskDialog, columnsDialog } from './dialogs.js';
 
-const collapsed = new Set(); // colunas recolhidas no painel (estado só da interface)
+const collapsed = new Set(); // seções recolhidas (estado só da interface)
 
 function toggle(id) {
   if (collapsed.has(id)) collapsed.delete(id);
@@ -36,31 +36,18 @@ function section({ id, title, tasks, columnId, tone }) {
   );
 }
 
-export function renderTaskPanel() {
-  const panel = $('#taskpanel');
-  const show = store.state.taskView === 'panel';
-  panel.classList.toggle('hidden', !show);
-  if (!show) return;
-  const project = boardProject();
+/** Conteúdo da aba: { actions, body } (ver ui/sidepanel.js). */
+export function taskTab(project) {
   const waiting = waitingTasks(project);
-  mount(
-    panel,
-    el(
-      'header',
-      { class: 'tp-header' },
-      el('span', { class: 'eyebrow', text: 'Tarefas' }),
-      el('span', { class: 'tp-project', text: project.name }),
-      el('span', { class: 'spacer' }),
+  return {
+    actions: [
       iconButton('plus', 'Nova tarefa', () => newTaskDialog(project)),
       iconButton('settings', 'Configurar colunas', () => columnsDialog(project)),
       iconButton('maximize', 'Abrir quadro', () => setTaskView('board')),
-      iconButton('close', 'Fechar painel', () => setTaskView('off')),
-    ),
-    el(
-      'div',
-      { class: 'tp-body' },
+    ],
+    body: [
       waiting.length ? section({ id: '__waiting', title: 'Em espera', tasks: waiting, tone: 'waiting' }) : null,
       tasksByColumn(project).map(({ column, tasks }) => section({ id: column.id, title: column.name, tasks, columnId: column.id })),
-    ),
-  );
+    ],
+  };
 }

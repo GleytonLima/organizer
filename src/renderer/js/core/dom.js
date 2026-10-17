@@ -31,6 +31,23 @@ export function mount(node, ...children) {
   return node;
 }
 
+/**
+ * Como `mount`, mas preserva foco e cursor do campo em edição (marcado com data-draft="chave").
+ * Use em áreas que re-renderizam enquanto o usuário digita.
+ */
+export function remount(node, ...children) {
+  const active = document.activeElement;
+  const key = node.contains(active) ? active.dataset.draft : null;
+  const sel = key ? [active.selectionStart, active.selectionEnd] : null;
+  mount(node, ...children);
+  const again = key && node.querySelector(`[data-draft="${key}"]`);
+  if (again) {
+    again.focus();
+    again.setSelectionRange?.(...sel);
+  }
+  return node;
+}
+
 /** Envolve um handler para não propagar o clique (botões dentro de itens clicáveis). */
 export const stop = (fn) => (e) => {
   e.stopPropagation();
