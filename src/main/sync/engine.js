@@ -14,7 +14,10 @@ const BATCH = 200;
 // 'status' (estado do sync) | 'changed' (memórias locais mudaram) | 'project' (id, { name?, columns? } do servidor)
 const events = new EventEmitter();
 let context = { projects: [] };
-let status = { state: 'off', at: null, error: null };
+// state: off | syncing | ok | offline | auth (sessão expirou) | error; pending = memórias na fila
+let status = { state: 'off', at: null, error: null, pending: 0 };
+// só o que vai mesmo ao servidor (memória de projeto sem chave ou de pasta sem remote fica local)
+const pendingCount = (world) => rows.dirtyItems().filter((item) => toServer(item, world, rows.gidOf)).length + rows.tombstones().length;
 let running = null;
 let again = false;
 let timer = null;
@@ -102,7 +105,7 @@ async function pullChanges(world) {
 /** Uma rodada completa. Chamadas durante uma rodada agendam outra logo em seguida. */
 function syncNow() {
   if (!syncEnabled()) {
-    setStatus({ state: 'off', error: null });
+    setStatus({ state: 'off', error: null, pending: 0 });
     return Promise.resolve(status);
   }
   if (running) {
@@ -110,17 +113,19 @@ function syncNow() {
     return running;
   }
   setStatus({ state: 'syncing' });
+  let pending = status.pending;
   running = (async () => {
     const world = await buildWorld(context);
+    pending = pendingCount(world);
     const pushed = await pushChanges(world);
     const pulled = await pullChanges(world);
     await syncProjects(context, (id, changed) => events.emit('project', id, changed));
-    setStatus({ state: 'ok', at: Date.now(), error: null });
+    setStatus({ state: 'ok', at: Date.now(), error: null, pending: pendingCount(world) });
     if (pushed || pulled) events.emit('changed');
     return status;
   })()
     .catch((err) => {
-      setStatus({ state: 'error', at: Date.now(), error: err.message });
+      setStatus({ state: err.kind || 'error', at: Date.now(), error: err.message, pending });
       return status;
     })
     .finally(() => {

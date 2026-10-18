@@ -12,6 +12,7 @@ import { splitIndicator } from './split.js';
 import { notificationsButton } from './notifications.js';
 import { tasksButton, memoryButton } from './tasks/index.js';
 import { insightsButton } from './insights/view.js';
+import { settingsButton } from './settings/view.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -112,6 +113,7 @@ export function renderTopbar() {
     tasksButton(),
     memoryButton(),
     insightsButton(),
+    settingsButton(),
     notificationsButton(),
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),

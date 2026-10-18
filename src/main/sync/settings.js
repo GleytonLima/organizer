@@ -28,13 +28,13 @@ const syncEnabled = () => {
   return !!(s.url && s.token);
 };
 
-/** O que a interface vê (nunca o token). */
-const publicSyncSettings = () => ({ url: syncSettings().url, hasToken: !!syncSettings().token });
+/** O que a interface vê (nunca o token). `account`: { name, email } de quem conectou (não é segredo). */
+const publicSyncSettings = () => ({ url: syncSettings().url, hasToken: !!syncSettings().token, account: raw().account || null });
 
 /** `token` vazio mantém o atual; `clear: true` desliga o sync (apaga URL e token). */
-function saveSyncSettings({ url = '', token = '', clear = false }) {
+function saveSyncSettings({ url = '', token = '', clear = false, account }) {
   if (clear) {
-    writeJsonAtomic(FILE(), { url: '', tokenEnc: null });
+    writeJsonAtomic(FILE(), { url: '', tokenEnc: null, account: null });
     return publicSyncSettings();
   }
   const clean = String(url).trim().replace(/\/+$/, '');
@@ -43,7 +43,7 @@ function saveSyncSettings({ url = '', token = '', clear = false }) {
   if (/^http:\/\//.test(clean) && !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/.test(clean)) {
     throw new Error('Use https:// (http:// só para um servidor nesta máquina: localhost).');
   }
-  const next = { ...raw(), url: clean };
+  const next = { ...raw(), url: clean, ...(account !== undefined && { account }) };
   if (token) {
     if (!safeStorage.isEncryptionAvailable()) throw new Error('Criptografia do sistema indisponível para guardar o token.');
     next.tokenEnc = safeStorage.encryptString(String(token).trim()).toString('base64');

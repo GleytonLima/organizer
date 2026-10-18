@@ -30,10 +30,13 @@ async function http(url, token, method, route, body) {
   return { status: res.status, data: await res.json().catch(() => null) };
 }
 
-/** { url, tokenA, tokenB, as(token) → (method, rota, corpo), stop } ou { skip: motivo }. */
-async function startMemoryServer() {
+/**
+ * { url, tokenA, tokenB, as(token) → (method, rota, corpo), stop } ou { skip: motivo }.
+ * `env`: variáveis extras do servidor (ex.: BO_OIDC_* para o SSO com o Keycloak de teste).
+ */
+async function startMemoryServer({ env: extra = {} } = {}) {
   if (!fs.existsSync(BIN)) return { skip: `binário do servidor não encontrado (${BIN})` };
-  const env = { ...process.env, DATABASE_URL: DB, BO_ADDR: `127.0.0.1:${PORT}`, BO_WEB_DIR: os.tmpdir() };
+  const env = { ...process.env, DATABASE_URL: DB, BO_ADDR: `127.0.0.1:${PORT}`, BO_WEB_DIR: os.tmpdir(), ...extra };
   const up = await run(['migrate', 'up'], env); // cria a tabela de versões (o reset precisa dela)
   if (up.code) return { skip: `PostgreSQL de testes indisponível (${lastLine(up.stderr || up.stdout)}) — rode docker compose up -d` };
   await run(['migrate', 'reset'], env);
@@ -50,4 +53,4 @@ async function startMemoryServer() {
   return { skip: 'o servidor não respondeu em /healthz' };
 }
 
-module.exports = { startMemoryServer };
+module.exports = { startMemoryServer, PORT };

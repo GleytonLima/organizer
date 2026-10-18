@@ -3,6 +3,9 @@ const { syncSettings } = require('./settings');
 
 const TIMEOUT_MS = 15000;
 
+/** Erro com tipo, para a interface: 'offline' (sem rede/servidor fora) | 'auth' (token recusado). */
+const failure = (message, kind) => Object.assign(new Error(message), { kind });
+
 // `allow404`: devolve { status: 404 } em vez de lançar (documento que ainda não existe).
 async function call(method, path, body, { allow404 = false } = {}) {
   const { url, token } = syncSettings();
@@ -16,16 +19,18 @@ async function call(method, path, body, { allow404 = false } = {}) {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (err) {
-    throw new Error(`Servidor de memória inacessível (${url}): ${err.cause?.code || err.message}`);
+    throw failure(`Servidor de memória inacessível (${url}): ${err.cause?.code || err.message}`, 'offline');
   }
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401) throw new Error('Token recusado pelo servidor (inválido ou revogado).');
+  if (res.status === 401) throw failure('Sua sessão expirou ou o token foi revogado: entre de novo.', 'auth');
+  if (res.status >= 502 && res.status <= 504) throw failure(`Servidor de memória indisponível (${res.status}).`, 'offline');
   if (allow404 && res.status === 404) return { status: 404, data: null };
   if (!res.ok && res.status !== 409) throw new Error(data.error || `Servidor respondeu ${res.status}.`);
   return { status: res.status, data };
 }
 
 const me = async () => (await call('GET', '/v1/me')).data;
+const logout = () => call('POST', '/v1/logout').catch(() => {}); // melhor esforço: revoga a sessão
 const pull = async (body) => (await call('POST', '/v1/sync/pull', body)).data;
 const push = async (changes) => (await call('POST', '/v1/sync/push', { changes })).data.results;
 const claim = async (workspace, taskKey) =>
@@ -46,4 +51,4 @@ const pushTasks = async (changes) => (await call('POST', '/v1/tasks/push', { cha
 const claimTask = async (workspace, id) =>
   (await call('POST', `/v1/tasks/${encodeURIComponent(workspace)}/${encodeURIComponent(id)}/claim`, null, { allow404: true })).data;
 
-module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces, pullTasks, pushTasks, claimTask };
+module.exports = { failure, logout, me, pull, push, claim, getDoc, putDoc, workspaces, pullTasks, pushTasks, claimTask };

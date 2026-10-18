@@ -7,7 +7,7 @@ import { showMenu } from '../menu.js';
 import { memoryView, ensureFresh, setQuery, setKind } from './state.js';
 import { newMemoryDialog } from './dialogs.js';
 import { embeddingsDialog } from './embeddings-dialog.js';
-import { syncDialog } from './sync-dialogs.js';
+import { openSettings } from '../settings/view.js';
 import { memoryItem } from './item.js';
 import { syncLine } from '../../memory/sync.js';
 
@@ -47,7 +47,7 @@ export function memoryTab(project) {
     actions: [
       iconButton('decision', 'Nova decisão', () => newMemoryDialog(project, 'decision')),
       iconButton('plus', 'Nova nota, ideia ou “como fazer”', (e) => newMenu(e, project)),
-      iconButton('cloud', 'Servidor de memória (sync com o time)', syncDialog),
+      iconButton('cloud', 'Servidor do time (Configurações)', () => openSettings('server')),
       iconButton('settings', 'Busca por similaridade (embeddings)', embeddingsDialog),
     ],
     body: [

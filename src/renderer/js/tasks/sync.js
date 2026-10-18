@@ -3,7 +3,7 @@
 // Rodada: envia o que mudou desde a última versão recebida (a "base"), funde os conflitos sem
 // perguntar (sync-doc.js) e aplica o que chegou. Roda depois de cada rodada do sync da memória
 // e logo após mudanças locais (só o envio).
-import { store, commit, subscribe, projects } from '../core/store.js';
+import { store, commit, subscribe, notify, projects } from '../core/store.js';
 import { makeTask } from '../core/model.js';
 import { columnsOf } from './columns.js';
 import { logTask } from './history.js';
@@ -14,6 +14,15 @@ let running = null;
 let again = false;
 let timer = null;
 let meName = null; // seu nome no servidor (o dono das tarefas é comparado com ele)
+
+/** Mudanças de tarefa esperando o servidor (para o indicador da barra de status). */
+export const taskSyncView = { pending: 0 };
+
+const setPending = (n) => {
+  if (taskSyncView.pending === n) return;
+  taskSyncView.pending = n;
+  notify();
+};
 
 /** Seu nome no servidor, depois da primeira rodada (null antes). */
 export const myServerName = () => meName;
@@ -146,17 +155,23 @@ export function syncTasksNow({ pull = true } = {}) {
     again = true;
     return running;
   }
+  let queued = 0;
   running = (async () => {
-    if (!synced().length || !(await api.sync.tasksEnabled())) return;
+    if (!synced().length || !(await api.sync.tasksEnabled())) return setPending(0);
     const [state, me] = [await api.sync.tasksState(), await api.sync.me()];
     meName = me;
     const changes = localChanges(state, me);
+    queued = changes.length;
     let changed = changes.length ? applyResults(changes, await api.sync.tasksPush(changes), state, me) : false;
     if (pull) changed = (await pullAll(state, me)) || changed;
     await api.sync.saveTasksState(state);
     if (changed) commit();
+    setPending(0);
   })()
-    .catch((err) => console.warn(`sync de tarefas: ${err.message}`))
+    .catch((err) => {
+      setPending(queued); // offline: ficam na fila e sobem na próxima rodada
+      console.warn(`sync de tarefas: ${err.message}`);
+    })
     .finally(() => {
       running = null;
       if (again) {

@@ -96,6 +96,27 @@ Painel lateral → aba **Memória** (busca, filtro Tudo/Decisões/Notas; no diá
 O painel mostra o **projeto em foco**: clique num projeto na sidebar (mesmo sem terminais) para focá-lo. MCP: `record_decision`, `remember_note`,
 `search_memory`, `list_decisions`, `forget_memory`. Terminal: `bo mem decide|note|search|decisions|forget`.
 
+## Sozinho ou com o time
+
+O app funciona **inteiro nesta máquina**, sem servidor nenhum: terminais, projetos, quadro de
+tarefas, memória (com busca), agentes, `bo`/MCP e Insights. É o modo padrão — a barra de status
+mostra **Local**.
+
+Para trabalhar com o time (ou trocar de máquina), conecte um servidor de memória
+([bo-memory-server](../bo-memory-server)) em **Configurações → Servidor do time** (engrenagem na
+barra superior, ou clique no estado do sync na barra de status):
+
+1. informe o endereço — o app pergunta ao servidor como entrar;
+2. **Entrar com o seu provedor** (Entra ID, Keycloak…) abre o navegador do sistema; o app nunca vê
+   sua senha. Ou use um token pessoal;
+3. em **Projetos**, clique **Compartilhar** nos que o time deve ver.
+
+Com o servidor, memória e quadro de tarefas dos projetos compartilhados sincronizam; outra máquina
+abre o projeto em **Novo projeto → Abrir do servidor…** (acha os clones pelo remote git ou clona).
+Se o servidor cair, você continua trabalhando: a barra mostra **Offline · N na fila** e tudo sobe
+quando ele voltar. Sessão vencida aparece como **Sessão expirou · Entrar**. Desconectar não apaga
+nada desta máquina.
+
 ## Onde os dados ficam
 
 `%APPDATA%/Bash Organizer/`: `state.json` (projetos, grupos, terminais, tarefas, comandos, tema),

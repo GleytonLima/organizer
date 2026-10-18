@@ -8,7 +8,13 @@ function listProcesses() {
   return new Promise((resolve, reject) => {
     execFile('powershell', ['-NoProfile', '-Command', QUERY], { maxBuffer: 64 * 1024 * 1024 }, (err, out) => {
       if (err) return reject(err);
-      resolve(JSON.parse(out).map((p) => ({ pid: p.ProcessId, ppid: p.ParentProcessId, name: p.Name, cmd: p.CommandLine || '' })));
+      try {
+        // o PowerShell 5 não escapa todo caractere de controle de uma linha de comando: troca por espaço
+        const list = JSON.parse(out.replace(/[\u0000-\u001f]/g, ' '));
+        resolve(list.map((p) => ({ pid: p.ProcessId, ppid: p.ParentProcessId, name: p.Name, cmd: p.CommandLine || '' })));
+      } catch (e) {
+        reject(e);
+      }
     });
   });
 }

@@ -1,4 +1,5 @@
-// Diálogos do sync da memória: servidor + token, resolver conflito e retomar tarefa (progresso).
+// Diálogos do sync da memória: resolver conflito e retomar tarefa (progresso). A conexão com o
+// servidor fica em Configurações → Servidor do time (ui/settings/server.js).
 import { el } from '../../core/dom.js';
 import { cleanError } from '../../core/errors.js';
 import { openModal, field } from '../modal.js';
@@ -6,33 +7,6 @@ import { invalidateMemory } from './state.js';
 import { resumeFromProgress } from '../../tasks/claim.js';
 
 const alert = (title, message) => openModal({ title, message });
-
-/** Servidor de memória (bo-memory-server) e o token deste dev, guardado criptografado. */
-export async function syncDialog() {
-  const s = await api.sync.settings();
-  const v = await openModal({
-    title: 'Servidor de memória',
-    message: 'Sincroniza decisões, notas e progresso com o time. Projetos sincronizam pela “chave de sincronização” (Editar projeto); pastas, pelo remote git.',
-    fields: [
-      field.text('url', 'URL do servidor', s.url, { placeholder: 'http://localhost:8787', mono: true }),
-      field.text('token', 'Seu token', '', { placeholder: s.hasToken ? '•••••• (guardado; deixe vazio para manter)' : 'bom_…', mono: true }),
-    ],
-    submit: 'Salvar e testar',
-    extra: s.url ? { label: 'Desligar sync', value: 'off', danger: true } : null,
-  });
-  if (!v) return;
-  try {
-    if (v === 'off') {
-      await api.sync.saveSettings({ clear: true });
-      return;
-    }
-    await api.sync.saveSettings(v);
-    const me = await api.sync.test();
-    await alert('Conectado', `Sincronizando como ${me.name} <${me.email}>.`);
-  } catch (err) {
-    await alert('Não foi possível conectar', cleanError(err));
-  }
-}
 
 const versionBox = (label, text) => el('div', { class: 'mem-version' }, el('div', { class: 'mem-version-label', text: label }), el('div', { class: 'mem-version-text', text }));
 

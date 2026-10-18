@@ -88,6 +88,12 @@ contextBridge.exposeInMainWorld('api', {
     clone: (url, dir) => ipcRenderer.invoke('sync:clone', url, dir),
     adoptProject: (key, project, layout) => ipcRenderer.invoke('sync:adoptProject', key, project, layout),
     onProject: (cb) => ipcRenderer.on('sync:project', (_e, id, changed) => cb(id, changed)),
+    // conexão com o servidor do time (Configurações)
+    probe: (url) => ipcRenderer.invoke('sync:probe', url),
+    loginBrowser: (url) => ipcRenderer.invoke('sync:loginBrowser', url),
+    loginToken: (url, token) => ipcRenderer.invoke('sync:loginToken', url, token),
+    cancelLogin: () => ipcRenderer.invoke('sync:cancelLogin'),
+    disconnect: () => ipcRenderer.invoke('sync:disconnect'),
     // quadro de tarefas do workspace
     tasksEnabled: () => ipcRenderer.invoke('sync:tasksEnabled'),
     me: () => ipcRenderer.invoke('sync:me'),
