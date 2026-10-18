@@ -12,7 +12,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const { app } = require('electron');
 const { RpcPeer } = require('./rpc');
-const { agentCommand, boMcpServer } = require('./agents');
+const { agentCommand, boMcpServer, parseEnv } = require('./agents');
 const { organizerEnv } = require('../pty');
 const { childEnv } = require('../env');
 const { PermissionGate } = require('./permissions');
@@ -60,7 +60,8 @@ class AgentSession {
   mcpServers() {
     const { BO_API_URL, BO_API_TOKEN } = organizerEnv(this.id);
     const bo = BO_API_URL ? [boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id })] : [];
-    return [...bo, ...parseMcpServers(this.profile.mcp)];
+    // ${NOME} nos servidores vem das variáveis do perfil (ou do ambiente do app)
+    return [...bo, ...parseMcpServers(this.profile.mcp, { ...process.env, ...parseEnv(this.profile.env) })];
   }
 
   async start() {

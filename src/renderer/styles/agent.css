@@ -329,3 +329,14 @@
   align-items: flex-start;
   gap: 8px;
 }
+.mcp-field .textarea {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mcp-status {
+  font-size: 11.5px;
+  color: var(--danger);
+}
+.mcp-status:empty {
+  display: none;
+}

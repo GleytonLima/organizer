@@ -1,26 +1,46 @@
 // "Agentes (ACP)…": escolher, criar, editar e remover perfis de agente (ver agents/profiles.js).
 import { el } from '../../core/dom.js';
 import { cleanError } from '../../core/errors.js';
-import { agentProfiles, saveProfile, removeProfile, PLAYWRIGHT_MCP } from '../../agents/profiles.js';
+import { agentProfiles, saveProfile, removeProfile } from '../../agents/profiles.js';
+import { checkMcp, mcpForEditor, withPlaywright } from '../../agents/mcp-config.js';
 import { openModal, field } from '../modal.js';
 import { confirmDanger } from '../confirm.js';
 
-const MCP_HINT = `Além do Bash Organizer (que vem sempre). Um por linha: “nome: comando argumentos”. Ex.: ${PLAYWRIGHT_MCP} — dá um navegador ao agente.`;
+const MCP_HINT =
+  'Além do Bash Organizer (que vem sempre). O mesmo JSON do Claude Code (.mcp.json): command/args/env, ou type "http"/"sse" com url/headers. ' +
+  '${NOME} vem das variáveis de ambiente acima — deixe tokens lá, não no JSON.';
+
+const MCP_PLACEHOLDER = '{\n  "mcpServers": {\n    "playwright": { "command": "npx", "args": ["@playwright/mcp@0.0.83"] }\n  }\n}';
 
 const MODE_HINT = 'Opcional. Modo de permissão ao abrir a sessão, se o agente tiver — no Claude Code: default, acceptEdits, plan, bypassPermissions. Dá para trocar na conversa.';
 
-/** Servidores MCP: caixa de texto + "Adicionar Playwright" (acrescenta a linha, se ainda não houver). */
+/** Servidores MCP: o JSON (validado enquanto você digita) + "Adicionar Playwright". */
 const mcpField = (value) =>
-  field.custom('mcp', 'Servidores MCP', value, {
+  field.custom('mcp', 'Servidores MCP', mcpForEditor(value), {
     hint: MCP_HINT,
     render: (values) => {
-      const box = el('textarea', { class: 'input textarea mono', rows: 3, placeholder: PLAYWRIGHT_MCP, oninput: (e) => (values.mcp = e.target.value) });
+      const status = el('div', { class: 'mcp-status' });
+      const check = () => {
+        try {
+          checkMcp(values.mcp);
+          status.textContent = '';
+        } catch (err) {
+          status.textContent = err.message;
+        }
+      };
+      const onInput = (e) => {
+        values.mcp = e.target.value;
+        check();
+      };
+      const box = el('textarea', { class: 'input textarea mono', rows: 8, spellcheck: 'false', placeholder: MCP_PLACEHOLDER, oninput: onInput });
       box.value = values.mcp;
       const addPlaywright = () => {
-        if (/^\s*playwright\s*:/m.test(values.mcp)) return;
-        values.mcp = box.value = [values.mcp.trim(), PLAYWRIGHT_MCP].filter(Boolean).join('\n');
+        try {
+          values.mcp = box.value = withPlaywright(values.mcp);
+        } catch {} // JSON inválido: o aviso abaixo já diz o que corrigir
+        check();
       };
-      return el('div', { class: 'mcp-field' }, box, el('button', { type: 'button', class: 'btn small', onclick: addPlaywright, text: 'Adicionar Playwright' }));
+      return el('div', { class: 'mcp-field' }, box, status, el('button', { type: 'button', class: 'btn small', onclick: addPlaywright, text: 'Adicionar Playwright' }));
     },
   });
 

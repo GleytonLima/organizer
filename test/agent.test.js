@@ -182,8 +182,15 @@ suite('agente via ACP', {
   t.check(!(await task()).waiting, 'e a tarefa não entra em espera');
 
   // perfis: um agente próprio com variáveis e modo padrão
+  // servidores MCP no JSON do Claude Code: stdio com env, http com headers, ${VAR} das variáveis do perfil
+  const MCP_JSON = JSON.stringify({ mcpServers: {
+    playwright: { command: 'npx', args: ['@playwright/mcp@0.0.83'] },
+    jira: { command: 'uvx', args: ['mcp-atlassian'], env: { JIRA_TOKEN: '${TK}' } },
+    remoto: { type: 'http', url: 'https://mcp.exemplo.com/mcp', headers: { Authorization: 'Bearer ${TK}' } },
+    desligado: { command: 'x', disabled: true },
+  } });
   const second = await t.js(`const P = await import('./js/agents/profiles.js');
-    P.saveProfile({ label: 'Fake 2', command: 'fake-acp', args: '--acp', env: 'FAKE_GREETING=Olá do perfil', mode: 'plan', mcp: P.PLAYWRIGHT_MCP });
+    P.saveProfile({ label: 'Fake 2', command: 'fake-acp', args: '--acp', env: 'FAKE_GREETING=Olá do perfil\\nTK=segredo-123', mode: 'plan', mcp: ${JSON.stringify(MCP_JSON)} });
     const p = P.agentProfiles().find((x) => x.label === 'Fake 2');
     (await import('./js/actions/terminals.js')).newAgentTerminal(S.projectById('pA').groups[0], p.id);
     return S.store.state.activeId;`);
@@ -197,9 +204,17 @@ suite('agente via ACP', {
 
   // servidores MCP do perfil: chegam no session/new junto do Bash Organizer (npx via "cmd /c" no Windows)
   const servers = require('fs').readFileSync(MCP_LOG, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).at(-1);
-  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright'], 'o agente recebe o MCP do Bash Organizer e o Playwright do perfil');
+  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright', 'jira', 'remoto'], 'o agente recebe o MCP do Bash Organizer e os do perfil (o desligado fica de fora)');
   const pw = servers.find((x) => x.name === 'playwright');
   t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@0.0.83'] : ['npx', '@playwright/mcp@0.0.83'], 'comando do servidor MCP (npx pelo cmd no Windows)');
-  const bad = await t.js(`try { (await import('./js/agents/profiles.js')).saveProfile({ label: 'X', command: 'x', mcp: 'sem dois pontos' }); return null; } catch (e) { return e.message; }`);
-  t.includes(bad || '', 'linha 1', 'linha de MCP inválida é recusada ao salvar o perfil');
+  t.equal(servers.find((x) => x.name === 'jira').env, [{ name: 'JIRA_TOKEN', value: 'segredo-123' }], 'env do servidor com ${VAR} vindo das variáveis do perfil');
+  const remote = servers.find((x) => x.name === 'remoto');
+  t.equal([remote.type, remote.url, remote.headers], ['http', 'https://mcp.exemplo.com/mcp', [{ name: 'Authorization', value: 'Bearer segredo-123' }]], 'servidor remoto (http) com cabeçalhos');
+  const P = './js/agents/profiles.js';
+  const bad = await t.js(`try { (await import('${P}')).saveProfile({ label: 'X', command: 'x', mcp: '{ "mcpServers": { "a": {} } }' }); return null; } catch (e) { return e.message; }`);
+  t.includes(bad || '', 'falta "command"', 'servidor MCP sem command (nem url) é recusado ao salvar');
+  const broken = await t.js(`try { (await import('${P}')).saveProfile({ label: 'X', command: 'x', mcp: '{ "mcpServers": ' }); return null; } catch (e) { return e.message; }`);
+  t.includes(broken || '', 'JSON inválido', 'JSON quebrado é recusado ao salvar');
+  const legacy = await t.js(`const M = await import('${P}'); M.saveProfile({ label: 'Antigo', command: 'x', mcp: 'pw: npx @playwright/mcp@0.0.83' }); return JSON.parse(M.agentProfiles().find((p) => p.label === 'Antigo').mcp)`);
+  t.equal(legacy, { mcpServers: { pw: { command: 'npx', args: ['@playwright/mcp@0.0.83'] } } }, 'o formato antigo (uma linha) é convertido para o JSON ao salvar');
 });
