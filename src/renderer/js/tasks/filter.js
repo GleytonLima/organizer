@@ -5,7 +5,8 @@ import { store, commit, notify } from '../core/store.js';
 import { hasTag, foldTag } from './tags.js';
 
 // tag: uma tag (ou null); memories: [{ gid, text }] escolhidas no seletor de memórias
-export const taskFilter = { query: '', waiting: false, memory: false, tag: null, memories: [] };
+// open: painel de filtros (atrás do funil da busca) aberto
+export const taskFilter = { query: '', waiting: false, memory: false, tag: null, memories: [], open: false };
 
 export const CHIPS = [
   { key: 'waiting', label: 'Em espera' },
@@ -34,6 +35,14 @@ export function setMemoryFilter(memories) {
   taskFilter.memories = memories;
   notify();
 }
+
+export function toggleFilterPanel() {
+  taskFilter.open = !taskFilter.open;
+  notify();
+}
+
+/** Quantos filtros (além da busca) estão ligados: o número no funil. */
+export const activeFilterCount = () => CHIPS.filter((c) => taskFilter[c.key]).length + (taskFilter.tag ? 1 : 0) + (taskFilter.memories.length ? 1 : 0);
 
 export const filterActive = () => !!(taskFilter.query.trim() || taskFilter.waiting || taskFilter.memory || taskFilter.tag || taskFilter.memories.length);
 

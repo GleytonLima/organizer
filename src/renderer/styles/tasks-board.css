@@ -211,12 +211,12 @@
   height: 12px;
   margin-right: 4px;
 }
-.chip-memory {
+.chip-active {
   max-width: 100%;
   padding: 0 4px 0 0;
   overflow: hidden;
 }
-.chip-memory .chip-text {
+.chip-active .chip-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -228,7 +228,7 @@
   font-size: inherit;
   cursor: pointer;
 }
-.chip-memory .chip-x {
+.chip-active .chip-x {
   display: inline-flex;
   padding: 3px;
   border: none;
@@ -237,15 +237,68 @@
   color: var(--faint);
   cursor: pointer;
 }
-.chip-memory .chip-x:hover {
+.chip-active .chip-x:hover {
   background: var(--hover);
   color: var(--text);
 }
-.chip-memory .chip-x .icon {
+.chip-active .chip-x .icon {
   margin: 0;
 }
 .tp-tags .chip.tag {
   height: 22px;
   padding: 0 9px;
   font-size: 11px;
+}
+
+/* busca com o funil dos filtros (minimalista: as opções só aparecem quando abertas) */
+.tp-search {
+  padding-right: 4px;
+}
+.tp-funnel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+}
+.tp-funnel:hover,
+.tp-funnel.open {
+  background: var(--hover);
+  color: var(--text);
+}
+.tp-funnel.active {
+  color: var(--text);
+}
+.tp-funnel .icon {
+  width: 14px;
+  height: 14px;
+}
+.tp-funnel-count {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+}
+.tp-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
 }

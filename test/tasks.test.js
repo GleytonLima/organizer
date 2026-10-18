@@ -115,9 +115,17 @@ suite('tarefas', {
   await search(task.key);
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Subir backend local'], 'busca pela chave da tarefa');
   await search('');
+  // minimalista: de cara só a busca; as opções ficam atrás do funil
+  t.equal(await t.js(`return !!document.querySelector('#taskpanel [data-chip]')`), false, 'filtros escondidos até abrir o funil');
+  await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`);
   await t.js(`S.store.state.tasks.find((x) => x.title === 'Lote 3').memoryRefs = ['m-1']; S.commit(); document.querySelector('#taskpanel [data-chip="memory"]').click()`);
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'chip "Com memória" mostra só as tarefas com memória vinculada');
-  await t.js(`document.querySelector('#taskpanel [data-chip="memory"]').click()`);
+  await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`); // fecha: fica só o filtro ativo
+  const closed = await t.waitFor(() => t.js(`return !document.querySelector('#taskpanel [data-chip]') && { active: [...document.querySelectorAll('#taskpanel [data-active]')].map((c) => c.textContent), count: document.querySelector('#taskpanel .tp-funnel-count')?.textContent }`));
+  t.equal(closed, { active: ['Com memória'], count: '1' }, 'fechado, mostra só o filtro ativo (com ×) e o número no funil');
+  await t.js(`document.querySelector('#taskpanel [data-active="memory"] .chip-x').click()`);
+  t.check(await t.waitFor(async () => (await titles()).length > 1), 'o × do chip ativo tira o filtro');
+  await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`); // reabre para o resto
   t.check(!(await titles()).includes('Página de preços'), 'no projeto em foco, as tarefas de outro projeto não aparecem');
   await t.js(`document.querySelector('#taskpanel .tp-scope').click()`);
   await t.js(`[...document.querySelectorAll('.menu-item')].find((b) => b.textContent.includes('Todos os projetos')).click()`);
@@ -156,8 +164,8 @@ suite('tarefas', {
   await t.js(`document.querySelector('.picker-card .btn.ghost').click()`);
   await t.js(`const f = await import('./js/tasks/filter.js'); f.setMemoryFilter([{ gid: 'm-1', text: 'Decisão X' }])`);
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'filtro por memória mostra as tarefas que a referenciam');
-  t.includes(await t.js(`return document.querySelector('#taskpanel .chip-memory').textContent`), 'Memória: Decisão X', 'o chip mostra a memória escolhida');
-  await t.js(`document.querySelector('#taskpanel .chip-memory .chip-x').click()`);
+  t.includes(await t.js(`return document.querySelector('#taskpanel .chip-active').textContent`), 'Memória: Decisão X', 'o chip mostra a memória escolhida');
+  await t.js(`document.querySelector('#taskpanel .chip-active .chip-x').click()`);
   t.check(await t.waitFor(async () => (await titles()).length > 1), 'o × tira o filtro por memória');
   // aviso de tarefa (ex.: "Concluída") no sino: clicar abre a gaveta da tarefa e marca como lido
   await t.js(`const c = await import('./js/notify/center.js'); c.clearNotifications();

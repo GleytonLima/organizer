@@ -1,9 +1,11 @@
-// Topo da aba Tarefas: escopo (projeto em foco ou todos — no lugar do nome do projeto), busca por
-// texto, chips de filtro, "Por memória…" e as tags em uso (ver tasks/filter.js). Reusa a busca e os
-// chips da aba Memória e o seletor de memórias.
+// Topo da aba Tarefas: escopo (projeto em foco ou todos — no lugar do nome do projeto) e a busca.
+// Minimalista: os filtros (Em espera, Com memória, Por memória…, tags) ficam atrás do funil na
+// própria caixa de busca; fechado, só aparecem os filtros ATIVOS, como chips com × (ver tasks/filter.js).
 import { el } from '../../core/dom.js';
 import { allTasks, projectTasks } from '../../tasks/queries.js';
-import { taskFilter, CHIPS, SCOPES, taskScope, setTaskScope, setTaskQuery, toggleTaskChip, toggleTaskTag, setMemoryFilter } from '../../tasks/filter.js';
+import {
+  taskFilter, CHIPS, SCOPES, taskScope, setTaskScope, setTaskQuery, toggleTaskChip, toggleTaskTag, setMemoryFilter, toggleFilterPanel, activeFilterCount,
+} from '../../tasks/filter.js';
 import { tagsInUse, foldTag } from '../../tasks/tags.js';
 import { pickMemories } from '../memory/picker.js';
 import { icon } from '../icons.js';
@@ -29,16 +31,20 @@ async function pickFilterMemories(project) {
   setMemoryFilter(items.map((m) => ({ gid: m.gid, text: m.text })));
 }
 
-function memoryChip(project) {
-  const chosen = taskFilter.memories;
-  if (!chosen.length) return el('button', { class: 'chip', 'data-chip': 'by-memory', onclick: () => pickFilterMemories(project) }, icon('link'), 'Por memória…');
-  const label = chosen.length === 1 ? chosen[0].text : `${chosen.length} memórias`;
-  return el(
+const memoryLabel = () => (taskFilter.memories.length === 1 ? taskFilter.memories[0].text : `${taskFilter.memories.length} memórias`);
+
+/** Chip de um filtro ativo (rótulo + ×); `onOpen` (opcional) reabre a escolha ao clicar no rótulo. */
+const activeChip = (label, onRemove, { onOpen = null, title = label, data = {} } = {}) =>
+  el(
     'span',
-    { class: 'chip on chip-memory', title: chosen.map((m) => m.text).join('\n') },
-    el('button', { class: 'chip-text', onclick: () => pickFilterMemories(project), text: `Memória: ${label}` }),
-    el('button', { class: 'chip-x', title: 'Tirar o filtro', onclick: () => setMemoryFilter([]) }, icon('close')),
+    { class: 'chip on chip-active', title, ...data },
+    el('button', { class: 'chip-text', onclick: onOpen || onRemove, text: label }),
+    el('button', { class: 'chip-x', title: 'Tirar o filtro', onclick: onRemove }, icon('close')),
   );
+
+function memoryChip(project) {
+  if (!taskFilter.memories.length) return el('button', { class: 'chip', 'data-chip': 'by-memory', onclick: () => pickFilterMemories(project) }, icon('link'), 'Por memória…');
+  return activeChip(`Memória: ${memoryLabel()}`, () => setMemoryFilter([]), { onOpen: () => pickFilterMemories(project), title: taskFilter.memories.map((m) => m.text).join('\n') });
 }
 
 function tagChips(project) {
@@ -51,21 +57,55 @@ function tagChips(project) {
   return el('div', { class: 'mem-filters tp-tags' }, tags.map((t) => el('button', { class: `chip tag${on(t) ? ' on' : ''}`, 'data-tag': t, onclick: () => toggleTaskTag(t), text: `#${t}` })));
 }
 
+/** Painel aberto pelo funil: todas as opções. */
+const options = (project) =>
+  el(
+    'div',
+    { class: 'tp-filter-panel' },
+    el(
+      'div',
+      { class: 'mem-filters' },
+      CHIPS.map((c) => el('button', { class: `chip${taskFilter[c.key] ? ' on' : ''}`, 'data-chip': c.key, onclick: () => toggleTaskChip(c.key), text: c.label })),
+      memoryChip(project),
+    ),
+    tagChips(project),
+  );
+
+/** Fechado: só os filtros em uso. */
+function activeOnly(project) {
+  const chips = [
+    ...CHIPS.filter((c) => taskFilter[c.key]).map((c) => activeChip(c.label, () => toggleTaskChip(c.key), { data: { 'data-active': c.key } })),
+    taskFilter.tag ? activeChip(`#${taskFilter.tag}`, () => toggleTaskTag(taskFilter.tag), { data: { 'data-active': 'tag' } }) : null,
+    taskFilter.memories.length ? activeChip(`Memória: ${memoryLabel()}`, () => setMemoryFilter([]), { onOpen: () => pickFilterMemories(project), data: { 'data-active': 'memories' } }) : null,
+  ].filter(Boolean);
+  return chips.length ? el('div', { class: 'mem-filters' }, chips) : null;
+}
+
+function funnel() {
+  const n = activeFilterCount();
+  return el(
+    'button',
+    {
+      type: 'button',
+      class: `tp-funnel${taskFilter.open ? ' open' : ''}${n ? ' active' : ''}`,
+      title: taskFilter.open ? 'Esconder filtros' : 'Filtros (em espera, memória, tags)',
+      onclick: (e) => (e.preventDefault(), toggleFilterPanel()),
+    },
+    icon('filter'),
+    n ? el('span', { class: 'tp-funnel-count', text: n }) : null,
+  );
+}
+
 export const filterBar = (project) => [
   el(
     'label',
-    { class: 'mem-search' },
+    { class: 'mem-search tp-search' },
     icon('search'),
     Object.assign(
-      el('input', { type: 'text', 'data-draft': 'task-query', placeholder: 'Buscar tarefas (chave, título, #tag)…', spellcheck: 'false', oninput: (e) => setTaskQuery(e.target.value) }),
+      el('input', { type: 'text', 'data-draft': 'task-query', placeholder: 'Buscar tarefas…', title: 'Chave, título, descrição ou #tag', spellcheck: 'false', oninput: (e) => setTaskQuery(e.target.value) }),
       { value: taskFilter.query },
     ),
+    funnel(),
   ),
-  el(
-    'div',
-    { class: 'mem-filters' },
-    CHIPS.map((c) => el('button', { class: `chip${taskFilter[c.key] ? ' on' : ''}`, 'data-chip': c.key, onclick: () => toggleTaskChip(c.key), text: c.label })),
-    memoryChip(project),
-  ),
-  tagChips(project),
+  taskFilter.open ? options(project) : activeOnly(project),
 ];
