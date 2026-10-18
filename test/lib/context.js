@@ -50,16 +50,17 @@ function createContext({ win, dir, ud, run, checks }) {
   }
 
   /** Ambiente de um agente: aponta só para este app (APPDATA isolado evita cair no app real). */
-  const agentEnv = (terminalId = '') => ({
+  // `token`: o do terminal (como um agente rodando nele) em vez do mestre — ver src/main/api/server.js
+  const agentEnv = (terminalId = '', token = api.token) => ({
     ...process.env,
     APPDATA: dir,
     BO_API_URL: api.url,
-    BO_API_TOKEN: api.token,
+    BO_API_TOKEN: token,
     BO_TERMINAL_ID: terminalId,
   });
 
-  async function mcp(terminalId = '', { cwd } = {}) {
-    const client = startMcp({ env: agentEnv(terminalId), cwd });
+  async function mcp(terminalId = '', { cwd, token } = {}) {
+    const client = startMcp({ env: agentEnv(terminalId, token), cwd });
     clients.push(client);
     await client.init();
     return client;

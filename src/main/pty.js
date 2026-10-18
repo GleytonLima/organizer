@@ -5,7 +5,7 @@ const path = require('path');
 const pty = require('node-pty');
 const { BASH, rcFile, windowsToMsys } = require('./bash');
 const { sendToWindow } = require('./window');
-const { apiInfo } = require('./api/server');
+const { apiInfo, terminalToken } = require('./api/server');
 const { childEnv } = require('./env');
 
 const ptys = new Map();
@@ -20,7 +20,8 @@ function organizerEnv(id) {
     BO_TERMINAL_ID: id,
     BO_BIN: windowsToMsys(BIN_DIR),
     BO_NODE: process.execPath,
-    ...(api && { BO_API_URL: api.url, BO_API_TOKEN: api.token }),
+    // token do próprio terminal (não o mestre): vale só como este terminal (ver api/server.js)
+    ...(api && { BO_API_URL: api.url, BO_API_TOKEN: terminalToken(id) }),
   };
 }
 

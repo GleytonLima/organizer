@@ -54,6 +54,7 @@ bin/             CLI `bo` (bo.js + lib/: client, commands(+task, +memory), mcp, 
 
 ## API local
 Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/commands.js`) e no MCP (`bin/lib/tools.js`).
+Tokens: o mestre fica em `api.json` (você, fora do app); cada terminal/agente recebe o seu (`bot_<id>_<hmac>`, `src/main/api/server.js`) e a identidade vem dele (`p._caller`, o `from` é ignorado). Digitar/fechar outro terminal, apagar memória e salvar comando inicial pedem o seu OK (`js/api/approvals.js`).
 
 ## Testes
 `npm test` (ou `node test/run.js <suíte>`): sobe o app de verdade com dados isolados e verifica pelo MCP/CLI/renderer.

@@ -9,7 +9,7 @@ import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
 import { addProject, addFoldersToProject, setSyncKey } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
-import { requestStartup } from './approvals.js';
+import { requestStartup, approveCrossTerminal } from './approvals.js';
 
 function terminalInfo({ project, group, t }) {
   return {
@@ -81,7 +81,8 @@ export const handlers = {
     const repo = p.repo ? resolveRepo(project, p.repo) : null;
     const base = repo?.path || (caller?.project === project ? caller.t.cwd : project.cwd || store.info.home);
     const cwd = await resolveCwd(p.cwd, base);
-    const t = addTerminal(group, { name: p.name || '', cwd }, { focus: !!p.focus });
+    // openedBy: quem abriu pode digitar nele sem pedir (ver approvals.js)
+    const t = addTerminal(group, { name: p.name || '', cwd, ...(p._caller && { openedBy: p._caller.terminal }) }, { focus: !!p.focus });
     if (p.command) await writeWhenReady(t.id, p.command + '\r');
     if (p.startup) requestStartup(t.id, String(p.startup)); // persiste execução: só com o seu OK no app
     return { ...terminalInfo(findTerm(t.id)), ...(p.startup && { startupPending: 'aguardando o OK do usuário no app' }) };
@@ -90,6 +91,7 @@ export const handlers = {
   /** Envia texto ao terminal (com Enter, salvo `enter: false`). */
   async send(p) {
     const entry = resolveTerminal(p.terminal, callerOf(p));
+    await approveCrossTerminal(p._caller, entry, 'Digitar', p.text || '');
     await writeWhenReady(entry.t.id, (p.text || '') + (p.enter === false ? '' : '\r'));
     return terminalInfo(entry);
   },
@@ -117,8 +119,9 @@ export const handlers = {
   },
 
   /** Fecha o terminal; se houver processo rodando, exige `force: true`. */
-  close(p) {
+  async close(p) {
     const entry = resolveTerminal(p.terminal, callerOf(p));
+    await approveCrossTerminal(p._caller, entry, 'Fechar');
     const cmd = runningCommand(entry.t.id);
     if (cmd && !p.force) throw new Error(`"${termLabel(entry.t)}" está executando "${cmd}". Use force para encerrar.`);
     removeTerminal(entry.t.id);

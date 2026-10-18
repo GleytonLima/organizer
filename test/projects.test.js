@@ -140,4 +140,31 @@ suite('projetos', {
   await agent.tool('create_project', { name: 'minha-app', syncKey: 'app-a' });
   const moved = await agent.tool('create_project', { name: 'minha-app', syncKey: 'outro-time' });
   t.check(!moved.ok && /só muda pela interface/.test(moved.error || ''), 'a API não troca a chave de sincronização de um projeto que já tem', moved.error);
+
+  // token por terminal: identidade vem do token; agir em outro terminal ou apagar memória pede o seu OK
+  const { terminalToken } = require('../src/main/api/server');
+  const call = (token, method, body) =>
+    fetch(`${t.api.url}/v1/${method}`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.status);
+  t.equal(await call(terminalToken('dev1').replace(/.$/, (c) => (c === '0' ? '1' : '0')), 'list', {}), 401, 'token de terminal forjado (assinatura errada) é recusado');
+  t.equal(await call(terminalToken('dev1'), 'list', {}), 200, 'token do terminal vale na API');
+  const asDev = await t.mcp('o1', { token: terminalToken('dev1') }); // diz ser o "o1", mas o token é do dev1
+  const status = (await asDev.tool('terminal_status', {})).data;
+  t.equal(status?.id, 'dev1', 'quem chama é o terminal do token (o "from" do pedido é ignorado)');
+  const typed = asDev.tool('send_input', { terminal: 'o1', text: 'echo DE-OUTRO' });
+  t.includes(await t.waitFor(async () => (await t.modal.open()) && t.modal.text()), 'echo DE-OUTRO', 'digitar em outro terminal pede o seu OK (e mostra o texto)');
+  await t.modal.cancel();
+  const refused = await typed;
+  t.check(!refused.ok && /não permitiu/.test(refused.error || ''), 'recusado, o agente recebe o erro', JSON.stringify(refused));
+  const allowed = asDev.tool('send_input', { terminal: 'o1', text: 'echo PERMITIDO' });
+  await t.waitFor(() => t.modal.open());
+  await t.js(`[...document.querySelectorAll('#modal button')].find((b) => b.textContent === 'Sempre deste terminal').click()`);
+  t.check((await allowed).ok, '"Sempre deste terminal" libera o pedido');
+  t.check((await asDev.tool('send_input', { terminal: 'o1', text: 'echo DE-NOVO' })).ok && !(await t.modal.open()), 'e não pergunta de novo para o mesmo par');
+  const ownTerm = (await asDev.tool('open_terminal', { name: 'meu', repo: 'infra' })).data;
+  t.check((await asDev.tool('send_input', { terminal: ownTerm?.id || 'meu', text: 'echo MEU' })).ok && !(await t.modal.open()), 'no terminal que ele mesmo abriu, digita sem pedir');
+  const note = await agent.tool('remember_note', { text: 'Nota que um agente quer apagar' });
+  const forgetting = asDev.tool('forget_memory', { id: note.data?.id });
+  t.includes(await t.waitFor(async () => (await t.modal.open()) && t.modal.text()), 'Nota que um agente quer apagar', 'apagar memória pedido por um terminal pede o seu OK');
+  await t.modal.cancel();
+  t.check(!(await forgetting).ok, 'recusado, a memória continua');
 });

@@ -10,6 +10,7 @@ import { callerOf, resolveProject, resolveCwd } from './resolve.js';
 import { invalidateMemory } from '../ui/memory/state.js';
 import { saveProgress } from '../memory/progress.js';
 import { memoryLinkHandlers } from './memory-link-handlers.js';
+import { approveForget } from './approvals.js';
 import { ideaToTask } from '../actions/idea-task.js';
 
 const iso = (ms) => new Date(ms).toISOString();
@@ -105,6 +106,8 @@ export const memoryHandlers = {
   memory_sync: () => api.sync.now(),
 
   async memory_forget(p) {
+    const [memory] = await api.memory.many([p.id]);
+    await approveForget(p._caller, memory); // pedido de um terminal (agente): só com o seu OK
     const r = await api.memory.remove(p.id);
     invalidateMemory();
     return r;
