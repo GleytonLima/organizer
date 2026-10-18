@@ -15,10 +15,12 @@ suite('avaliação da busca', { seed: () => seed.state([]) }, async (t) => {
   const { search } = require('../src/main/memory/search');
   const data = loadEval();
   const ids = {};
-  for (const m of data.memories) ids[m.k] = store.add({ scope: 'global', kind: m.kind, text: m.text, tags: m.tags.join(',') }).id;
+  const where = (m) => (m.kind === 'progress' ? { scope: 'project', projectId: 'p-eval', project: 'eval', taskKey: m.task } : { scope: 'global' });
+  for (const m of data.memories) ids[m.k] = store.add({ ...where(m), kind: m.kind, text: m.text, tags: m.tags.join(',') }).id;
   for (const m of data.memories) {
     if (m.supersededBy) openDb().prepare('UPDATE memories SET superseded_by = ? WHERE id = ?').run(ids[m.supersededBy], ids[m.k]);
     if (m.review) markReview([ids[m.k]], 'avaliação');
+    if (m.status) store.update(ids[m.k], { status: m.status });
   }
   const keyOf = Object.fromEntries(Object.entries(ids).map(([k, id]) => [id, k]));
   const ranked = [];
@@ -27,7 +29,10 @@ suite('avaliação da busca', { seed: () => seed.state([]) }, async (t) => {
     ranked.push({ q, expect, got: res.items.map((i) => keyOf[i.id]) });
   }
   const s = score(ranked);
-  process.stdout.write(`  busca por texto: hit@1 ${s.hit1} · hit@5 ${s.hit5} · MRR ${s.mrr} (${s.n} perguntas)\n`);
+  // ruído: buscas com um progresso de tarefa (episódico) entre os 5 primeiros
+  const progress = new Set(data.memories.filter((m) => m.kind === 'progress').map((m) => m.k));
+  const noisy = ranked.filter((r) => r.got.slice(0, 5).some((k) => progress.has(k))).length;
+  process.stdout.write(`  busca por texto: hit@1 ${s.hit1} · hit@5 ${s.hit5} · MRR ${s.mrr} (${s.n} perguntas) · com progresso no top-5: ${noisy}\n`);
   for (const m of s.misses) process.stdout.write(`    · ${m}\n`);
   // híbrida com provedor falso: prefixos do nomic na indexação e na consulta
   const embeddings = require('../src/main/memory/embeddings');
@@ -47,5 +52,6 @@ suite('avaliação da busca', { seed: () => seed.state([]) }, async (t) => {
     [1.15, 1.12, 1, 0.9, 0.8, 0.65, 0.8], 'autoridade: decisão sobe; a revisar, substituída e ideia fechada têm teto');
   const order = rerank([{ id: 'n', kind: 'note', s: 1 }, { id: 'd', kind: 'decision', s: 0.95 }, { id: 'd2', kind: 'decision', s: 0.5 }], (m) => m.s, 2).map((m) => m.id);
   t.equal(order, ['d', 'n'], 'quase empate: a decisão passa; a muito menos relevante não entra');
+  t.equal(noisy, 0, 'progresso de tarefa concluída não aparece na busca padrão (antes: 5 de 25 buscas com progresso no top-5)');
   t.check(s.hit1 >= FLOOR.hit1 && s.hit5 >= FLOOR.hit5 && s.mrr >= FLOOR.mrr, `busca por texto não piora (piso hit@1 ${FLOOR.hit1}, hit@5 ${FLOOR.hit5}, MRR ${FLOOR.mrr})`, JSON.stringify(s));
 });

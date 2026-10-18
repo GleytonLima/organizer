@@ -48,6 +48,13 @@ const ACTIONS = {
   },
   wait: { usage: 'wait <tarefa> <pergunta...>', run: async ([task, ...q]) => line(await request('task_input', { task, question: q.join(' ') })) },
   done: { usage: 'done [tarefa] [--summary S]', run: async ([task], o) => line(await request('task_complete', { task, summary: o.summary })) },
+  suggest: {
+    usage: 'suggest <tarefa> <texto...> [--kind decision|howto|note] [--tags A,B]',
+    run: async ([task, ...text], o) => {
+      const r = await request('task_suggest_memory', { task, text: text.join(' '), kind: o.kind, tags: o.tags ? String(o.tags).split(',') : [] });
+      return `${r.task}: sugestão ${r.suggestion.id} (${r.suggestion.kind}) — ${r.note}`;
+    },
+  },
   waiting: { usage: 'waiting', run: async () => (await request('task_waiting')).map(line).join('\n') || '(nada em espera)' },
 };
 

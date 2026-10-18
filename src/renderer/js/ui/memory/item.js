@@ -3,7 +3,7 @@
 import { el } from '../../core/dom.js';
 import { timeAgo } from '../../core/format.js';
 import { scopeLabel } from '../../memory/context.js';
-import { kindOf, IDEA_STATUS } from '../../memory/kinds.js';
+import { kindOf, STATUS_LABEL } from '../../memory/kinds.js';
 import { ideaToTask, setIdeaStatus } from '../../actions/idea-task.js';
 import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
@@ -53,7 +53,7 @@ function openItem(project, m) {
 
 export function memoryItem(project, m) {
   const where = scopeLabel(project, m); // "global" / "pasta backend"; projeto = sem rótulo
-  const status = m.kind === 'idea' && m.status && m.status !== 'open' ? IDEA_STATUS[m.status] : null;
+  const status = m.status ? STATUS_LABEL[m.status] : null;
   const meta = [m.scope === 'project' ? m.repo : null, m.kind === 'progress' ? null : m.taskKey, status, m.source, timeAgo(m.updatedAt)].filter(Boolean).join(' · ');
   return el(
     'article',

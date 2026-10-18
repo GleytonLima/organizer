@@ -78,9 +78,27 @@ const TASK_TOOLS = [
   },
   {
     name: 'complete_task',
-    description: 'Conclui a tarefa: move para a última coluna do quadro e avisa o usuário.',
+    description: 'Conclui a tarefa: move para a última coluna do quadro e avisa o usuário. Leia o campo "next" da resposta: ele pede as memórias duráveis (suggest_memory).',
     inputSchema: { type: 'object', properties: { task: taskRef, summary: { type: 'string', description: 'Resumo do que foi feito.' } } },
     run: (request, args) => request('task_complete', args),
+  },
+  {
+    name: 'suggest_memory',
+    description:
+      'Propõe uma memória DURÁVEL aprendida na tarefa — uma decisão em uma frase com o porquê, um "como fazer" ou uma nota que valha para ' +
+      'quem vier depois (não um relato do que foi feito). Fica pendente na tarefa até o usuário aceitar (vira memória do projeto vinculada) ou descartar. ' +
+      'Use ao concluir (1 a 3, só se houver algo durável).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task: taskRef,
+        kind: { type: 'string', enum: ['decision', 'howto', 'note'], description: 'Padrão: decision.' },
+        text: { type: 'string', description: 'Decisão: uma frase com o porquê (até 280 caracteres).' },
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['text'],
+    },
+    run: (request, args) => request('task_suggest_memory', args),
   },
   {
     name: 'list_tasks',

@@ -17,6 +17,7 @@ const SUITES = [
   { name: 'links' },
   { name: 'agent', runs: 2 },
   { name: 'insights' },
+  { name: 'consolidate' }, // consolidação da memória ao concluir tarefas
   { name: 'search-eval' }, // avaliação da busca (hit@k); imprime as métricas
   { name: 'sync' }, // precisa do bo-memory-server (binário) e do PostgreSQL de testes; sem eles, é pulada
 ];

@@ -15,9 +15,13 @@ import { memoriesBox } from './detail-memories.js';
 import { subtasksBox, parentLine } from './detail-subtasks.js';
 import { tagsBox } from './detail-tags.js';
 import { feedbackBox } from './detail-feedback.js';
+import { suggestionsBox } from './detail-suggestions.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
+/** Rótulo + conteúdo, ou nada quando o conteúdo é null. */
+const withLabel = (text, node) => (node ? [el('label', { class: 'td-label', text }), node] : []);
+
 const draftOf = (task) => {
   if (!drafts.has(task.id)) drafts.set(task.id, {});
   return drafts.get(task.id);
@@ -102,6 +106,7 @@ export function renderTaskDetail() {
     subtasksBox(task),
     el('label', { class: 'td-label', text: 'Memórias' }),
     memoriesBox(task),
+    ...withLabel('Sugestões de memória', suggestionsBox(task, draftOf(task))),
     el('label', { class: 'td-label', text: 'Seu feedback' }),
     feedbackBox(task, draftOf(task)),
     el('label', { class: 'td-label', text: 'Histórico' }),

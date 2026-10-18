@@ -29,3 +29,5 @@ export const kindOf = (kind) => KINDS[kind] || KINDS.note;
 
 /** Estado de uma ideia, legível. */
 export const IDEA_STATUS = { open: 'aberta', converted: 'virou tarefa', discarded: 'descartada' };
+/** Estado fechado de uma memória (ideia ou progresso), para a linha de detalhes; aberta = nada. */
+export const STATUS_LABEL = { ...IDEA_STATUS, open: null, done: 'tarefa concluída' };

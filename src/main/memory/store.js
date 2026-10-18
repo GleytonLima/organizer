@@ -10,6 +10,8 @@ const { contentTerms } = require('./stopwords');
 const DECISION_MAX = 280;
 const KINDS = ['note', 'decision', 'progress', 'idea', 'howto'];
 const IDEA_STATUS = ['open', 'converted', 'discarded'];
+const PROGRESS_STATUS = ['open', 'done']; // done = a tarefa foi concluída: progresso arquivado
+const STATUSES = { idea: IDEA_STATUS, progress: PROGRESS_STATUS };
 const changes = new EventEmitter(); // 'write' após cada gravação local (o sync agenda um envio)
 const COLUMNS = 'id, scope, folder, project_id, project, repo, kind, text, tags, source, task_key, superseded_by, created_at, updated_at, embedding_model, gid, rev, dirty, conflict, sync_error, progress, author, remote, refs, review, status';
 
@@ -58,7 +60,7 @@ const toItem = (r) =>
     remote: r.remote,
     refs: parse(r.refs) || [], // [{ id: gid, type: depends | related | contradicts }]
     review: parse(r.review), // marca "a revisar": { reason, source, by?, at }
-    status: r.status, // ideia: open | converted | discarded
+    status: r.status, // ideia: open | converted | discarded; progresso: open | done
   };
 
 function get(id) {
@@ -108,7 +110,9 @@ function update(id, { text, tags, repo, scope, folder, projectId, progress, refs
   const changedText = next.text !== cur.text;
   const prog = progress !== undefined ? progress : cur.progress;
   const links = refs !== undefined ? resolveRefs(refs, cur.gid) : cur.refs;
-  if (status !== undefined && (cur.kind !== 'idea' || !IDEA_STATUS.includes(status))) throw new Error(`Estado só vale para ideias: ${IDEA_STATUS.join(', ')}.`);
+  if (status !== undefined && !STATUSES[cur.kind]?.includes(status)) {
+    throw new Error(STATUSES[cur.kind] ? `Estado inválido: use ${STATUSES[cur.kind].join(', ')}.` : 'Estado só vale para ideias e progresso.');
+  }
   openDb()
     .prepare(`UPDATE memories SET text = ?, tags = ?, repo = ?, scope = ?, folder = ?, folder_key = ?, project_id = ?, progress = ?, refs = ?, status = ?, task_key = ?, review = NULL,
               updated_at = ?, dirty = 1, sync_error = NULL${changedText ? ', embedding = NULL, embedding_model = NULL' : ''} WHERE id = ?`)
@@ -151,8 +155,8 @@ function filters({ context, projectId, scope, kind, repo, taskKey, needsReview =
   equals('task_key', taskKey);
   if (!includeSuperseded) where.push(`${col('superseded_by')} IS NULL`);
   if (needsReview) where.push(`${col('review')} IS NOT NULL`);
-  // ideias que viraram tarefa ou foram descartadas só aparecem no filtro de ideias
-  if (kind !== 'idea') where.push(`NOT (${col('kind')} = 'idea' AND coalesce(${col('status')}, 'open') <> 'open')`);
+  // ideias que viraram tarefa ou foram descartadas, e progresso de tarefa concluída, só no filtro do próprio tipo
+  if (kind !== 'idea' && kind !== 'progress') where.push(`coalesce(${col('status')}, 'open') = 'open'`);
   return { sql: where.length ? where.join(' AND ') : '1 = 1', args };
 }
 

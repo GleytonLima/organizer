@@ -3,6 +3,7 @@
 import { store, commit } from '../core/store.js';
 import { makeTask } from '../core/model.js';
 import { columnById, firstColumn, lastColumn, isDoneColumn } from '../tasks/columns.js';
+import { onTaskDone, onTaskReopened } from './task-consolidate.js';
 import { taskProject } from '../tasks/queries.js';
 import { logTask, stampOrigin, notifyAbout } from '../tasks/history.js';
 import { confirmDanger } from '../ui/confirm.js';
@@ -41,11 +42,14 @@ export function moveTask(task, columnId, { by = 'você', note = '', terminalId }
   if (!col) throw new Error('Coluna inexistente.');
   stampOrigin(task, terminalId);
   const changed = task.columnId !== col.id;
+  const wasDone = isDoneColumn(project, task.columnId);
   task.columnId = col.id;
   if (by === 'agente') task.needsInput = null;
   logTask(task, by, 'moved', `${changed ? `Movida para “${col.name}”` : `Continua em “${col.name}”`}${note ? ` — ${note}` : ''}`, { to: col.id });
   commit();
   if (changed && by === 'agente' && isDoneColumn(project, col.id)) notifyAbout(task, `Concluída: ${task.title}`);
+  if (changed && isDoneColumn(project, col.id)) onTaskDone(task, { by });
+  else if (changed && wasDone) onTaskReopened(task);
   return task;
 }
 

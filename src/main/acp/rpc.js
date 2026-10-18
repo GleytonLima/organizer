@@ -12,9 +12,12 @@ class RpcPeer {
     this.handlers = new Map(); // método → (params) => resultado (pedidos do agente)
     this.listeners = new Map(); // método → (params) => void (notificações do agente)
     readline.createInterface({ input }).on('line', (line) => this.receive(line));
+    // agente que saiu (EPIPE ao escrever): falha os pedidos em aberto em vez de derrubar o processo
+    output.on('error', (err) => this.close(`O agente encerrou (${err.code || err.message}).`));
   }
 
   send(msg) {
+    if (this.closed || this.output.destroyed) throw new Error('O agente encerrou.');
     this.output.write(`${JSON.stringify({ jsonrpc: '2.0', ...msg })}\n`);
   }
 
@@ -22,12 +25,18 @@ class RpcPeer {
     const id = ++this.seq;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      this.send({ id, method, params });
+      try {
+        this.send({ id, method, params });
+      } catch (err) {
+        this.pending.delete(id);
+        reject(err);
+      }
     });
   }
 
+  /** Notificação (sem resposta): para um agente que já saiu, não há o que avisar. */
   notify(method, params) {
-    this.send({ method, params });
+    if (!this.closed) this.send({ method, params });
   }
 
   onRequest(method, fn) {
@@ -40,6 +49,7 @@ class RpcPeer {
 
   /** Rejeita tudo que está pendente (o agente encerrou). */
   close(reason) {
+    this.closed = true;
     for (const p of this.pending.values()) p.reject(new Error(reason));
     this.pending.clear();
   }

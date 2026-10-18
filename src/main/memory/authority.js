@@ -10,7 +10,7 @@ function authority(m) {
   let f = 1 + (KIND[m.kind] ?? 0);
   if (m.supersededBy) f = Math.min(f, 0.65);
   else if (m.review) f = Math.min(f, 0.8);
-  if (m.kind === 'idea' && m.status && m.status !== 'open') f = Math.min(f, 0.8);
+  if (m.status && m.status !== 'open') f = Math.min(f, 0.8); // ideia fechada, progresso de tarefa concluída
   return Math.min(MAX, Math.max(MIN, f));
 }
 

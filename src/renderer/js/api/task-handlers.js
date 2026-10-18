@@ -9,6 +9,8 @@ import { callerOf, resolveProject } from './resolve.js';
 import { linkTaskMemories, unlinkTaskMemory, taskMemories } from '../actions/task-memories.js';
 import { addTaskTags, removeTaskTags } from '../actions/task-tags.js';
 import { tagsOf, hasTag } from '../tasks/tags.js';
+import { suggestMemory } from '../actions/task-suggestions.js';
+import { consolidationRequest } from '../actions/task-consolidate.js';
 
 const iso = (ms) => new Date(ms).toISOString();
 
@@ -75,7 +77,8 @@ export const taskHandlers = {
     const { task } = context(p, { needTask: true });
     const memories = (await taskMemories(task)).map((m) => ({ id: m.id, kind: m.kind, text: m.text, review: m.review?.reason ?? null }));
     const subtasks = subtasksOf(task).map((t) => ({ key: t.key, title: t.title, column: columnById(taskProject(t), t.columnId)?.name, waiting: !!t.needsInput }));
-    return { ...taskInfo(task, { history: true }), subtasks, memories };
+    const memorySuggestions = (task.memorySuggestions || []).map(({ id, kind, text }) => ({ id, kind, text }));
+    return { ...taskInfo(task, { history: true }), subtasks, memories, memorySuggestions };
   },
 
   async task_create(p) {
@@ -140,8 +143,18 @@ export const taskHandlers = {
     return taskInfo(suggestReply(task, p.suggestion));
   },
 
+  /** Conclui; a resposta pede ao agente que proponha memórias duráveis (consolidação). */
   task_complete(p) {
     const { task, terminalId } = context(p, { needTask: true });
-    return taskInfo(completeTask(task, { note: p.summary || '', terminalId }));
+    completeTask(task, { note: p.summary || '', terminalId });
+    task.consolidationAskedAt = Date.now();
+    return { ...taskInfo(task), next: consolidationRequest(task) };
+  },
+
+  /** O agente propõe uma memória (decision | howto | note); o usuário aceita ou descarta na gaveta. */
+  task_suggest_memory(p) {
+    const { task } = context(p, { needTask: true });
+    const item = suggestMemory(task, { kind: p.kind || 'decision', text: p.text, tags: p.tags || [] });
+    return { task: task.key, suggestion: item, pending: task.memorySuggestions.length, note: 'Fica pendente até o usuário aceitar ou descartar.' };
   },
 };
