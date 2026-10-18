@@ -20,6 +20,12 @@ export const insightsButton = () =>
 const menuButton = (label, items) =>
   el('button', { class: 'period-btn', onclick: (e) => showMenu(e, items()) }, el('span', { text: label }), icon('chevron'));
 
+/** Exporta os feedbacks (JSONL) para onde você escolher. */
+async function exportFeedback() {
+  const r = await api.feedback.exportAll();
+  if (r) await openModal({ title: 'Feedback exportado', message: `${r.count} feedback(s) em ${r.path}` });
+}
+
 async function pricesDialog() {
   const p = insightsSettings().prices || {};
   const v = await openModal({
@@ -54,6 +60,7 @@ function header(d) {
     ]),
     menuButton(d.period.label, () => INSIGHT_PERIODS.map((p) => ({ label: p.label, checked: p.id === d.period.id, action: () => setInsights({ period: p.id }) }))),
     el('button', { class: 'btn small ghost', onclick: pricesDialog, text: 'Preços…' }),
+    el('button', { class: 'btn small ghost', onclick: exportFeedback, title: 'Seus feedbacks com a foto do contexto, um por linha (JSONL), para análise', text: 'Exportar feedback…' }),
     iconButton('refresh', 'Atualizar', refreshInsights),
     iconButton('close', 'Voltar aos terminais', () => setTaskView('off')),
   );

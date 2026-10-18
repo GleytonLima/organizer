@@ -68,4 +68,4 @@ function closeMetrics() {
   db = null;
 }
 
-module.exports = { registerMetricsIpc, closeMetrics, record, query };
+module.exports = { registerMetricsIpc, closeMetrics, record, query, open };

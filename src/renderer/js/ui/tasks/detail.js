@@ -14,6 +14,7 @@ import { saveProgressDialog } from '../memory/progress.js';
 import { memoriesBox } from './detail-memories.js';
 import { subtasksBox, parentLine } from './detail-subtasks.js';
 import { tagsBox } from './detail-tags.js';
+import { feedbackBox } from './detail-feedback.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -101,6 +102,8 @@ export function renderTaskDetail() {
     subtasksBox(task),
     el('label', { class: 'td-label', text: 'Memórias' }),
     memoriesBox(task),
+    el('label', { class: 'td-label', text: 'Seu feedback' }),
+    feedbackBox(task, draftOf(task)),
     el('label', { class: 'td-label', text: 'Histórico' }),
     history(task),
   ]);

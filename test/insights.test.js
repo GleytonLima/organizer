@@ -79,5 +79,39 @@ suite('insights', {
   t.check(await t.waitFor(async () => (await cardText('cost')).includes('mi ')), 'em "Todos os projetos" entram os eventos do outro projeto');
   const shots = process.env.BO_TEST_SHOTS;
   if (shots) require('fs').writeFileSync(path.join(shots, 'insights.png'), (await t.wc.capturePage()).toPNG());
-  await t.js(`(await import('./js/actions/tasks.js')).setTaskView('off')`);
+
+  // feedback qualitativo na gaveta da tarefa: texto + rótulo, com a foto do contexto
+  await t.js(`(await import('./js/ui/tasks/selection.js')).openTask('t1')`);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#task-detail .td-feedback textarea')`));
+  const saveFb = () => t.js(`[...document.querySelectorAll('#task-detail .td-feedback button')].find((b) => b.textContent === 'Salvar feedback').click()`);
+  await saveFb(); // vazio: recusa
+  t.includes(await t.waitFor(async () => (await t.modal.open()) && t.modal.text()), 'Escreva o feedback', 'feedback vazio (sem texto nem rótulo) é recusado');
+  await t.modal.submit();
+  await t.js(`const ta = document.querySelector('#task-detail .td-feedback textarea'); ta.value = 'O agente entendeu rápido, mas faltou a convenção de testes.'; ta.dispatchEvent(new Event('input'));
+    document.querySelector('#task-detail .td-feedback [data-label="adjusted"]').click();`);
+  await saveFb();
+  const shown = await t.waitFor(() => t.js(`const i = document.querySelector('#task-detail .td-feedback-item'); return i && i.innerText`));
+  t.check(/Precisou de ajustes/.test(shown) && /convenção de testes/.test(shown), 'o feedback aparece na tarefa, com o rótulo', shown);
+  t.equal(await t.js(`return document.querySelector('#task-detail .td-feedback textarea').value`), '', 'a caixa fica limpa depois de salvar');
+  const [fb] = await t.js(`return api.feedback.list({ targetType: 'task', targetId: 't1' })`);
+  const c = fb?.context || {};
+  t.equal([fb?.label, c.key, c.column, c.leadMs, c.waits, c.reopened, c.agent?.turns, c.agent?.interrupted], ['adjusted', 'IN-1', 'Feito', 2 * DAY, 1, 0, 3, 1], 'feedback guarda a foto do contexto (lead time, esperas, uso do agente na tarefa)');
+
+  // exportação JSONL (o diálogo de salvar vira um caminho fixo no teste)
+  const out = path.join(t.dir, 'feedback.jsonl');
+  require('electron').dialog.showSaveDialog = async () => ({ canceled: false, filePath: out });
+  await t.js(`(await import('./js/actions/tasks.js')).setTaskView('insights')`);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#board [data-card]')`));
+  await t.js(`[...document.querySelectorAll('#board button')].find((b) => b.textContent === 'Exportar feedback…').click()`);
+  t.includes(await t.waitFor(async () => (await t.modal.open()) && t.modal.text()), '1 feedback', 'exportar avisa quantos foram e para onde');
+  await t.modal.submit();
+  const lines = require('fs').readFileSync(out, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  t.check(lines.length === 1 && lines[0].text.includes('convenção') && lines[0].context.leadMs === 2 * DAY && lines[0].at, 'JSONL: uma linha por feedback, com texto, rótulo, data e contexto', JSON.stringify(lines[0]).slice(0, 200));
+
+  // apagar um feedback pela gaveta
+  await t.js(`(await import('./js/actions/tasks.js')).setTaskView('off'); (await import('./js/ui/tasks/selection.js')).openTask('t1')`);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#task-detail .td-feedback-item')`));
+  await t.js(`document.querySelector('#task-detail .td-feedback-item [title="Apagar este feedback"]').click()`);
+  t.check(await t.waitFor(() => t.js(`return !document.querySelector('#task-detail .td-feedback-item')`)), 'o × apaga o feedback');
+  await t.js(`(await import('./js/ui/tasks/selection.js')).closeTask()`);
 });

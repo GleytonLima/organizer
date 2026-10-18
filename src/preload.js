@@ -63,6 +63,13 @@ contextBridge.exposeInMainWorld('api', {
     record: (ev) => ipcRenderer.send('metrics:record', ev),
     query: (opts) => ipcRenderer.invoke('metrics:query', opts),
   },
+  // Feedback qualitativo (texto + rótulo + contexto) sobre tarefas ou tags.
+  feedback: {
+    add: (f) => ipcRenderer.invoke('feedback:add', f),
+    list: (q) => ipcRenderer.invoke('feedback:list', q),
+    remove: (id) => ipcRenderer.invoke('feedback:remove', id),
+    exportAll: () => ipcRenderer.invoke('feedback:export'),
+  },
 
   // Sync da memória com o bo-memory-server.
   sync: {
