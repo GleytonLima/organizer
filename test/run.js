@@ -14,6 +14,7 @@ const SUITES = [
   { name: 'memory-scopes' },
   { name: 'projects' },
   { name: 'split' },
+  { name: 'pty-cleanup', runs: 2 }, // fechar terminal/app não deixa bash nem comandos órfãos
   { name: 'links' },
   { name: 'agent', runs: 2 },
   { name: 'insights' },
