@@ -5,6 +5,7 @@ const { EventEmitter } = require('events');
 const { openDb } = require('./db');
 const { normalizeScope, contextClause } = require('./scope');
 const { resolveRefs } = require('./refs');
+const { contentTerms } = require('./stopwords');
 
 const DECISION_MAX = 280;
 const KINDS = ['note', 'decision', 'progress', 'idea', 'howto'];
@@ -164,9 +165,9 @@ function list(opts = {}) {
     .map(toItem);
 }
 
-/** Converte texto livre numa consulta FTS5 segura: termos com prefixo, unidos por OR (o bm25 ordena). */
+/** Converte texto livre numa consulta FTS5 segura: termos com prefixo (sem stopwords), unidos por OR (o bm25 ordena). */
 function ftsQuery(text) {
-  const terms = String(text || '').match(/[\p{L}\p{N}_-]+/gu) || [];
+  const terms = contentTerms(String(text || '').match(/[\p{L}\p{N}_-]+/gu) || []);
   return terms.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
 }
 

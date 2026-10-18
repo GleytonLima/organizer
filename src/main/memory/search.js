@@ -3,6 +3,7 @@
 const { openDb } = require('./db');
 const store = require('./store');
 const embeddings = require('./embeddings');
+const authority = require('./authority');
 
 const POOL = 50; // candidatos de cada lado antes da fusão
 const RRF_K = 60;
@@ -35,23 +36,27 @@ async function vectorRank(query, opts) {
     .map((r) => r.id);
 }
 
+/** Reciprocal rank fusion: cada ranking soma 1/(k + posição). → Map id → escore. */
 function fuse(rankings) {
   const score = new Map();
   for (const ids of rankings) ids.forEach((id, i) => score.set(id, (score.get(id) || 0) + 1 / (RRF_K + i + 1)));
-  return [...score.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  return score;
 }
 
 /** @returns {{ mode: 'texto'|'híbrida'|'recentes', warning?: string, items: object[] }} */
 async function search(query, opts = {}) {
   const limit = opts.limit || 20;
   if (!String(query || '').trim()) return { mode: 'recentes', items: store.list({ ...opts, limit }) };
-  const text = store.searchText(query, { ...opts, limit: POOL });
-  if (!embeddings.enabled()) return { mode: 'texto', items: text.slice(0, limit) };
+  const text = store.searchText(query, { ...opts, limit: Math.max(POOL, authority.window(limit)) });
+  // bm25 do SQLite: menor = melhor (negativo); a autoridade multiplica a relevância (−bm25)
+  const byText = () => authority.rerank(text, (m) => -m.score, limit);
+  if (!embeddings.enabled()) return { mode: 'texto', items: byText() };
   try {
-    const ids = fuse([text.map((t) => t.id), await vectorRank(query, opts)]).slice(0, limit);
-    return { mode: 'híbrida', items: ids.map((id) => store.get(id)) };
+    const score = fuse([text.map((t) => t.id), await vectorRank(query, opts)]);
+    const items = [...score.keys()].map((id) => store.get(id)).filter(Boolean);
+    return { mode: 'híbrida', items: authority.rerank(items, (m) => score.get(m.id), limit) };
   } catch (err) {
-    return { mode: 'texto', warning: `Embeddings indisponíveis (${err.message}); usando só texto.`, items: text.slice(0, limit) };
+    return { mode: 'texto', warning: `Embeddings indisponíveis (${err.message}); usando só texto.`, items: byText() };
   }
 }
 
