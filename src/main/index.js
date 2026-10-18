@@ -3,7 +3,7 @@ const { app } = require('electron');
 require('./ipc-guard').guardIpc();
 const { createWindow, focusWindow } = require('./window');
 const { writeRcFile } = require('./bash');
-const { registerPtyIpc, killAll } = require('./pty');
+const { registerPtyIpc, killAll, closeAll, hasPtys } = require('./pty');
 const { registerGitIpc } = require('./git');
 const { registerSystemIpc } = require('./system');
 const { registerEditorIpc } = require('./editor');
@@ -46,7 +46,15 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on('window-all-closed', () => app.quit());
-  app.on('will-quit', () => {
+  // Na primeira passada, segura a saída até os shells terminarem (ver closeAll em pty.js).
+  let ptysClosed = false;
+  app.on('will-quit', (e) => {
+    if (!ptysClosed && hasPtys()) {
+      e.preventDefault();
+      ptysClosed = true;
+      closeAll().then(() => app.quit());
+      return;
+    }
     killAll();
     stopApiServer();
     stopSync();

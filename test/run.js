@@ -82,10 +82,10 @@ async function main() {
       if (!results) console.error(`  ✗ ${suite.name}: execução ${run} terminou sem resultado (código ${code})`);
       passed += results ? results.filter((r) => r.ok).length : 0;
       total += results ? results.length : 0;
-      // O arquivo de resultados é a verdade: o node-pty às vezes derruba o processo ao encerrar os
-      // ptys (0xC0000409) depois de tudo gravado — isso vira aviso, não falha.
-      const runOk = !!results && results.every((r) => r.ok);
-      if (results && code !== 0) console.error(`  ! ${suite.name}: execução ${run} saiu com código ${code} ao encerrar (resultados já gravados)`);
+      // Sair com código ≠ 0 depois de gravar os resultados = o app quebrou ao fechar (ex.: 0xC0000409
+      // quando os ptys não terminam antes do processo; ver closeAll em src/main/pty.js).
+      const runOk = !!results && results.every((r) => r.ok) && code === 0;
+      if (results && code !== 0) console.error(`  ✗ ${suite.name}: execução ${run} saiu com código ${code} ao encerrar o app`);
       if (!runOk && stderr.trim()) console.error(`  stderr de ${suite.name}:\n${stderr.trim().replace(/^/gm, '    ')}`);
       ok &&= runOk;
     }

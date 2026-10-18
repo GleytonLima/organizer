@@ -69,6 +69,19 @@ function killAll() {
   for (const id of [...ptys.keys()]) kill(id);
 }
 
+/**
+ * Encerra todos os shells e espera cada um sair (no máximo `timeout` ms). O kill do conpty termina
+ * em segundo plano (threads nativas, ~1 s de flush até o `exit`); sair do processo antes disso às
+ * vezes trava o encerramento ou derruba o app com 0xC0000409.
+ */
+function closeAll(timeout = 3000) {
+  const exits = [...ptys.values()].map((p) => new Promise((resolve) => p.onExit(resolve)));
+  killAll();
+  return Promise.race([Promise.all(exits), new Promise((resolve) => setTimeout(resolve, timeout))]);
+}
+
+const hasPtys = () => ptys.size > 0;
+
 function registerPtyIpc() {
   ipcMain.handle('pty:info', () => ({ bash: BASH, home: app.getPath('home') }));
   ipcMain.handle('pty:create', (_e, opts) => spawn(opts));
@@ -83,4 +96,4 @@ function registerPtyIpc() {
   });
 }
 
-module.exports = { registerPtyIpc, killAll, organizerEnv };
+module.exports = { registerPtyIpc, killAll, closeAll, hasPtys, organizerEnv };
