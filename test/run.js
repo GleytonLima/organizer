@@ -25,6 +25,8 @@ const SUITES = [
   { name: 'search-eval' }, // avaliação da busca (hit@k); imprime as métricas
   { name: 'sync' }, // precisa do bo-memory-server (binário) e do PostgreSQL de testes; sem eles, é pulada
 ];
+// `manual`: fora do `npm test`, roda só pelo nome (ex.: node test/run.js promo-shots)
+SUITES.push({ name: 'promo-shots', manual: true });
 const SUITE_TIMEOUT = 180000;
 
 function runOnce(suite, dir, run) {
@@ -72,7 +74,7 @@ function coverageReport() {
 
 async function main() {
   const only = process.argv.slice(2).filter((a) => a !== '--coverage');
-  const selected = only.length ? SUITES.filter((s) => only.includes(s.name)) : SUITES;
+  const selected = only.length ? SUITES.filter((s) => only.includes(s.name)) : SUITES.filter((s) => !s.manual);
   if (!selected.length) throw new Error(`Suíte desconhecida: ${only.join(', ')}`);
   const summary = [];
   for (const suite of selected) {
