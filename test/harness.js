@@ -8,6 +8,7 @@ const os = require('os');
 const path = require('path');
 const { createChecks } = require('./lib/checks');
 const { createContext, wait } = require('./lib/context');
+const { startRendererCoverage } = require('./lib/coverage');
 
 const ROOT = path.resolve(__dirname, '..');
 const TIMEOUT = 150000;
@@ -46,6 +47,7 @@ function suite(name, { seed }, body) {
 
   app.once('browser-window-created', async (_e, win) => {
     const wc = win.webContents;
+    const saveCoverage = startRendererCoverage(wc); // só com --coverage (NODE_V8_COVERAGE)
     win.setSize(1400, 860);
     // Electron novo: um objeto com `level` em texto; antigo: (evento, nível numérico, mensagem).
     wc.on('console-message', (e, level, message) => {
@@ -66,6 +68,7 @@ function suite(name, { seed }, body) {
     checks.check(!consoleErrors.length, 'sem erros no console do renderer', consoleErrors.join('\n      '));
     clearTimeout(timer);
     finish(checks.failed() ? 1 : 0);
+    await (await saveCoverage)?.().catch(() => {});
     await wait(300);
     win.close(); // fecha como o usuário: salva o estado e encerra a memória normalmente
   });

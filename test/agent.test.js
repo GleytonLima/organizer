@@ -217,4 +217,35 @@ suite('agente via ACP', {
   t.includes(broken || '', 'JSON inválido', 'JSON quebrado é recusado ao salvar');
   const legacy = await t.js(`const M = await import('${P}'); M.saveProfile({ label: 'Antigo', command: 'x', mcp: 'pw: npx @playwright/mcp@0.0.83' }); return JSON.parse(M.agentProfiles().find((p) => p.label === 'Antigo').mcp)`);
   t.equal(legacy, { mcpServers: { pw: { command: 'npx', args: ['@playwright/mcp@0.0.83'] } } }, 'o formato antigo (uma linha) é convertido para o JSON ao salvar');
+
+  // editor do perfil: o formato antigo aparece como JSON, "Adicionar Playwright" mescla, erro aparece ao digitar
+  await t.js(`const M = await import('${P}'); const p = M.agentProfiles().find((x) => x.label === 'Antigo'); p.mcp = 'gh: npx gh-mcp'; S.commit();
+    import('./js/ui/agent/profiles-dialog.js').then((d) => d.agentsDialog());`);
+  await t.waitFor(() => t.modal.open());
+  await t.js(`const sel = document.querySelector('#modal select'); sel.value = [...sel.options].find((o) => o.text.startsWith('Antigo')).value; sel.dispatchEvent(new Event('change')); document.querySelector('#modal [type=submit]').click()`);
+  const box = () => t.js(`return document.querySelector('#modal .mcp-field textarea')?.value ?? null`);
+  t.equal(JSON.parse(await t.waitFor(box)), { mcpServers: { gh: { command: 'npx', args: ['gh-mcp'] } } }, 'o editor mostra o formato antigo já convertido para JSON');
+  await t.js(`[...document.querySelectorAll('#modal button')].find((b) => b.textContent === 'Adicionar Playwright').click()`);
+  t.equal(Object.keys(JSON.parse(await box()).mcpServers), ['gh', 'playwright'], '"Adicionar Playwright" mescla no JSON');
+  await t.js(`const ta = document.querySelector('#modal .mcp-field textarea'); ta.value = '{ "mcpServers": { "a b": { "command": "x" } } }'; ta.dispatchEvent(new Event('input'))`);
+  t.includes(await t.js(`return document.querySelector('#modal .mcp-status').textContent`), '“a b”', 'erro do JSON aparece enquanto você digita');
+  await t.modal.cancel();
+  await t.waitFor(async () => !(await t.modal.open()));
+  await t.modal.cancel().catch(() => {}); // lista de perfis
+  const ui = await t.js(`const C = await import('./js/agents/mcp-config.js');
+    const errs = ['{ "bash-organizer": { "command": "x" } }', '{ "a": 1 }', '{ "r": { "type": "http" } }', '[]', 'sem dois pontos'].map((x) => { try { C.checkMcp(x); return null; } catch (e) { return e.message; } });
+    return { errs, again: C.withPlaywright(C.withPlaywright('')), raw: C.mcpForEditor('{ quebrado') };`);
+  t.check(ui.errs.every(Boolean), 'validação recusa nome reservado, servidor não-objeto, http sem url, lista e linha sem nome', JSON.stringify(ui.errs));
+  t.equal([Object.keys(JSON.parse(ui.again).mcpServers), ui.raw], [['playwright'], '{ quebrado'], 'Playwright não duplica; JSON inválido aparece como está para corrigir');
+
+  // unidade, no processo principal: montagem dos servidores e JSON canônico do sync
+  const { parseMcpServers } = require('../src/main/acp/mcp-servers');
+  const fails = ['{x', '{"a b":{"command":"x"}}', '{"a":{}}', '{"a":{"type":"ws","url":"u"}}', '{"r":{"type":"sse"}}', '{"bash-organizer":{"command":"x"}}', '[]', '{"a":1}', 'sem dois pontos']
+    .map((x) => { try { parseMcpServers(x); return null; } catch (e) { return e.message; } });
+  t.check(fails.every(Boolean), 'servidores MCP inválidos são recusados com mensagem', JSON.stringify(fails));
+  t.equal(parseMcpServers(`pw: C:/tools/pw.exe "com espaço" 'outro'\n# comentário`)[0].args, ['com espaço', 'outro'], 'formato antigo: argumentos entre aspas e comentários');
+  t.equal(parseMcpServers('{"s":{"type":"sse","url":"https://x/sse"}}')[0].type, 'sse', 'servidor remoto SSE');
+  const { canonical, sameContent } = require('../src/main/sync/mapping');
+  t.equal(canonical({ b: 1, a: [1, { d: 2, c: null }] }), canonical({ a: [1, { c: null, d: 2 }], b: 1 }), 'JSON canônico ignora a ordem das chaves (jsonb do PostgreSQL)');
+  t.check(sameContent({ text: 'x', refs: [{ id: 'a', type: 'depends' }] }, { text: 'x', refs: [{ type: 'depends', id: 'a' }] }), 'mesmo conteúdo com chaves em outra ordem não vira conflito');
 });

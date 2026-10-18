@@ -60,7 +60,7 @@ Novo método: implemente em `js/api/handlers.js`, exponha no CLI (`bin/lib/comma
 A suíte `sync` sobe o `../bo-memory-server/bin/bo-memory-server.exe` contra o PostgreSQL de testes (docker compose); sem eles, é pulada.
 Mudou um comportamento coberto? Ajuste ou acrescente verificações no `test/<área>.test.js`; reuse o contexto do `harness.js`.
 No processo principal, chame o `bo` só de forma assíncrona (`t.bo`): `execFileSync` trava a própria API.
-Qualidade: SonarQube local (`docker compose -f tools/sonar/docker-compose.yml -p bo-sonar up -d`, porta 9300) e `bash tools/sonar/analyze.sh` (os três repos); meta: nota A em confiabilidade, segurança, manutenibilidade e revisão de segurança, quality gate OK.
+Qualidade: SonarQube local (`docker compose -f tools/sonar/docker-compose.yml -p bo-sonar up -d`, porta 9300) e `bash tools/sonar/analyze.sh [--coverage]` (os três repos; `--coverage` roda antes `npm run test:coverage` aqui e na web e `go test -coverprofile` no servidor); meta: nota A em confiabilidade, segurança, manutenibilidade e revisão de segurança, quality gate OK.
 Interface com input real (cliques, teclado, arrastar): `npm run test:ui` — Playwright `_electron` em `test/ui/*.spec.js` (fixture abre o app com dados isolados). Use para o que depende de foco/mouse; o resto fica no harness (mais rápido).
 
 ## Empacotamento

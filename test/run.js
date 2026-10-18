@@ -47,8 +47,24 @@ function readResults(dir, run) {
   }
 }
 
+/** --coverage: cobertura V8 de tudo (main, renderer, CLI) → coverage/lcov.info (ver lib/coverage.js). */
+const COVERAGE = process.argv.includes('--coverage');
+const COV_DIR = path.join(__dirname, '..', 'coverage');
+if (COVERAGE) {
+  fs.rmSync(COV_DIR, { recursive: true, force: true });
+  process.env.NODE_V8_COVERAGE = path.join(COV_DIR, 'v8');
+}
+
+function coverageReport() {
+  const { spawnSync } = require('child_process');
+  const c8 = require.resolve('c8/bin/c8.js');
+  spawnSync(process.execPath, [c8, 'report', '--temp-directory', process.env.NODE_V8_COVERAGE, '--report-dir', COV_DIR, '--reporter', 'lcov', '--reporter', 'text-summary',
+    '--src', path.join(__dirname, '..'), '--include', 'src/**', '--include', 'bin/**', '--exclude', 'test/**'], { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  require('./lib/coverage').relativizeLcov(path.join(COV_DIR, 'lcov.info'), path.join(__dirname, '..'));
+}
+
 async function main() {
-  const only = process.argv.slice(2);
+  const only = process.argv.slice(2).filter((a) => a !== '--coverage');
   const selected = only.length ? SUITES.filter((s) => only.includes(s.name)) : SUITES;
   if (!selected.length) throw new Error(`Suíte desconhecida: ${only.join(', ')}`);
   const summary = [];
@@ -85,6 +101,7 @@ async function main() {
   const failed = summary.filter((s) => !s.ok).length;
   console.log(failed ? `\n${failed} suíte(s) falharam.` : '\nTudo passou.');
   process.exitCode = failed ? 1 : 0;
+  if (COVERAGE) coverageReport();
 }
 
 main().catch((err) => {
