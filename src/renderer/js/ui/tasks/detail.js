@@ -16,6 +16,7 @@ import { subtasksBox, parentLine } from './detail-subtasks.js';
 import { tagsBox } from './detail-tags.js';
 import { feedbackBox } from './detail-feedback.js';
 import { suggestionsBox } from './detail-suggestions.js';
+import { ownerValue } from './detail-owner.js';
 
 // Rascunhos por tarefa: sobrevivem aos re-renders (git, processos…) enquanto você digita.
 const drafts = new Map();
@@ -63,6 +64,7 @@ function meta(task) {
     'div',
     { class: 'td-meta' },
     item('Terminal', origin ? el('button', { class: 'link', onclick: stop(() => activate(origin.t.id)) }, icon('terminal'), termLabel(origin.t)) : el('span', { text: '—' })),
+    item('Com', ownerValue(task)),
     item('Repositório', el('span', { text: task.repo ? `${task.repo} · ${task.branch || '?'}` : task.branch || '—' })),
     item('Progresso', el('span', { text: task.progress == null ? '—' : `${task.progress}%` })),
     item('Criada', el('span', { text: timeAgo(task.createdAt) })),

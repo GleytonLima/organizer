@@ -3,7 +3,7 @@ import { el } from '../../core/dom.js';
 import { cleanError } from '../../core/errors.js';
 import { openModal, field } from '../modal.js';
 import { invalidateMemory } from './state.js';
-import { adoptTaskFromProgress } from '../../actions/task-adopt.js';
+import { resumeFromProgress } from '../../tasks/claim.js';
 
 const alert = (title, message) => openModal({ title, message });
 
@@ -70,7 +70,7 @@ export async function resumeTask(project, m) {
   if (!ok) return;
   try {
     const claimed = await api.sync.claim(m.id);
-    const task = adoptTaskFromProgress(project, claimed);
+    const task = await resumeFromProgress(project, claimed); // com o quadro do time: adota a tarefa que já existe
     invalidateMemory();
     await alert('Tarefa retomada', `${task.key} está no seu quadro.`);
   } catch (err) {

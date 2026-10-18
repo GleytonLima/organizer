@@ -95,6 +95,7 @@ contextBridge.exposeInMainWorld('api', {
     saveTasksState: (state) => ipcRenderer.invoke('sync:saveTasksState', state),
     tasksPull: (body) => ipcRenderer.invoke('sync:tasksPull', body),
     tasksPush: (changes) => ipcRenderer.invoke('sync:tasksPush', changes),
+    claimTask: (workspace, id) => ipcRenderer.invoke('sync:claimTask', workspace, id),
   },
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),

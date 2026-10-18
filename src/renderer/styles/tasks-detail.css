@@ -87,6 +87,17 @@
   font-size: 11px;
   color: var(--faint);
 }
+/* dono da tarefa do time: o nome e, se for outra pessoa, "Retomar" discreto ao lado */
+.td-owner {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.td-owner .link {
+  color: var(--dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .td-meta .link {
   display: inline-flex;
   align-items: center;

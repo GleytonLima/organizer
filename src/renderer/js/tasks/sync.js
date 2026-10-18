@@ -13,6 +13,10 @@ const AFTER_EDIT_MS = 1500;
 let running = null;
 let again = false;
 let timer = null;
+let meName = null; // seu nome no servidor (o dono das tarefas é comparado com ele)
+
+/** Seu nome no servidor, depois da primeira rodada (null antes). */
+export const myServerName = () => meName;
 
 const synced = () => projects().filter((p) => p.syncKey);
 const projectOfKey = (key) => synced().find((p) => p.syncKey === key);
@@ -23,8 +27,9 @@ function bumpSeq(project, key) {
   if (n > (project.taskSeq || 0)) project.taskSeq = n;
 }
 
+// O dono (`owner`) vem do servidor e não faz parte do documento: só o claim o muda.
 function applyDoc(task, item, me) {
-  Object.assign(task, fromDoc(item.task, me), { key: item.key });
+  Object.assign(task, fromDoc(item.task, me), { key: item.key }, item.owner !== undefined && { owner: item.owner });
 }
 
 function renameKey(task, key) {
@@ -78,7 +83,7 @@ function applyResults(changes, results, state, me) {
       else {
         const merged = mergeDocs(state.bases[c.id]?.doc, c.task, s.task);
         state.bases[c.id] = { ws: c.workspace, rev: s.rev, key: s.key, doc: s.task };
-        applyDoc(task, { task: merged, key: s.key }, me); // a fusão sobe na próxima rodada
+        applyDoc(task, { task: merged, key: s.key, owner: s.owner }, me); // a fusão sobe na próxima rodada
       }
     } else console.warn(`sync de tarefas: ${c.id} recusada — ${r.error}`);
   });
@@ -112,7 +117,7 @@ function applyPulled(item, state, me) {
     return !!task;
   }
   if (task && dirty) {
-    applyDoc(task, { task: mergeDocs(base?.doc, toDoc(task, me), item.task), key: item.key }, me);
+    applyDoc(task, { task: mergeDocs(base?.doc, toDoc(task, me), item.task), key: item.key, owner: item.owner }, me);
     state.bases[item.id] = { ws: item.workspace, rev: item.rev, key: item.key, doc: item.task };
     return true;
   }
@@ -144,6 +149,7 @@ export function syncTasksNow({ pull = true } = {}) {
   running = (async () => {
     if (!synced().length || !(await api.sync.tasksEnabled())) return;
     const [state, me] = [await api.sync.tasksState(), await api.sync.me()];
+    meName = me;
     const changes = localChanges(state, me);
     let changed = changes.length ? applyResults(changes, await api.sync.tasksPush(changes), state, me) : false;
     if (pull) changed = (await pullAll(state, me)) || changed;

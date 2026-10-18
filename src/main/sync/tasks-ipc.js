@@ -36,6 +36,7 @@ function registerTasksSyncIpc() {
   ipcMain.handle('sync:saveTasksState', (_e, state) => writeJsonAtomic(FILE(), { ...state, url: syncSettings().url }));
   ipcMain.handle('sync:tasksPull', (_e, body) => client.pullTasks(body));
   ipcMain.handle('sync:tasksPush', (_e, changes) => pushAll(changes));
+  ipcMain.handle('sync:claimTask', (_e, workspace, id) => client.claimTask(workspace, id));
 }
 
 module.exports = { registerTasksSyncIpc };

@@ -65,7 +65,33 @@ suite('quadro de tarefas sincronizado', {
     t.equal([after?.task?.title, after?.task?.columnId], ['Login com SSO (Entra ID)', 'k2'], 'a fusão sobe para o servidor');
     t.check(await t.js(`return !!S.store.state.tasks.find((x) => x.key === ${JSON.stringify(t1.key)}).needsInput`), 'a espera local continua depois da fusão');
 
-    // 4. Exclusões: Bruno apaga a dele; Ana apaga uma dela.
+    // 4. Dono: quem criou; Bruno retoma no servidor, Ana retoma pelo quadro — sem tarefa nova.
+    const owner = (key) => t.js(`const x = S.store.state.tasks.find((y) => y.key === ${JSON.stringify(key)}); return x?.owner?.name ?? null`);
+    t.equal(await owner(t1.key), 'Ana', 'o dono é quem criou');
+    const t1id = (await server())[t1.key].id;
+    t.equal((await bruno('POST', `/v1/tasks/app/${t1id}/claim`)).data?.owner?.name, 'Bruno', 'Bruno retoma no servidor');
+    await round();
+    t.equal(await owner(t1.key), 'Bruno', 'o novo dono chega aqui');
+    const CLAIM = { C: './js/tasks/claim.js', SEL: './js/ui/tasks/selection.js' };
+    t.check(await t.js(`return C.ownedByOther(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(t1.key)}))`, CLAIM), 'a tarefa aparece como de outra pessoa');
+    await t.js(`SEL.openTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(t1.key)}).id)`, CLAIM);
+    t.includes(await t.waitFor(() => t.js(`return document.querySelector('.td-owner')?.innerText`)), 'Bruno', 'a gaveta mostra com quem está');
+    const count = () => t.js(`return S.store.state.tasks.length`);
+    const before = await count();
+    await t.js(`await C.claimTask(S.store.state.tasks.find((x) => x.key === ${JSON.stringify(t1.key)}))`, CLAIM);
+    t.equal([await owner(t1.key), (await server())[t1.key]?.owner?.name, await count()], ['Ana', 'Ana', before], 'Retomar pelo quadro troca o dono, sem criar tarefa');
+    const claims = await t.js(`return S.store.state.tasks.find((x) => x.key === ${JSON.stringify(t1.key)}).history.filter((h) => h.type === 'claim').map((h) => h.by)`);
+    t.equal(claims, ['Bruno', 'você'], 'as retomadas ficam no histórico (a sua como "você")');
+
+    // Retomar pelo progresso de uma tarefa que ainda não chegou aqui: o quadro sincroniza antes e ela é adotada.
+    await bruno('POST', '/v1/tasks/push', { changes: [{ op: 'upsert', workspace: 'app', baseRev: 0, id: 'bruno9', key: 'APP-9', task: { title: 'Refresh token', columnId: 'k2', history: [] } }] });
+    const progress = { taskKey: 'APP-9', text: 'Falta testar a expiração', progress: { status: 'Falta testar a expiração', task: { key: 'APP-9', title: 'Refresh token' }, owner: { name: 'Ana' } } };
+    await t.js(`await C.resumeFromProgress(S.store.state.projects[0], ${JSON.stringify(progress)})`, CLAIM);
+    const nines = await t.js(`return S.store.state.tasks.filter((x) => x.title === 'Refresh token').map((x) => [x.id, x.key, x.owner?.name])`);
+    t.equal(nines, [['bruno9', 'APP-9', 'Ana']], 'Retomar pelo progresso adota a tarefa do quadro (sem duplicar) e você vira o dono');
+    await t.js(`SEL.closeTask()`, CLAIM);
+
+    // 5. Exclusões: Bruno apaga a dele; Ana apaga uma dela.
     const b = (await server())['APP-2'];
     await bruno('POST', '/v1/tasks/push', { changes: [{ op: 'delete', workspace: 'app', baseRev: b.rev, id: b.id }] });
     await t.js(`S.store.state.tasks = S.store.state.tasks.filter((x) => x.key !== 'APP-4'); S.commit()`);

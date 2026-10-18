@@ -11,6 +11,7 @@ import { parentOf, subtasksOf, taskProject } from '../../tasks/queries.js';
 import { isDoneColumn } from '../../tasks/columns.js';
 import { tagsOf } from '../../tasks/tags.js';
 import { toggleTaskTag } from '../../tasks/filter.js';
+import { ownerChip } from './detail-owner.js';
 
 const lastReport = (task) => [...task.history].reverse().find((h) => h.type === 'report')?.text;
 
@@ -41,6 +42,7 @@ function originChips(task) {
     task.branch
       ? el('span', { class: 'task-chip', title: 'Repositório e branch' }, icon('branch'), el('span', { text: task.repo ? `${task.repo} · ${task.branch}` : task.branch }))
       : null,
+    ownerChip(task),
     origin
       ? el('button', { class: 'task-chip link', title: 'Abrir terminal de origem', onclick: stop(() => activate(origin.t.id)) }, icon('terminal'), el('span', { text: termLabel(origin.t) }))
       : null,

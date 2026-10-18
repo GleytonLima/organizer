@@ -42,4 +42,8 @@ const workspaces = async () => (await call('GET', '/v1/workspaces')).data.items 
 const pullTasks = async (body) => (await call('POST', '/v1/tasks/pull', body)).data;
 const pushTasks = async (changes) => (await call('POST', '/v1/tasks/push', { changes })).data.results;
 
-module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces, pullTasks, pushTasks };
+/** "Retomar" uma tarefa do quadro: você vira o dono. null se ela ainda não está no servidor. */
+const claimTask = async (workspace, id) =>
+  (await call('POST', `/v1/tasks/${encodeURIComponent(workspace)}/${encodeURIComponent(id)}/claim`, null, { allow404: true })).data;
+
+module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces, pullTasks, pushTasks, claimTask };
