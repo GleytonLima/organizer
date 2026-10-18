@@ -15,6 +15,10 @@ function findBash() {
 
 const BASH = findBash();
 const GIT_ROOT = BASH ? path.resolve(path.dirname(BASH), '..') : null;
+
+// git.exe pelo caminho absoluto (o do mesmo Git do bash), não pelo PATH: um git.exe numa pasta
+// gravável do PATH seria executado no lugar.
+const GIT = [GIT_ROOT && path.join(GIT_ROOT, 'cmd', 'git.exe'), GIT_ROOT && path.join(GIT_ROOT, 'bin', 'git.exe')].find((p) => p && fs.existsSync(p)) || 'git';
 const rcFile = () => userFile('bash-init.sh');
 
 // O script fica em src/main/shell/ e é copiado para userData: o bash não lê de dentro do .asar.
@@ -37,4 +41,4 @@ function windowsToMsys(p) {
   return m ? `/${m[1].toLowerCase()}/${m[2].replace(/\\/g, '/')}` : p;
 }
 
-module.exports = { BASH, rcFile, writeRcFile, msysToWindows, windowsToMsys };
+module.exports = { GIT, BASH, rcFile, writeRcFile, msysToWindows, windowsToMsys };

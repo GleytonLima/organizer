@@ -24,8 +24,9 @@ async function buildWorld(context) {
       if (!world.pathOf.has(remote)) world.pathOf.set(remote, dir);
     }
   }
-  world.workspaces = [...new Set(world.keyOf.values())].sort();
-  world.folders = [...world.pathOf.keys()].sort();
+  const byText = (a, b) => a.localeCompare(b);
+  world.workspaces = [...new Set(world.keyOf.values())].sort(byText);
+  world.folders = [...world.pathOf.keys()].sort(byText);
   return world;
 }
 
@@ -99,10 +100,12 @@ function fromServer(s, world, local, idOf) {
 const CONTENT = ['kind', 'scope', 'workspace', 'folder', 'text', 'taskKey', 'supersededBy', 'status'];
 
 // JSON com chaves ordenadas: o jsonb do PostgreSQL devolve as chaves em outra ordem.
-const canonical = (v) =>
-  Array.isArray(v) ? `[${v.map(canonical).join(',')}]`
-  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`
-  : JSON.stringify(v ?? null);
+function canonical(v) {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
+  if (!v || typeof v !== 'object') return JSON.stringify(v ?? null);
+  const keys = Object.keys(v).sort((a, b) => a.localeCompare(b));
+  return `{${keys.map((k) => JSON.stringify(k) + ':' + canonical(v[k])).join(',')}}`;
+}
 
 /** Mesmo conteúdo (o que o servidor compara): evita conflito falso quando os dois lados convergiram. */
 function sameContent(mine, server) {

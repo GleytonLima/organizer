@@ -1,6 +1,7 @@
 // Identidade de uma pasta entre máquinas: a URL do remote git, normalizada como no servidor
 // (bo-memory-server/internal/memory/remote.go; ver docs/API.md → "Normalização de remote").
 const { execFile } = require('child_process');
+const { GIT } = require('../bash');
 
 /** git@github.com:Gleyton/Repo.git | https://… | ssh://… → "github.com/gleyton/repo". */
 function normalizeRemote(remote) {
@@ -24,7 +25,7 @@ const cache = new Map(); // caminho (minúsculas) → remote normalizado | '' (s
 
 function gitRemote(dir) {
   return new Promise((resolve) => {
-    execFile('git', ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', dir, 'remote', 'get-url', 'origin'], { timeout: 4000, windowsHide: true }, (err, out) =>
+    execFile(GIT, ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', dir, 'remote', 'get-url', 'origin'], { timeout: 4000, windowsHide: true }, (err, out) =>
       resolve(err ? '' : normalizeRemote(out)),
     );
   });

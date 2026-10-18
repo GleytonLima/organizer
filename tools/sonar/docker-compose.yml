@@ -1,0 +1,18 @@
+# SonarQube local para analisar os três projetos (organizer, bo-memory-server, bo-memory-web).
+#   docker compose -f tools/sonar/docker-compose.yml up -d     → http://localhost:9300 (admin/admin no 1º acesso)
+#   bash tools/sonar/analyze.sh                                → analisa e mostra as notas
+# Porta 9300 (a 9000 costuma estar ocupada, ex.: MinIO; 9081–9180 o Windows reserva). Só nesta máquina; dados no volume sonar-data.
+services:
+  sonarqube:
+    image: sonarqube:community
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true" # Elasticsearch embutido sem exigir vm.max_map_count
+    ports:
+      - "127.0.0.1:9300:9000"
+    volumes:
+      - sonar-data:/opt/sonarqube/data
+      - sonar-extensions:/opt/sonarqube/extensions
+
+volumes:
+  sonar-data:
+  sonar-extensions:

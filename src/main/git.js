@@ -2,6 +2,7 @@ const { ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
+const { GIT } = require('./bash');
 
 function parseGitStatus(out) {
   const info = { branch: null, ahead: 0, behind: 0, changes: 0, staged: 0, untracked: 0, conflicts: 0 };
@@ -39,7 +40,7 @@ function gitStatus(cwd) {
 
 function git(cwd, args, maxBuffer = 1024 * 1024) {
   return new Promise((resolve) => {
-    execFile('git', ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', cwd, ...args], { timeout: 4000, windowsHide: true, maxBuffer }, (err, stdout) => resolve(err ? null : stdout));
+    execFile(GIT, ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', cwd, ...args], { timeout: 4000, windowsHide: true, maxBuffer }, (err, stdout) => resolve(err ? null : stdout));
   });
 }
 

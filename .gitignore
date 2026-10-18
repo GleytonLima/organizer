@@ -2,3 +2,4 @@
 out/
 dist/
 test/ui/results/
+tools/sonar/.token

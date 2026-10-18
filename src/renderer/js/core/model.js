@@ -3,7 +3,8 @@
 import { DOT_COLORS } from '../themes/palette.js';
 import { DEFAULT_AGENT_PROFILES } from '../agents/profiles.js';
 
-export const uid = () => Math.random().toString(36).slice(2, 10);
+// ids de entidades: 8 caracteres de um gerador criptográfico (nada de Math.random)
+export const uid = () => crypto.randomUUID().replaceAll('-', '').slice(0, 8);
 
 export const makeTerminal = (fields = {}) => ({ id: uid(), name: '', color: null, cwd: '', startup: '', ...fields });
 
