@@ -4,3 +4,6 @@ dist/
 test/ui/results/
 tools/sonar/.token
 coverage/
+
+# artefatos locais do Playwright MCP (capturas, logs)
+.playwright-mcp/
