@@ -82,8 +82,11 @@ export function addProject({ name = '', repos = [], color = nextColor() }) {
 }
 
 export async function createProject() {
-  const v = await openModal({ title: 'Novo projeto', fields: projectFields({ name: '', repos: [], color: nextColor() }), submit: 'Criar', wide: true });
+  // com o servidor de memória configurado: abrir um projeto que já está lá (trocar de máquina)
+  const remote = (await api.sync.settings()).hasToken ? { label: 'Abrir do servidor…', value: 'remote' } : null;
+  const v = await openModal({ title: 'Novo projeto', fields: projectFields({ name: '', repos: [], color: nextColor() }), submit: 'Criar', wide: true, extra: remote });
   if (!v) return;
+  if (v === 'remote') return (await import('./project-remote.js')).openRemoteProject();
   newTerminal(addProject(v).groups[0]);
 }
 

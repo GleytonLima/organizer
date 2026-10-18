@@ -82,6 +82,12 @@ contextBridge.exposeInMainWorld('api', {
     resolve: (id, choice, text) => ipcRenderer.invoke('sync:resolve', id, choice, text),
     claim: (id) => ipcRenderer.invoke('sync:claim', id),
     onStatus: (cb) => ipcRenderer.on('sync:status', (_e, s) => cb(s)),
+    // projeto/layout no servidor (trocar de máquina)
+    remoteProjects: () => ipcRenderer.invoke('sync:remoteProjects'),
+    fetchProject: (key, opts) => ipcRenderer.invoke('sync:fetchProject', key, opts),
+    clone: (url, dir) => ipcRenderer.invoke('sync:clone', url, dir),
+    adoptProject: (key, project, layout) => ipcRenderer.invoke('sync:adoptProject', key, project, layout),
+    onProject: (cb) => ipcRenderer.on('sync:project', (_e, id, changed) => cb(id, changed)),
   },
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),

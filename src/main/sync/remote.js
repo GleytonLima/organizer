@@ -21,24 +21,35 @@ function normalizeRemote(remote) {
   return r;
 }
 
-const cache = new Map(); // caminho (minúsculas) → remote normalizado | '' (sem remote)
+/** URL de clone sem usuário/senha (https://token@host/… → https://host/…); git@host:… fica como está. */
+function cloneUrl(remote) {
+  const r = String(remote || '').trim();
+  return r.replace(/^([a-z+]+:\/\/)[^@/]*@/i, (m, scheme) => (/^ssh/i.test(scheme) ? m : scheme));
+}
+
+const cache = new Map(); // caminho (minúsculas) → { remote: normalizado, url: para clonar } | vazio
 
 function gitRemote(dir) {
   return new Promise((resolve) => {
     execFile(GIT, ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', dir, 'remote', 'get-url', 'origin'], { timeout: 4000, windowsHide: true }, (err, out) =>
-      resolve(err ? '' : normalizeRemote(out)),
+      resolve(err ? { remote: '', url: '' } : { remote: normalizeRemote(out), url: cloneUrl(out) }),
     );
   });
 }
 
-/** Remote normalizado da pasta ('' se não for repositório ou não tiver "origin"). Em cache. */
-async function remoteOf(dir) {
+async function originOf(dir) {
   const key = String(dir || '').toLowerCase();
-  if (!key) return '';
+  if (!key) return { remote: '', url: '' };
   if (!cache.has(key)) cache.set(key, await gitRemote(dir));
   return cache.get(key);
 }
 
+/** Remote normalizado da pasta ('' se não for repositório ou não tiver "origin"). Em cache. */
+const remoteOf = async (dir) => (await originOf(dir)).remote;
+
+/** URL do "origin" para clonar, sem credenciais ('' se não houver). Em cache. */
+const cloneUrlOf = async (dir) => (await originOf(dir)).url;
+
 const clearRemoteCache = () => cache.clear();
 
-module.exports = { normalizeRemote, remoteOf, clearRemoteCache };
+module.exports = { normalizeRemote, remoteOf, cloneUrlOf, cloneUrl, clearRemoteCache };

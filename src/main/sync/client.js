@@ -3,7 +3,8 @@ const { syncSettings } = require('./settings');
 
 const TIMEOUT_MS = 15000;
 
-async function call(method, path, body) {
+// `allow404`: devolve { status: 404 } em vez de lançar (documento que ainda não existe).
+async function call(method, path, body, { allow404 = false } = {}) {
   const { url, token } = syncSettings();
   if (!url || !token) throw new Error('Sincronização não configurada (servidor e token).');
   let res;
@@ -19,6 +20,7 @@ async function call(method, path, body) {
   }
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) throw new Error('Token recusado pelo servidor (inválido ou revogado).');
+  if (allow404 && res.status === 404) return { status: 404, data: null };
   if (!res.ok && res.status !== 409) throw new Error(data.error || `Servidor respondeu ${res.status}.`);
   return { status: res.status, data };
 }
@@ -29,4 +31,11 @@ const push = async (changes) => (await call('POST', '/v1/sync/push', { changes }
 const claim = async (workspace, taskKey) =>
   (await call('POST', `/v1/progress/${encodeURIComponent(workspace)}/${encodeURIComponent(taskKey)}/claim`)).data;
 
-module.exports = { me, pull, push, claim };
+// Projeto (do workspace) e layout (seu) para trocar de máquina — docs/API.md → "Projeto e layout".
+const docPath = (workspace, which) => `/v1/workspaces/${encodeURIComponent(workspace)}/${which}`;
+const getDoc = async (workspace, which) => (await call('GET', docPath(workspace, which), null, { allow404: true })).data;
+/** { status: 200 | 409, data } — 409 traz { server }. */
+const putDoc = (workspace, which, doc, baseVersion) => call('PUT', docPath(workspace, which), { ...doc, baseVersion });
+const workspaces = async () => (await call('GET', '/v1/workspaces')).data.items || [];
+
+module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces };

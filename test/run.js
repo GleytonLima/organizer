@@ -15,6 +15,7 @@ const SUITES = [
   { name: 'projects' },
   { name: 'split' },
   { name: 'pty-cleanup', runs: 2 }, // fechar terminal/app não deixa bash nem comandos órfãos
+  { name: 'machine' }, // trocar de máquina: projeto e layout no servidor (pulada sem o bo-memory-server)
   { name: 'links' },
   { name: 'agent', runs: 2 },
   { name: 'insights' },

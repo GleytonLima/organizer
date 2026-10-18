@@ -5,12 +5,14 @@ const client = require('./client');
 const rows = require('./rows');
 const { syncEnabled, syncSettings } = require('./settings');
 const { buildWorld, toServer, fromServer, sameContent } = require('./mapping');
+const { syncProjects } = require('./project-sync');
 
 const INTERVAL_MS = Number(process.env.BO_SYNC_INTERVAL_MS) || 30000;
 const AFTER_WRITE_MS = 1500;
 const BATCH = 200;
 
-const events = new EventEmitter(); // 'status' (estado do sync) | 'changed' (memórias locais mudaram)
+// 'status' (estado do sync) | 'changed' (memórias locais mudaram) | 'project' (id, { name?, columns? } do servidor)
+const events = new EventEmitter();
 let context = { projects: [] };
 let status = { state: 'off', at: null, error: null };
 let running = null;
@@ -112,6 +114,7 @@ function syncNow() {
     const world = await buildWorld(context);
     const pushed = await pushChanges(world);
     const pulled = await pullChanges(world);
+    await syncProjects(context, (id, changed) => events.emit('project', id, changed));
     setStatus({ state: 'ok', at: Date.now(), error: null });
     if (pushed || pulled) events.emit('changed');
     return status;

@@ -9,6 +9,26 @@ const engine = require('./engine');
 const { clearRemoteCache } = require('./remote');
 const { publicSyncSettings, saveSyncSettings, syncEnabled } = require('./settings');
 const { buildWorld } = require('./mapping');
+const { locateFolders, cloneRepo } = require('./locate');
+const { adoptServerState } = require('./project-sync');
+
+/** Projetos do servidor que você pode abrir nesta máquina. */
+async function remoteProjects() {
+  if (!syncEnabled()) throw new Error('Configure o servidor de memória para abrir projetos de lá.');
+  return (await client.workspaces()).filter((w) => w.hasProject).map(({ key, name }) => ({ key, name }));
+}
+
+/**
+ * Projeto e seu layout no servidor, com as pastas já localizadas nesta máquina:
+ * { project, layout, located: { remote: caminho } }. `known`: pastas que você já tem em projetos.
+ */
+async function fetchRemoteProject(key, { known = [], bases = [] } = {}) {
+  const project = await client.getDoc(key, 'project');
+  if (!project) throw new Error(`O projeto "${key}" ainda não está no servidor.`);
+  const layout = await client.getDoc(key, 'layout');
+  const located = await locateFolders(project.folders.map((f) => f.remote), known, bases);
+  return { project, layout, located };
+}
 
 /**
  * Resolve o conflito de uma memória: 'mine' (reenvia a sua), 'server' (aceita a do servidor)
@@ -58,9 +78,14 @@ function registerSyncIpc() {
   ipcMain.on('sync:context', (_e, ctx) => engine.setContext(ctx));
   ipcMain.handle('sync:resolve', (_e, id, choice, text) => resolveConflict(id, choice, text));
   ipcMain.handle('sync:claim', (_e, id) => claim(id));
+  ipcMain.handle('sync:remoteProjects', () => remoteProjects());
+  ipcMain.handle('sync:fetchProject', (_e, key, opts) => fetchRemoteProject(key, opts));
+  ipcMain.handle('sync:clone', (_e, url, dir) => cloneRepo(url, dir));
+  ipcMain.handle('sync:adoptProject', (_e, key, project, layout) => adoptServerState(key, project, layout));
 
   engine.events.on('status', (s) => sendToWindow('sync:status', s));
   engine.events.on('changed', () => sendToWindow('memory:changed'));
+  engine.events.on('project', (id, changed) => sendToWindow('sync:project', id, changed));
   store.changes.on('write', engine.afterWrite);
   engine.schedule(3000); // primeira rodada logo depois que a janela envia os projetos
 }
