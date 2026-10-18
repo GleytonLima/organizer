@@ -199,7 +199,7 @@ suite('agente via ACP', {
   const servers = require('fs').readFileSync(MCP_LOG, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).at(-1);
   t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright'], 'o agente recebe o MCP do Bash Organizer e o Playwright do perfil');
   const pw = servers.find((x) => x.name === 'playwright');
-  t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@latest'] : ['npx', '@playwright/mcp@latest'], 'comando do servidor MCP (npx pelo cmd no Windows)');
+  t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@0.0.83'] : ['npx', '@playwright/mcp@0.0.83'], 'comando do servidor MCP (npx pelo cmd no Windows)');
   const bad = await t.js(`try { (await import('./js/agents/profiles.js')).saveProfile({ label: 'X', command: 'x', mcp: 'sem dois pontos' }); return null; } catch (e) { return e.message; }`);
   t.includes(bad || '', 'linha 1', 'linha de MCP inválida é recusada ao salvar o perfil');
 });

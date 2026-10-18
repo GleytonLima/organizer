@@ -108,7 +108,10 @@ export async function writeWhenReady(id, data) {
 
 async function spawn(t, s) {
   safeFit(s);
-  const r = await api.ptyCreate({ id: t.id, cwd: t.cwd, cols: s.term.cols, rows: s.term.rows });
+  // nonce das sequências OSC 6973: só o bash-init deste terminal o conhece (ver registerShellIntegration)
+  s.oscNonce = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const r = await api.ptyCreate({ id: t.id, cwd: t.cwd, cols: s.term.cols, rows: s.term.rows, nonce: s.oscNonce });
+  if (r.nonce) s.oscNonce = r.nonce; // o shell já existia (renderer recarregado): vale o nonce dele
   if (!r.ok) {
     s.term.write(`\x1b[31m${r.error}\x1b[0m\r\n`);
     s.exited = true;
@@ -121,10 +124,12 @@ async function spawn(t, s) {
   if (t.startup) api.ptyWrite(t.id, t.startup + '\r');
 }
 
-// Sequências emitidas pelo src/main/shell/bash-init.sh.
+// Sequências emitidas pelo src/main/shell/bash-init.sh, com o nonce do terminal: as que não o trazem
+// (impressas por um programa qualquer) são descartadas.
 function registerShellIntegration(id, s) {
   s.term.parser.registerOscHandler(6973, (data) => {
-    const [kind, ...rest] = data.split(';');
+    const [nonce, kind, ...rest] = data.split(';');
+    if (!s.oscNonce || nonce !== s.oscNonce) return true;
     const arg = rest.join(';');
     if (kind === 'cwd') {
       onCwdChange(id, arg.trim().replace(/\//g, '\\')); // trim: descarta a quebra de linha do `pwd -W`

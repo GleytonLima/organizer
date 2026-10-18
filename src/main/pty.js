@@ -24,9 +24,11 @@ function organizerEnv(id) {
   };
 }
 
-function spawn({ id, cwd, cols, rows }) {
+const nonces = new Map(); // id → nonce das sequências OSC 6973 (ver bash-init.sh)
+
+function spawn({ id, cwd, cols, rows, nonce }) {
   if (!BASH) return { ok: false, error: 'Git Bash não encontrado. Defina GIT_BASH_PATH.' };
-  if (ptys.has(id)) return { ok: true };
+  if (ptys.has(id)) return { ok: true, nonce: nonces.get(id) }; // renderer recarregado: o shell é o mesmo
   const dir = cwd && fs.existsSync(cwd) ? cwd : app.getPath('home');
   const proc = pty.spawn(BASH, ['--rcfile', rcFile().replace(/\\/g, '/'), '-i'], {
     name: 'xterm-256color',
@@ -39,15 +41,18 @@ function spawn({ id, cwd, cols, rows }) {
       TERM_PROGRAM: 'bash-organizer',
       COLORTERM: 'truecolor',
       ...organizerEnv(id),
+      BO_OSC_NONCE: nonce || '', // o bash-init guarda numa variável do shell e tira do ambiente
     }),
   });
   ptys.set(id, proc);
+  nonces.set(id, nonce || '');
   proc.onData((data) => sendToWindow('pty:data', id, data));
   proc.onExit(({ exitCode }) => {
     ptys.delete(id);
+    nonces.delete(id);
     sendToWindow('pty:exit', id, exitCode);
   });
-  return { ok: true, cwd: dir };
+  return { ok: true, cwd: dir, nonce: nonce || '' };
 }
 
 function kill(id) {

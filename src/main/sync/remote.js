@@ -24,7 +24,7 @@ const cache = new Map(); // caminho (minúsculas) → remote normalizado | '' (s
 
 function gitRemote(dir) {
   return new Promise((resolve) => {
-    execFile('git', ['-C', dir, 'remote', 'get-url', 'origin'], { timeout: 4000, windowsHide: true }, (err, out) =>
+    execFile('git', ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', dir, 'remote', 'get-url', 'origin'], { timeout: 4000, windowsHide: true }, (err, out) =>
       resolve(err ? '' : normalizeRemote(out)),
     );
   });

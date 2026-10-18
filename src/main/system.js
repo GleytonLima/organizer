@@ -1,4 +1,5 @@
 // IPC de estado persistido e utilidades do sistema (diálogos, clipboard, explorer).
+const fs = require('fs');
 const { ipcMain, dialog, clipboard, shell } = require('electron');
 const { userFile, readJson, writeJsonAtomic } = require('./files');
 const { msysToWindows } = require('./bash');
@@ -14,6 +15,22 @@ function saveState(state) {
     console.error('Falha ao salvar estado', err);
     return false;
   }
+}
+
+/**
+ * Abre uma pasta no Explorer (ou o relatório HTML do Playwright). Qualquer outro arquivo só é mostrado
+ * na pasta: openPath executaria um .exe/.bat/.lnk, e o caminho pode vir de um terminal.
+ */
+function openSafely(p) {
+  let st;
+  try {
+    st = fs.statSync(String(p || ''));
+  } catch {
+    return;
+  }
+  const report = /[\\/]playwright-report[\\/]index\.html$/i.test(p);
+  if (st.isDirectory() || report) shell.openPath(p);
+  else shell.showItemInFolder(p);
 }
 
 function registerSystemIpc() {
@@ -35,7 +52,7 @@ function registerSystemIpc() {
   });
   ipcMain.handle('clipboard:read', () => clipboard.readText());
   ipcMain.on('clipboard:write', (_e, text) => clipboard.writeText(text));
-  ipcMain.on('shell:openPath', (_e, p) => shell.openPath(p));
+  ipcMain.on('shell:openPath', (_e, p) => openSafely(p));
 }
 
 module.exports = { registerSystemIpc };

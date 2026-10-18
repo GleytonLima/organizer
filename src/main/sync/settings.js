@@ -39,6 +39,10 @@ function saveSyncSettings({ url = '', token = '', clear = false }) {
   }
   const clean = String(url).trim().replace(/\/+$/, '');
   if (clean && !/^https?:\/\//.test(clean)) throw new Error('A URL do servidor deve começar com http:// ou https://.');
+  // token e memórias do time não trafegam em texto aberto: http só na própria máquina
+  if (/^http:\/\//.test(clean) && !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/.test(clean)) {
+    throw new Error('Use https:// (http:// só para um servidor nesta máquina: localhost).');
+  }
   const next = { ...raw(), url: clean };
   if (token) {
     if (!safeStorage.isEncryptionAvailable()) throw new Error('Criptografia do sistema indisponível para guardar o token.');

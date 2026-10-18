@@ -7,7 +7,8 @@ import { uid } from '../core/model.js';
 export const DEFAULT_AGENT_PROFILES = () => [{ id: 'claude', label: 'Claude Code', builtin: true, command: '', args: '', env: '', mode: '', mcp: '' }];
 
 /** Sugestão pronta: navegador para o agente (abrir páginas, clicar, preencher, print). */
-export const PLAYWRIGHT_MCP = 'playwright: npx @playwright/mcp@latest';
+// versão fixa (não @latest): um pacote novo comprometido rodaria com os seus direitos e o token da API
+export const PLAYWRIGHT_MCP = 'playwright: npx @playwright/mcp@0.0.83';
 
 export const agentProfiles = () => store.state.agentProfiles;
 export const profileById = (id) => agentProfiles().find((p) => p.id === id) || agentProfiles()[0];

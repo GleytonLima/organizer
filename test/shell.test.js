@@ -14,7 +14,9 @@ suite('shell: sinais OSC 6973', {
   t.check(await t.shellReady('sh'), 'Git Bash fica pronto');
 
   // Captura as sequências cruas sem atrapalhar o handler do app (devolver false repassa adiante).
-  await t.js(`window.__osc = []; SE.getSession('sh').term.parser.registerOscHandler(6973, (d) => (window.__osc.push(d), false));`);
+  // Cada sequência traz o nonce do terminal na frente ("<nonce>;start;…"): aqui ele é conferido e tirado.
+  await t.js(`window.__osc = []; const s = SE.getSession('sh');
+    s.term.parser.registerOscHandler(6973, (d) => (window.__osc.push(d.startsWith(s.oscNonce + ';') ? d.slice(s.oscNonce.length + 1) : 'SEM-NONCE:' + d), false));`);
   const osc = () => t.js(`return window.__osc`);
   const session = () => t.js(`const s = SE.getSession('sh'); return { running: s.running?.cmd ?? null, lastExit: s.lastExit }`);
 
@@ -53,6 +55,15 @@ suite('shell: sinais OSC 6973', {
     return norm(c) === tmp ? c : null;
   });
   t.check(cwd, 'cd /tmp atualiza a pasta do terminal para %TEMP% (formato Windows)', `esperado ${tmp}`);
+
+  // Sequência forjada pela saída de um programa (sem o nonce): o app ignora — a pasta não muda.
+  await t.type('sh', `printf '\\033]6973;cwd;C:/forjado\\007\\033]6973;x;cwd;C:/forjado\\007'; echo forjou`);
+  await t.waitFor(async () => (await osc()).some((d) => d.startsWith('SEM-NONCE:')));
+  await t.wait(300);
+  t.equal(norm(await t.js(`return S.findTerm('sh').t.cwd`)), tmp, 'sequência OSC sem o nonce do terminal (forjada) não muda a pasta');
+  await t.type('sh', 'echo "nonce:[${BO_OSC_NONCE}]"');
+  const out = await t.waitFor(async () => { const r = await t.js(`return (await import('./js/terminals/buffer.js')).readLines('sh', 5)`); return /nonce:\[.*\]\s*$/m.test(r) && r; });
+  t.check(/nonce:\[\]/.test(out || ''), 'o nonce não fica no ambiente dos comandos', out);
 
   // zoom: Ctrl + (sem Shift) aumenta, Ctrl − diminui até um limite, Ctrl 0 volta a 100%
   const press = async (keyCode, times = 1) => {

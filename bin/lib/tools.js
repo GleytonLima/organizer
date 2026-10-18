@@ -43,7 +43,7 @@ const TOOLS = [
         repo: { type: 'string', description: 'Nome de uma pasta/repositório do projeto (ex.: "backend"); veja list_terminals → repos. Preferível a caminhos.' },
         cwd: { type: 'string', description: 'Pasta inicial: absoluta, ~/..., /c/... ou relativa (ao repo, se informado, senão ao terminal de origem).' },
         command: { type: 'string', description: 'Comando a executar uma vez ao abrir (ex.: "npm run dev").' },
-        startup: { type: 'string', description: 'Comando salvo no terminal e repetido sempre que o app restaurar a sessão.' },
+        startup: { type: 'string', description: 'Comando salvo no terminal e repetido sempre que o app restaurar a sessão. Só vale depois que o usuário aprova no app (ele vê o comando).' },
         group: { type: 'string', description: 'Grupo de destino (nome ou id); criado se não existir.' },
         project: { type: 'string', description: 'Projeto (nome ou id). Padrão: o projeto do terminal de origem.' },
         focus: { type: 'boolean', description: 'Trazer o terminal para a frente (padrão: false, para não interromper o usuário).' },

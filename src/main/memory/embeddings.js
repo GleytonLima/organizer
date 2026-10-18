@@ -69,6 +69,8 @@ function saveSettings({ provider, url, model, apiKey }) {
   if (provider !== 'off' && !PROVIDERS[provider]) throw new Error(`Provedor desconhecido: ${provider}`);
   const cur = rawSettings();
   const next = { ...cur, provider, url: url || '', model: model || '' };
+  // trocou de provedor ou de endereço: a chave antiga não vai para o novo destino
+  if (cur.provider !== provider || (cur.url || '') !== (url || '')) delete next.apiKeyEnc;
   if (apiKey) {
     if (!safeStorage.isEncryptionAvailable()) throw new Error('Criptografia do sistema indisponível para guardar a chave.');
     next.apiKeyEnc = safeStorage.encryptString(apiKey).toString('base64');

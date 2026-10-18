@@ -129,4 +129,15 @@ suite('projetos', {
   await t.type(runner, 'FAKE_PW_EXIT=0 npx playwright test');
   const passed = await t.waitFor(() => t.js(`return (await import('./js/notify/center.js')).recentNotifications().find((n) => n.body.includes('passou'))?.body || null`), { timeout: 60000 });
   t.includes(passed || '', '3 passed', 'sucesso vira aviso com as contagens');
+
+  // segurança: o que persiste execução ou muda para onde vão as memórias passa pelo usuário
+  const asked = await agent.tool('open_terminal', { name: 'svc', repo: 'infra', startup: 'echo SUBIU' });
+  t.check(asked.ok && asked.data?.startupPending, 'open_terminal com startup fica pendente do OK do usuário', JSON.stringify(asked));
+  t.includes(await t.waitFor(async () => (await t.modal.open()) && t.modal.text()), 'echo SUBIU', 'o app mostra o comando e pede permissão');
+  t.equal(await t.js(`return S.store.state.projects[0].groups.flatMap((g) => g.terminals).find((x) => x.name === 'svc').startup`), '', 'antes do OK nada fica salvo');
+  await t.modal.submit();
+  t.equal(await t.waitFor(() => t.js(`return S.store.state.projects[0].groups.flatMap((g) => g.terminals).find((x) => x.name === 'svc').startup || null`)), 'echo SUBIU', 'com o OK o comando inicial é salvo');
+  await agent.tool('create_project', { name: 'minha-app', syncKey: 'app-a' });
+  const moved = await agent.tool('create_project', { name: 'minha-app', syncKey: 'outro-time' });
+  t.check(!moved.ok && /só muda pela interface/.test(moved.error || ''), 'a API não troca a chave de sincronização de um projeto que já tem', moved.error);
 });

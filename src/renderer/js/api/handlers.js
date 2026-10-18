@@ -9,6 +9,7 @@ import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
 import { addProject, addFoldersToProject, setSyncKey } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
+import { requestStartup } from './approvals.js';
 
 function terminalInfo({ project, group, t }) {
   return {
@@ -62,7 +63,12 @@ export const handlers = {
     const existing = projects().find((x) => x.name.toLowerCase() === p.name.trim().toLowerCase());
     const project = existing || addProject({ name: p.name.trim(), repos });
     if (existing) addFoldersToProject(existing, repos);
-    if (p.syncKey != null) setSyncKey(project, p.syncKey);
+    if (p.syncKey != null) {
+      // mudar para onde as memórias de um projeto vão (workspace do time) só pela interface
+      const key = String(p.syncKey).trim().toLowerCase();
+      if (existing?.syncKey && existing.syncKey !== key) throw new Error('A chave de sincronização deste projeto só muda pela interface (Editar projeto).');
+      setSyncKey(project, key);
+    }
     return describeProject(project);
   },
 
@@ -75,9 +81,10 @@ export const handlers = {
     const repo = p.repo ? resolveRepo(project, p.repo) : null;
     const base = repo?.path || (caller?.project === project ? caller.t.cwd : project.cwd || store.info.home);
     const cwd = await resolveCwd(p.cwd, base);
-    const t = addTerminal(group, { name: p.name || '', cwd, startup: p.startup || '' }, { focus: !!p.focus });
+    const t = addTerminal(group, { name: p.name || '', cwd }, { focus: !!p.focus });
     if (p.command) await writeWhenReady(t.id, p.command + '\r');
-    return terminalInfo(findTerm(t.id));
+    if (p.startup) requestStartup(t.id, String(p.startup)); // persiste execução: só com o seu OK no app
+    return { ...terminalInfo(findTerm(t.id)), ...(p.startup && { startupPending: 'aguardando o OK do usuário no app' }) };
   },
 
   /** Envia texto ao terminal (com Enter, salvo `enter: false`). */

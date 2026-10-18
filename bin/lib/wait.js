@@ -6,6 +6,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 async function waitForOutput(request, { terminal, pattern, timeout = 60, interval = 1000 }) {
   if (!pattern) throw new Error('Informe o padrão (regex) a esperar.');
+  if (String(pattern).length > 200) throw new Error('Padrão longo demais (máx. 200 caracteres).'); // ReDoS
   const re = new RegExp(pattern, 'mi');
   const deadline = Date.now() + timeout * 1000;
   for (;;) {

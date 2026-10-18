@@ -29,6 +29,11 @@ function createWindow() {
   attachZoom(win);
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
+  // a janela nunca sai do app (ex.: um arquivo HTML solto nela herdaria o window.api do preload)
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.on('will-redirect', (e) => e.preventDefault());
+  win.webContents.session.setPermissionRequestHandler((_wc, permission, done) => done(['clipboard-sanitized-write', 'notifications'].includes(permission)));
+
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) shell.openExternal(url);
     return { action: 'deny' };

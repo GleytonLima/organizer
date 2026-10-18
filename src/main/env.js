@@ -11,6 +11,7 @@ function childEnv(extra = {}) {
     for (const key of Object.keys(env)) if (HOST_SESSION.test(key)) delete env[key];
     delete env.ANTHROPIC_BASE_URL; // aponta para o proxy da sessão hospedeira
   }
+  delete env.BO_SYNC_TOKEN; // token do servidor de memória (pode vir do ambiente): não vaza para terminais e agentes
   return { ...env, ...extra };
 }
 

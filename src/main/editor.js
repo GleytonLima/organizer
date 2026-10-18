@@ -15,7 +15,9 @@ function editorCommand(folder) {
 
 /** Abre a pasta no editor; resolve { ok } ou { ok: false, error } (ex.: `code` fora do PATH). */
 function openInEditor(folder) {
-  if (!folder || !fs.existsSync(folder)) return Promise.resolve({ ok: false, error: `Pasta não encontrada: ${folder}` });
+  if (!folder || !fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) return Promise.resolve({ ok: false, error: `Pasta não encontrada: ${folder}` });
+  // o cmd expande %VAR% mesmo entre aspas: um nome de pasta com % (ou ") viraria outro comando
+  if (/[%"]/.test(folder)) return Promise.resolve({ ok: false, error: 'O caminho da pasta tem % ou ", que não dá para passar com segurança ao VS Code pelo cmd.' });
   const { command, args, shell, env } = editorCommand(folder);
   return new Promise((resolve) => {
     let stderr = '';

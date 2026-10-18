@@ -39,7 +39,7 @@ function gitStatus(cwd) {
 
 function git(cwd, args, maxBuffer = 1024 * 1024) {
   return new Promise((resolve) => {
-    execFile('git', ['-C', cwd, ...args], { timeout: 4000, windowsHide: true, maxBuffer }, (err, stdout) => resolve(err ? null : stdout));
+    execFile('git', ['-c', 'core.fsmonitor=', '-c', 'core.hooksPath=NUL', '-C', cwd, ...args], { timeout: 4000, windowsHide: true, maxBuffer }, (err, stdout) => resolve(err ? null : stdout));
   });
 }
 
