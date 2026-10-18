@@ -17,6 +17,9 @@ function endpoints() {
   return list;
 }
 
+// Métodos que podem esperar a sua confirmação no app. Mesma lista em src/main/api/bridge.js.
+const ASKS_YOU = new Set(['send', 'close', 'memory_forget', 'task_delete']);
+
 function post({ url, token }, method, params) {
   const body = JSON.stringify(params);
   return new Promise((resolve, reject) => {
@@ -25,7 +28,7 @@ function post({ url, token }, method, params) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), Authorization: `Bearer ${token}` },
-        timeout: 20000,
+        timeout: ASKS_YOU.has(method) ? 5 * 60000 + 5000 : 20000, // confirmações no app esperam você
       },
       (res) => {
         let data = '';

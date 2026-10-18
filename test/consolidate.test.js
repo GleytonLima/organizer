@@ -6,6 +6,7 @@ const path = require('path');
 const { suite, seed } = require('./harness');
 
 process.env.BO_ACP_AGENT = JSON.stringify([process.execPath, path.join(__dirname, 'fixtures', 'fake-acp-agent.js')]);
+process.env.BO_BRIDGE_TIMEOUT_MS = '2000'; // pedidos comuns: 2 s; os que pedem confirmação esperam mais
 process.env.FAKE_ACP_STORE = path.join(process.env.BO_TEST_DIR || os.tmpdir(), 'acp-sessions.json');
 
 suite('consolidação da memória', {
@@ -71,6 +72,7 @@ suite('consolidação da memória', {
   t.check((await pending).code !== 0 && (await exists()), 'recusar a confirmação mantém a tarefa');
   pending = t.bo(['task', 'delete', extra], { terminal: 'a1' });
   await t.waitFor(() => t.modal.open());
+  await t.wait(3000); // você demorou mais que o tempo normal de um pedido
   await t.modal.submit();
   t.includes((await pending).stdout, 'apagada', 'confirmar no app apaga a tarefa');
   t.check(!(await exists()), 'e ela some do quadro');
