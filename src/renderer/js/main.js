@@ -15,6 +15,7 @@ import { initNotifyCenter } from './notify/center.js';
 import { initTasksUi } from './ui/tasks/index.js';
 import { openTaskFromNotice } from './ui/tasks/selection.js';
 import { initMemorySync } from './memory/sync.js';
+import { initTasksSync } from './tasks/sync.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -44,6 +45,7 @@ async function init() {
   initApi(); // depois de restaurar: pedidos já encontram os terminais
   startGitPolling();
   initMemorySync();
+  initTasksSync(); // quadro do workspace (projetos com syncKey)
 
   if (!store.info.bash) {
     openModal({

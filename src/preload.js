@@ -88,6 +88,13 @@ contextBridge.exposeInMainWorld('api', {
     clone: (url, dir) => ipcRenderer.invoke('sync:clone', url, dir),
     adoptProject: (key, project, layout) => ipcRenderer.invoke('sync:adoptProject', key, project, layout),
     onProject: (cb) => ipcRenderer.on('sync:project', (_e, id, changed) => cb(id, changed)),
+    // quadro de tarefas do workspace
+    tasksEnabled: () => ipcRenderer.invoke('sync:tasksEnabled'),
+    me: () => ipcRenderer.invoke('sync:me'),
+    tasksState: () => ipcRenderer.invoke('sync:tasksState'),
+    saveTasksState: (state) => ipcRenderer.invoke('sync:saveTasksState', state),
+    tasksPull: (body) => ipcRenderer.invoke('sync:tasksPull', body),
+    tasksPush: (changes) => ipcRenderer.invoke('sync:tasksPush', changes),
   },
 
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),

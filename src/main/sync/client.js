@@ -38,4 +38,8 @@ const getDoc = async (workspace, which) => (await call('GET', docPath(workspace,
 const putDoc = (workspace, which, doc, baseVersion) => call('PUT', docPath(workspace, which), { ...doc, baseVersion });
 const workspaces = async () => (await call('GET', '/v1/workspaces')).data.items || [];
 
-module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces };
+// Quadro de tarefas do workspace — docs/API.md → "Quadro de tarefas".
+const pullTasks = async (body) => (await call('POST', '/v1/tasks/pull', body)).data;
+const pushTasks = async (changes) => (await call('POST', '/v1/tasks/push', { changes })).data.results;
+
+module.exports = { me, pull, push, claim, getDoc, putDoc, workspaces, pullTasks, pushTasks };

@@ -11,6 +11,7 @@ const { publicSyncSettings, saveSyncSettings, syncEnabled } = require('./setting
 const { buildWorld } = require('./mapping');
 const { locateFolders, cloneRepo } = require('./locate');
 const { adoptServerState } = require('./project-sync');
+const { registerTasksSyncIpc } = require('./tasks-ipc');
 
 /** Projetos do servidor que você pode abrir nesta máquina. */
 async function remoteProjects() {
@@ -65,6 +66,7 @@ async function claim(id) {
 }
 
 function registerSyncIpc() {
+  registerTasksSyncIpc();
   ipcMain.handle('sync:settings', () => publicSyncSettings());
   ipcMain.handle('sync:saveSettings', (_e, s) => {
     const saved = saveSyncSettings(s);
