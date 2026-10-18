@@ -7,6 +7,7 @@ import { notify, persist } from '../core/store.js';
 import { profileById } from '../agents/profiles.js';
 import { renderAgentView } from '../ui/agent/view.js';
 import { onPrompt, onPermission, onPermissionAnswered, onTurnEnd } from '../actions/agent-tasks.js';
+import { recordEvent, usageOf } from '../metrics/record.js';
 import { applyUpdate, permissionItem, waitingYou, transcriptText } from './agent-transcript.js';
 
 const STATE_LABEL = { iniciando: 'iniciando…', pronto: 'pronto', trabalhando: 'trabalhando…', encerrado: 'encerrado' };
@@ -25,14 +26,20 @@ function handle(s, ev) {
   else if (ev.type === 'config') s.config = ev.options;
   else if (ev.type === 'update') applyUpdate(s, ev.update);
   else if (ev.type === 'permission') {
-    const item = permissionItem(ev);
+    const item = { ...permissionItem(ev), askedAt: Date.now() };
     s.items.push(item);
     onPermission(s.id, item);
   } else if (ev.type === 'permission-answered') {
     const item = s.items.find((i) => i.type === 'permission' && i.requestId === ev.requestId);
     if (item) item.answer = ev.optionId;
     onPermissionAnswered(s.id, item);
+    const kind = item?.options.find((o) => o.optionId === ev.optionId)?.kind || 'cancelled';
+    recordEvent('agent.permission', s.id, { kind, ms: item?.askedAt ? Date.now() - item.askedAt : null, profile: s.t.agent });
   } else if (ev.type === 'turn') {
+    const since = s.items.findLastIndex((i) => i.type === 'user');
+    const tools = s.items.slice(since + 1).filter((i) => i.type === 'tool').length;
+    const model = s.config?.find((o) => o.category === 'model' || o.id === 'model')?.currentValue ?? null;
+    recordEvent('agent.turn', s.id, { stopReason: ev.stopReason, ms: s.turnStart ? Date.now() - s.turnStart : null, usage: usageOf(ev.usage), model, profile: s.t.agent, tools });
     s.items.push({ type: 'turn', stopReason: ev.stopReason });
     onTurnEnd(s.id, s.items.findLast((i) => i.type === 'agent')?.text || '', ev.stopReason);
   } else if (ev.type === 'error') s.items.push({ type: 'error', text: ev.message });
@@ -79,6 +86,7 @@ export function createAgentSession(t, { container, onFocus }) {
       if (!clean && !attachments.length) return;
       if (s.state !== 'pronto') throw new Error(s.state === 'trabalhando' ? 'O agente ainda está trabalhando.' : 'A sessão do agente não está pronta.');
       s.items.push({ type: 'user', text: clean, attachments: attachments.map(({ kind, name, url, path }) => ({ kind, name, url, path })) });
+      s.turnStart = Date.now(); // duração do turno (Insights)
       onPrompt(t.id, clean || `Anexos: ${attachments.map((a) => a.name).join(', ')}`);
       s.render();
       return api.acp.prompt(t.id, clean, attachments.map(({ url, ...a }) => a));

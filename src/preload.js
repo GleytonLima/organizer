@@ -58,6 +58,12 @@ contextBridge.exposeInMainWorld('api', {
     onEvent: (cb) => ipcRenderer.on('acp:event', (_e, id, event) => cb(id, event)),
   },
 
+  // Eventos do painel Insights (src/main/metrics).
+  metrics: {
+    record: (ev) => ipcRenderer.send('metrics:record', ev),
+    query: (opts) => ipcRenderer.invoke('metrics:query', opts),
+  },
+
   // Sync da memória com o bo-memory-server.
   sync: {
     settings: () => ipcRenderer.invoke('sync:settings'),

@@ -10,6 +10,7 @@ import { refreshGit } from '../git/git.js';
 import { terminalKeyHandler } from './keys.js';
 import { copyOrPaste } from './clipboard.js';
 import { playwrightFinished } from '../playwright/result.js';
+import { recordEvent } from '../metrics/record.js';
 import { attachNotifySources, commandFinished } from '../notify/sources.js';
 
 // id -> { term, fit, host, head, exited, running: { cmd, since } | null, lastExit: number | null }
@@ -124,6 +125,12 @@ async function spawn(t, s) {
   if (t.startup) api.ptyWrite(t.id, t.startup + '\r');
 }
 
+/** Só o programa do comando ("npm", "git"…): a linha inteira pode ter segredo (TOKEN=… curl …). */
+function programOf(cmd) {
+  const program = String(cmd || '').trim().split(/\s+/).find((w) => !/^[A-Za-z_]\w*=/.test(w)) || '';
+  return program.split(/[\\/]/).pop().slice(0, 40);
+}
+
 // Sequências emitidas pelo src/main/shell/bash-init.sh, com o nonce do terminal: as que não o trazem
 // (impressas por um programa qualquer) são descartadas.
 function registerShellIntegration(id, s) {
@@ -141,6 +148,7 @@ function registerShellIntegration(id, s) {
       [s.running, s.lastExit] = [null, Number(arg) || 0];
       // `playwright test` vira aviso/tarefa com o resultado; o resto, o aviso de comando longo
       if (!playwrightFinished(id, finished, s.lastExit)) commandFinished(id, finished, s.lastExit);
+      if (finished) recordEvent('command', id, { program: programOf(finished.cmd), exit: s.lastExit, ms: Date.now() - finished.since });
     }
     notify();
     return true;

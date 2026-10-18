@@ -14,6 +14,7 @@ const { registerNotificationIpc } = require('./notifications');
 const { registerMemoryIpc, closeMemory } = require('./memory');
 const { registerSyncIpc, stopSync } = require('./sync');
 const { registerAcpIpc, stopAllAgents } = require('./acp');
+const { registerMetricsIpc, closeMetrics } = require('./metrics');
 
 // Pasta de dados alternativa (testes, ou um segundo perfil isolado): BO_USER_DATA=<pasta>.
 if (process.env.BO_USER_DATA) app.setPath('userData', process.env.BO_USER_DATA);
@@ -34,6 +35,7 @@ if (!app.requestSingleInstanceLock()) {
   registerMemoryIpc();
   registerSyncIpc();
   registerAcpIpc();
+  registerMetricsIpc();
 
   app.whenReady().then(async () => {
     writeRcFile();
@@ -48,5 +50,6 @@ if (!app.requestSingleInstanceLock()) {
     stopSync();
     stopAllAgents();
     closeMemory();
+    closeMetrics();
   });
 }

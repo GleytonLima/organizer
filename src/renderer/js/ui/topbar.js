@@ -11,6 +11,7 @@ import { terminalMenu, projectMenu, groupMenu, themeMenu } from './context-menus
 import { splitIndicator } from './split.js';
 import { notificationsButton } from './notifications.js';
 import { tasksButton, memoryButton } from './tasks/index.js';
+import { insightsButton } from './insights/view.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -110,6 +111,7 @@ export function renderTopbar() {
     tabs ? [tabsArea(), split] : [split || activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
     tasksButton(),
     memoryButton(),
+    insightsButton(),
     notificationsButton(),
     iconButton('theme', 'Tema', themeMenu),
     layoutSwitch(),

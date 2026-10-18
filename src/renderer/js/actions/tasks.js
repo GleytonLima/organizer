@@ -43,7 +43,7 @@ export function moveTask(task, columnId, { by = 'você', note = '', terminalId }
   const changed = task.columnId !== col.id;
   task.columnId = col.id;
   if (by === 'agente') task.needsInput = null;
-  logTask(task, by, 'moved', `${changed ? `Movida para “${col.name}”` : `Continua em “${col.name}”`}${note ? ` — ${note}` : ''}`);
+  logTask(task, by, 'moved', `${changed ? `Movida para “${col.name}”` : `Continua em “${col.name}”`}${note ? ` — ${note}` : ''}`, { to: col.id });
   commit();
   if (changed && by === 'agente' && isDoneColumn(project, col.id)) notifyAbout(task, `Concluída: ${task.title}`);
   return task;

@@ -1,0 +1,83 @@
+/* Painel Insights: grade de cartões (mesma área do quadro), discretos e arredondados. */
+.ins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding: 2px 2px 16px;
+}
+.ins-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+}
+.ins-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.ins-big {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.ins-caption {
+  font-size: 12px;
+  color: var(--dim);
+}
+.ins-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+.ins-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.ins-line strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.ins-line span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+.ins-hint {
+  margin: auto 0 0;
+  padding-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--faint);
+}
+.ins-bars {
+  width: 100%;
+  height: 36px;
+  margin-top: 8px;
+}
+.ins-bars rect {
+  fill: var(--hover);
+}
+.ins-bars rect.on {
+  fill: var(--accent);
+  opacity: 0.55;
+}
+.ins-scope,
+.ins-loading {
+  font-size: 12px;
+  color: var(--faint);
+}

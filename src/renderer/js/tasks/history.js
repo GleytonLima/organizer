@@ -3,9 +3,12 @@ import { findTerm } from '../core/store.js';
 import { gitFor } from '../git/git.js';
 import { pushNotification } from '../notify/center.js';
 
-/** Registra um evento no histórico. type: 'created'|'moved'|'report'|'input'|'reply'|'edit'. */
-export function logTask(task, by, type, text) {
-  task.history.push({ at: Date.now(), by, type, text });
+/**
+ * Registra um evento no histórico. type: 'created'|'moved'|'report'|'input'|'reply'|'edit'.
+ * `extra`: campos estruturados (ex.: { to: colunaId } em 'moved', usado pelo painel Insights).
+ */
+export function logTask(task, by, type, text, extra = {}) {
+  task.history.push({ at: Date.now(), by, type, text, ...extra });
   task.updatedAt = Date.now();
 }
 

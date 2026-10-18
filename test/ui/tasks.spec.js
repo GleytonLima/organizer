@@ -44,3 +44,11 @@ test('"Abrir quadro" cabe no painel e abre o kanban', async ({ page }) => {
   await expect(page.locator('#board')).toBeVisible();
   await expect(page.locator('#board .kb-column')).toHaveCount(3);
 });
+
+test('o ícone de Insights abre o painel com os cinco cartões', async ({ page }) => {
+  await page.getByTitle('Insights: fluxo, espera, custo e qualidade').click();
+  await expect(page.locator('#board [data-card]')).toHaveCount(5);
+  await expect(page.locator('#board [data-card="flow"]')).toContainText('Fluxo');
+  await page.locator('#board').getByTitle('Voltar aos terminais').click();
+  await expect(page.locator('#board')).toBeHidden();
+});

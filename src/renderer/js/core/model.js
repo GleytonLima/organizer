@@ -83,6 +83,7 @@ export function migrate(saved, home) {
     taskView: s.taskView || 'off', // 'off' | 'panel' | 'board'
     taskPeriod: s.taskPeriod || '7d', // período da lista de tarefas (tasks/period.js)
     taskScope: s.taskScope || 'project', // lista de tarefas: projeto em foco | todos (tasks/filter.js)
+    insights: s.insights || { period: '30d', scope: 'project', prices: null }, // painel Insights (metrics/insights.js)
     agentProfiles: s.agentProfiles?.length ? s.agentProfiles : DEFAULT_AGENT_PROFILES(), // agentes ACP (agents/profiles.js)
     sideTab: s.sideTab || 'tasks', // aba do painel lateral: 'tasks' | 'memory'
   };

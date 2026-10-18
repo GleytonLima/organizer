@@ -30,6 +30,7 @@ src/main/memory/  memória: db + migrations (node:sqlite + FTS5), store (decisã
 src/main/acp/    experimento ACP (Agent Client Protocol): rpc (JSON-RPC por linha), agents (claude-agent-acp), session (um agente por terminal), index (IPC)
 src/main/env.js  ambiente dos filhos (tira as variáveis de uma sessão hospedeira do Claude Code)
 src/main/sync/   sync da memória com o bo-memory-server: settings (URL + token no safeStorage), client, remote, mapping, rows, engine (push → pull a cada 30 s)
+src/main/metrics/ eventos do painel Insights (metrics.db: turnos do agente com tokens, permissões, comandos — só o programa); o fluxo vem do histórico das tarefas
 src/main/notifications.js  toast do Windows + piscar na barra de tarefas
 src/main/playwright.js  detecta playwright.config.* e o relatório; o renderer roda (`js/playwright/runner.js`) e trata o fim de `playwright test` em qualquer terminal (`result.js`: aviso ou tarefa #playwright)
 src/main/shell/  bash-init.sh: integração com o shell (OSC 7 = pasta, OSC 6973 = início/fim de comando)
@@ -43,6 +44,8 @@ src/renderer/
   js/api/        handlers da API local (resolve nomes/ids/caminhos)
   js/tasks/      quadro de tarefas: colunas por projeto (columns), consultas (queries), histórico/origem (history)
   js/notify/     central de avisos (center) e fontes: bell, OSC 9/777, comando longo (sources)
+  js/metrics/    Insights: coleta (record), cálculo puro (flow = fluxo/espera/reabertura; agent = custo/assertividade/comandos), insights (período, escopo, cache)
+  js/ui/insights/ tela cheia do painel (cartões, barras por semana, preços dos tokens)
   js/ui/memory/  aba Memória do painel lateral (busca, filtros, diálogos, embeddings)
   js/ui/tasks/   painel, quadro, cartão, gaveta de detalhe (+ espera), diálogos (nova tarefa, colunas)
   js/ui/         sidebar(+groups), topbar, split, notifications (sino), cmdbar, statusbar, menu, modal, confirm, dnd, componentes

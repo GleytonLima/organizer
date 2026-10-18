@@ -262,4 +262,8 @@ suite('agente via ACP', {
   t.equal(await t.js(`return (await import('./js/agents/profiles.js')).agentProfiles().find((p) => p.label === 'Antigo').mode`), '', 'sem confirmar, o modo do perfil não muda');
   await s2(`(s.config.find((o) => o.id === 'mode').currentValue = 'bypassPermissions', s.render(), true)`);
   t.check(await t.waitFor(() => s2(`!!s.body.querySelector('.ag-picker.risky')`)), 'em bypassPermissions o seletor de modo fica marcado');
+
+  // Insights: a conversa com o agente vira eventos (turnos com duração e desfecho; permissões com a resposta)
+  const kinds = await t.js(`const evs = await api.metrics.query({ since: 0 }); return { turns: evs.filter((e) => e.kind === 'agent.turn').length, denied: evs.filter((e) => e.kind === 'agent.permission' && /^reject/.test(e.data.kind)).length, withTask: evs.some((e) => e.kind === 'agent.turn' && e.taskId && e.projectId), ms: evs.find((e) => e.kind === 'agent.turn')?.data.ms > 0 }`);
+  t.check(kinds.turns >= 3 && kinds.denied >= 1 && kinds.withTask && kinds.ms, 'turnos e permissões do agente viram eventos (com tarefa, projeto e duração)', JSON.stringify(kinds));
 });

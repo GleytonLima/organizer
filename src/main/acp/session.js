@@ -148,7 +148,7 @@ class AgentSession {
     this.state('trabalhando');
     try {
       const r = await this.rpc.request('session/prompt', { sessionId: this.sessionId, prompt });
-      this.emit({ type: 'turn', stopReason: r?.stopReason || 'end_turn' });
+      this.emit({ type: 'turn', stopReason: r?.stopReason || 'end_turn', usage: r?.usage || null }); // usage: tokens do turno
     } catch (err) {
       this.emit({ type: 'error', message: err.message });
     } finally {

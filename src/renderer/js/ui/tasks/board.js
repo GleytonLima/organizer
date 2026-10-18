@@ -9,6 +9,7 @@ import { dropTarget } from '../dnd.js';
 import { taskCard } from './card.js';
 import { newTaskDialog, columnsDialog } from './dialogs.js';
 import { periodButton } from './period-button.js';
+import { renderInsights } from '../insights/view.js';
 
 function column(project, { column: col, tasks }) {
   return el(
@@ -28,11 +29,13 @@ function column(project, { column: col, tasks }) {
 }
 
 export function renderBoard() {
-  const show = store.state.taskView === 'board';
+  const view = store.state.taskView;
+  const show = view === 'board' || view === 'insights'; // o painel Insights usa a mesma área
   $('#main').classList.toggle('board-mode', show);
   const board = $('#board');
   board.classList.toggle('hidden', !show);
   if (!show) return;
+  if (view === 'insights') return renderInsights(board);
   const project = boardProject();
   const waiting = waitingTasks(project).length;
   mount(

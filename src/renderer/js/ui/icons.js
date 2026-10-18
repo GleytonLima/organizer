@@ -18,6 +18,8 @@ const PATHS = {
   check: '<path d="M3.5 8.5l3 3 6-7"/>',
   folder: '<path d="M2.25 4.75c0-.83.67-1.5 1.5-1.5h2.6l1.4 1.5h4.5c.83 0 1.5.67 1.5 1.5v5.5c0 .83-.67 1.5-1.5 1.5h-8.5c-.83 0-1.5-.67-1.5-1.5z"/>',
   terminal: '<path d="M3.5 5l3 3-3 3M8.5 11.5h4"/>',
+  refresh: '<path d="M12.75 7.5A4.75 4.75 0 1 1 11.3 4.1M12.75 2.75v2.5h-2.5"/>',
+  chart: '<path d="M3 12.75h10M4.75 10.5V8M8 10.5V4.5M11.25 10.5V6.75"/>',
   kanban: '<rect x="2" y="2.75" width="12" height="10.5" rx="2.5"/><path d="M5.5 5.5v4M8 5.5v2M10.5 5.5v5.5"/>',
   pause: '<circle cx="8" cy="8" r="5.5"/><path d="M6.75 6v4M9.25 6v4"/>',
   settings: '<path d="M3 5h6M11.5 5H13M3 11h1.5M7 11h6"/><circle cx="10.25" cy="5" r="1.25"/><circle cx="5.75" cy="11" r="1.25"/>',
