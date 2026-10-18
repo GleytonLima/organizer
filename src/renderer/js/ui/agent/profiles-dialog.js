@@ -67,6 +67,14 @@ async function editProfile(profile = null) {
       if (await confirmDanger({ title: `Remover “${profile.label}”?`, message: 'Terminais que usam este agente passam a usar o Claude Code.' })) removeProfile(profile);
       return;
     }
+    if (v.mode?.trim() === 'bypassPermissions' && profile?.mode !== 'bypassPermissions') {
+      const ok = await confirmDanger({
+        title: 'Agente sem pedir permissão?',
+        message: 'Em bypassPermissions o agente roda comandos, edita arquivos e usa os servidores MCP sem perguntar nada — inclusive se um texto não confiável (página, memória, saída de terminal) o induzir. Use só em pastas descartáveis.',
+        submit: 'Usar mesmo assim',
+      });
+      if (!ok) return;
+    }
     saveProfile({ ...v, id: profile?.id });
   } catch (err) {
     await openModal({ title: 'Não foi possível salvar', message: cleanError(err) });

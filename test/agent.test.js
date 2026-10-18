@@ -248,4 +248,18 @@ suite('agente via ACP', {
   const { canonical, sameContent } = require('../src/main/sync/mapping');
   t.equal(canonical({ b: 1, a: [1, { d: 2, c: null }] }), canonical({ a: [1, { c: null, d: 2 }], b: 1 }), 'JSON canônico ignora a ordem das chaves (jsonb do PostgreSQL)');
   t.check(sameContent({ text: 'x', refs: [{ id: 'a', type: 'depends' }] }, { text: 'x', refs: [{ type: 'depends', id: 'a' }] }), 'mesmo conteúdo com chaves em outra ordem não vira conflito');
+
+  // bypassPermissions: salvar o perfil pede confirmação; na conversa, o seletor de modo fica marcado
+  await t.js(`import('./js/ui/agent/profiles-dialog.js').then((d) => d.agentsDialog())`);
+  await t.waitFor(() => t.modal.open());
+  await t.js(`const sel = document.querySelector('#modal select'); sel.value = [...sel.options].find((o) => o.text.startsWith('Antigo')).value; sel.dispatchEvent(new Event('change')); document.querySelector('#modal [type=submit]').click()`);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#modal [data-field="mode"] input')`));
+  await t.js(`const i = document.querySelector('#modal [data-field="mode"] input'); i.value = 'bypassPermissions'; i.dispatchEvent(new Event('input')); document.querySelector('#modal [type=submit]').click()`);
+  t.includes(await t.waitFor(async () => { const x = await t.modal.text(); return /sem pedir permissão/.test(x) && x; }), 'não confiável', 'salvar um perfil em bypassPermissions pede confirmação explicando o risco');
+  await t.modal.cancel();
+  await t.wait(200);
+  await t.modal.cancel().catch(() => {}); // a lista de perfis volta: fecha
+  t.equal(await t.js(`return (await import('./js/agents/profiles.js')).agentProfiles().find((p) => p.label === 'Antigo').mode`), '', 'sem confirmar, o modo do perfil não muda');
+  await s2(`(s.config.find((o) => o.id === 'mode').currentValue = 'bypassPermissions', s.render(), true)`);
+  t.check(await t.waitFor(() => s2(`!!s.body.querySelector('.ag-picker.risky')`)), 'em bypassPermissions o seletor de modo fica marcado');
 });

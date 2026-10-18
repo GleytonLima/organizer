@@ -31,12 +31,20 @@ export function playwrightFinished(id, running, exitCode) {
   if (!running || !isRun(running.cmd)) return false;
   const entry = findTerm(id);
   if (!entry) return false;
+  // o ConPTY do Windows entrega o OSC de fim antes do texto desenhado: lê a saída um instante depois
+  setTimeout(() => report(id, entry, exitCode), SETTLE_MS);
+  return true;
+}
+
+const SETTLE_MS = 300;
+
+function report(id, entry, exitCode) {
   const folder = entry.t.cwd;
   const repo = repoName(folder);
   const { counts, failures } = summarize(readLines(id, 300));
   refreshPlaywright(folder).then((info) => (exitCode ? onFail(entry, { repo, folder, counts, failures, report: info?.report }) : null));
-  if (!exitCode) pushNotification({ terminalId: id, label: `Playwright · ${repo}`, body: `passou${counts.length ? ` (${counts.join(', ')})` : ''}` });
-  return true;
+  const summary = counts.length ? ` (${counts.join(', ')})` : '';
+  if (!exitCode) pushNotification({ terminalId: id, label: `Playwright · ${repo}`, body: `passou${summary}` });
 }
 
 function onFail({ project, t }, { repo, folder, counts, failures, report }) {

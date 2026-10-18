@@ -1,4 +1,6 @@
 const { app } = require('electron');
+// antes de qualquer módulo registrar canais: só a página do app fala com o processo principal
+require('./ipc-guard').guardIpc();
 const { createWindow, focusWindow } = require('./window');
 const { writeRcFile } = require('./bash');
 const { registerPtyIpc, killAll } = require('./pty');

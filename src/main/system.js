@@ -7,7 +7,26 @@ const { getWindow } = require('./window');
 
 const STATE_FILE = () => userFile('state.json');
 
+const isText = (v) => v == null || typeof v === 'string';
+
+/**
+ * Forma mínima do estado antes de gravar: o state.json guarda perfis de agente (comando que vira
+ * processo) e comandos iniciais de terminais — um renderer comprometido não grava qualquer coisa.
+ */
+function validState(state) {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return false;
+  if (!Array.isArray(state.projects) || !state.projects.every((p) => p && Array.isArray(p.groups))) return false;
+  const terminals = state.projects.flatMap((p) => p.groups.flatMap((g) => (Array.isArray(g?.terminals) ? g.terminals : [null])));
+  if (!terminals.every((t) => t && typeof t.id === 'string' && isText(t.startup) && isText(t.cwd))) return false;
+  const profiles = state.agentProfiles ?? [];
+  return Array.isArray(profiles) && profiles.every((p) => p && typeof p.id === 'string' && ['command', 'args', 'env', 'mode', 'mcp'].every((k) => isText(p[k])));
+}
+
 function saveState(state) {
+  if (!validState(state)) {
+    console.error('Estado recusado: formato inesperado');
+    return false;
+  }
   try {
     writeJsonAtomic(STATE_FILE(), state);
     return true;
@@ -55,4 +74,4 @@ function registerSystemIpc() {
   ipcMain.on('shell:openPath', (_e, p) => openSafely(p));
 }
 
-module.exports = { registerSystemIpc };
+module.exports = { registerSystemIpc, validState };

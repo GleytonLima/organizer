@@ -76,6 +76,9 @@ function startApiServer() {
     server.listen(0, '127.0.0.1', () => {
       info = { url: `http://127.0.0.1:${server.address().port}`, token, pid: process.pid };
       writeJsonAtomic(discoveryFile(), info);
+      try {
+        fs.chmodSync(discoveryFile(), 0o600); // token mestre: só o usuário (no Windows, o %APPDATA% já é dele)
+      } catch {}
       resolve(info);
     });
   });

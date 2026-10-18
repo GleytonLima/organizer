@@ -8,8 +8,19 @@ import { pushNotification } from './center.js';
 const BELL_COOLDOWN_MS = 4000;
 const LONG_COMMAND_MS = 15000;
 
+const OSC_COOLDOWN_MS = 5000;
+
 export function attachNotifySources(id, term) {
   let lastBell = 0;
+  let lastOsc = 0;
+  // a saída de qualquer programa pode emitir OSC 9/777: no máximo um aviso a cada 5 s por terminal
+  // (o título do aviso já diz de qual terminal veio — ver center.js)
+  const oscAllowed = () => {
+    const now = Date.now();
+    if (now - lastOsc < OSC_COOLDOWN_MS) return false;
+    lastOsc = now;
+    return true;
+  };
   term.onBell(() => {
     const now = Date.now();
     if (now - lastBell < BELL_COOLDOWN_MS) return;
@@ -19,14 +30,14 @@ export function attachNotifySources(id, term) {
 
   term.parser.registerOscHandler(9, (data) => {
     if (/^\d+;/.test(data)) return false; // subcomandos ConEmu/WT (ex.: 9;4 progresso, 9;9 pasta)
-    pushNotification({ terminalId: id, body: data });
+    if (oscAllowed()) pushNotification({ terminalId: id, body: String(data).slice(0, 200) });
     return true;
   });
 
   term.parser.registerOscHandler(777, (data) => {
     const [kind, title, ...body] = data.split(';');
     if (kind !== 'notify') return false;
-    pushNotification({ terminalId: id, label: title, body: body.join(';') });
+    if (oscAllowed()) pushNotification({ terminalId: id, label: String(title).slice(0, 80), body: body.join(';').slice(0, 200) });
     return true;
   });
 }

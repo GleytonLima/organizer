@@ -54,7 +54,7 @@ analyze() {
       args+=(-Dsonar.exclusions="node_modules/**,coverage/**,test/**" -Dsonar.tests=test -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info) ;;
     bo-memory-server)
       args+=(-Dsonar.exclusions="bin/**,**/*_test.go,docker/**,coverage.out" -Dsonar.tests=. -Dsonar.test.inclusions="**/*_test.go"
-        -Dsonar.go.coverage.reportPaths=coverage.out) ;;
+        -Dsonar.go.coverage.reportPaths=coverage.out -Dsonar.coverage.exclusions="cmd/**") ;;
   esac
   MSYS_NO_PATHCONV=1 docker run --rm -v "$(cygpath -w "$dir" 2>/dev/null || echo "$dir"):/usr/src" sonarsource/sonar-scanner-cli:latest "${args[@]}" -Dsonar.qualitygate.wait=false >/dev/null
 }

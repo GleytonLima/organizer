@@ -56,7 +56,8 @@ export function configPickers(s, { disabled = false } = {}) {
     return el(
       'button',
       {
-        class: 'ag-picker',
+        // modo que dispensa as permissões: discreto, mas visível (ver profiles-dialog.js)
+        class: `ag-picker${option.currentValue === 'bypassPermissions' ? ' risky' : ''}`,
         'data-option': option.id,
         title: option.description || labelOf(option),
         disabled,

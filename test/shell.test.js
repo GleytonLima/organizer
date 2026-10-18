@@ -80,4 +80,29 @@ suite('shell: sinais OSC 6973', {
   t.equal(zoom(), 67, 'Ctrl − para no mínimo legível (67%)');
   await press('0');
   t.equal(zoom(), 100, 'Ctrl 0 volta a 100%');
+
+  // avisos por OSC 9: no máximo um a cada 5 s por terminal (a saída de qualquer programa os emite)
+  await t.js(`(await import('./js/notify/center.js')).clearNotifications()`);
+  await t.type('sh', `printf '\\033]9;aviso-um\\007\\033]9;aviso-dois\\007'`);
+  await t.wait(800);
+  const notices = await t.js(`return (await import('./js/notify/center.js')).recentNotifications().map((n) => n.body)`);
+  t.check(notices.filter((b) => /aviso-(um|dois)/.test(b)).length <= 1, 'OSC 9 em rajada vira no máximo um aviso', JSON.stringify(notices));
+
+  // IPC só da página do app; estado salvo validado no processo principal
+  const path = require('path');
+  const { pathToFileURL } = require('url');
+  const { fromApp } = require('../src/main/ipc-guard');
+  const page = pathToFileURL(path.join(__dirname, '..', 'src', 'renderer', 'index.html')).href;
+  t.equal(
+    [fromApp({ senderFrame: { url: page } }), fromApp({ senderFrame: { url: 'https://evil.example/' } }), fromApp({ senderFrame: { url: page, parent: {} } }), fromApp({})],
+    [true, false, false, false],
+    'IPC aceita só o frame principal com a página do app',
+  );
+  const { validState } = require('../src/main/system');
+  const ok = { projects: [{ groups: [{ terminals: [{ id: 'a', cwd: 'C:/x', startup: '' }] }] }], agentProfiles: [{ id: 'claude', command: '', mcp: '' }] };
+  t.equal(
+    [validState(ok), validState(null), validState({ projects: 'x' }), validState({ ...ok, agentProfiles: [{ id: 'p', command: { evil: 1 } }] }), validState({ projects: [{ groups: [{ terminals: [{ id: 'a', startup: 42 }] }] }] })],
+    [true, false, false, false, false],
+    'estado com formato inesperado não é gravado',
+  );
 });
