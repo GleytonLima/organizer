@@ -92,6 +92,11 @@ suite('insights', {
   await saveFb();
   const shown = await t.waitFor(() => t.js(`const i = document.querySelector('#task-detail .td-feedback-item'); return i && i.innerText`));
   t.check(/Precisou de ajustes/.test(shown) && /convenção de testes/.test(shown), 'o feedback aparece na tarefa, com o rótulo', shown);
+  if (shots) {
+    await t.js(`document.querySelector('#task-detail .td-feedback').scrollIntoView({ block: 'center' })`);
+    await new Promise((r) => setTimeout(r, 200));
+    require('fs').writeFileSync(path.join(shots, 'insights-feedback.png'), (await t.wc.capturePage()).toPNG());
+  }
   t.equal(await t.js(`return document.querySelector('#task-detail .td-feedback textarea').value`), '', 'a caixa fica limpa depois de salvar');
   const [fb] = await t.js(`return api.feedback.list({ targetType: 'task', targetId: 't1' })`);
   const c = fb?.context || {};

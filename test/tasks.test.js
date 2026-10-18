@@ -1,6 +1,9 @@
 // Quadro de tarefas: agente cria e move, pede uma decisão (Em espera), supervisor sugere,
 // você responde pela gaveta da tarefa e a resposta chega no terminal de origem; agente conclui.
+const path = require('path');
 const { suite, seed } = require('./harness');
+
+const shotOf = (t) => async (name) => process.env.BO_TEST_SHOTS && require('fs').writeFileSync(path.join(process.env.BO_TEST_SHOTS, `tasks-${name}.png`), (await t.wc.capturePage()).toPNG());
 
 const TASK_UI = { A: './js/actions/tasks.js', SEL: './js/ui/tasks/selection.js' };
 
@@ -103,6 +106,7 @@ suite('tarefas', {
     const b = [...document.querySelectorAll('#taskpanel .tp-header button, #taskpanel .tp-toolbar button')];
     return b.length ? b.filter((x) => x.getBoundingClientRect().right > p.right + 1).map((x) => x.title || x.textContent) : null`));
   t.equal(clipped, [], 'os botões do painel cabem na largura (nenhum cortado, inclusive "Abrir quadro")');
+  await shotOf(t)('panel-actions');
   await t.js(`document.querySelector('#taskpanel [title="Abrir quadro"]').click()`);
   t.equal(await t.waitFor(() => t.js(`return S.store.state.taskView === 'board' && !document.querySelector('#board').classList.contains('hidden')`)), true, '"Abrir quadro" abre o kanban');
   await t.js(`A.setTaskView('panel'); S.store.state.taskPeriod = '7d'; S.commit()`, TASK_UI);
@@ -117,12 +121,16 @@ suite('tarefas', {
   await search('');
   // minimalista: de cara só a busca; as opções ficam atrás do funil
   t.equal(await t.js(`return !!document.querySelector('#taskpanel [data-chip]')`), false, 'filtros escondidos até abrir o funil');
+  await shotOf(t)('funnel-hidden');
   await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`);
+  await t.waitFor(() => t.js(`return !!document.querySelector('#taskpanel [data-chip]')`));
+  await shotOf(t)('funnel-open');
   await t.js(`S.store.state.tasks.find((x) => x.title === 'Lote 3').memoryRefs = ['m-1']; S.commit(); document.querySelector('#taskpanel [data-chip="memory"]').click()`);
   t.equal(await t.waitFor(async () => ((await titles()).length === 1 ? titles() : null)), ['Lote 3'], 'chip "Com memória" mostra só as tarefas com memória vinculada');
   await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`); // fecha: fica só o filtro ativo
   const closed = await t.waitFor(() => t.js(`return !document.querySelector('#taskpanel [data-chip]') && { active: [...document.querySelectorAll('#taskpanel [data-active]')].map((c) => c.textContent), count: document.querySelector('#taskpanel .tp-funnel-count')?.textContent }`));
   t.equal(closed, { active: ['Com memória'], count: '1' }, 'fechado, mostra só o filtro ativo (com ×) e o número no funil');
+  await shotOf(t)('funnel-active');
   await t.js(`document.querySelector('#taskpanel [data-active="memory"] .chip-x').click()`);
   t.check(await t.waitFor(async () => (await titles()).length > 1), 'o × do chip ativo tira o filtro');
   await t.js(`document.querySelector('#taskpanel .tp-funnel').click()`); // reabre para o resto
