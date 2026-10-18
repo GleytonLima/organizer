@@ -6,7 +6,8 @@
 const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
-const { userFile, writeJsonAtomic } = require('../files');
+const { userFile } = require('../files');
+const { writePrivate } = require('./private-file');
 const { callRenderer } = require('./bridge');
 
 const MAX_BODY = 1024 * 1024;
@@ -73,12 +74,9 @@ function startApiServer() {
   const token = crypto.randomBytes(24).toString('hex');
   const server = http.createServer((req, res) => handle(req, res, token));
   return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => {
+    server.listen(0, '127.0.0.1', async () => {
       info = { url: `http://127.0.0.1:${server.address().port}`, token, pid: process.pid };
-      writeJsonAtomic(discoveryFile(), info);
-      try {
-        fs.chmodSync(discoveryFile(), 0o600); // token mestre: só o usuário (no Windows, o %APPDATA% já é dele)
-      } catch {}
+      await writePrivate(discoveryFile(), JSON.stringify(info, null, 2)); // token mestre: só o usuário (ACL no Windows)
       resolve(info);
     });
   });

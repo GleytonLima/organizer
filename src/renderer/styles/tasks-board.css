@@ -255,12 +255,13 @@
   padding-right: 4px;
 }
 .tp-funnel {
-  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 4px;
+  min-width: 28px;
   height: 26px;
+  padding: 0 7px;
   border: none;
   border-radius: var(--r-sm);
   background: transparent;
@@ -280,9 +281,7 @@
   height: 14px;
 }
 .tp-funnel-count {
-  position: absolute;
-  top: 1px;
-  right: 1px;
+  /* ao lado do ícone, não por cima */
   min-width: 14px;
   height: 14px;
   padding: 0 3px;

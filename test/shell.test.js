@@ -105,4 +105,11 @@ suite('shell: sinais OSC 6973', {
     [true, false, false, false, false],
     'estado com formato inesperado não é gravado',
   );
+
+  // api.json (token mestre): no Windows, sem herança — só você e o SYSTEM
+  if (process.platform === 'win32') {
+    const acl = require('child_process').execFileSync('icacls', [require('path').join(t.ud, 'api.json')], { encoding: 'utf8' });
+    const entries = acl.split(/\r?\n/).map((l) => l.replace(/^.*api\.json/, '').trim()).filter((l) => /:\(/.test(l));
+    t.check(entries.length === 2 && !acl.includes('(I)'), 'api.json só com o usuário e o SYSTEM, sem permissões herdadas', acl);
+  }
 });

@@ -24,11 +24,11 @@ const toVector = (blob) => new Float32Array(blob.buffer, blob.byteOffset, blob.b
 
 /** Ids ordenados por similaridade com a consulta (só memórias vetorizadas com o modelo atual). */
 async function vectorRank(query, opts) {
-  const [q] = await embeddings.embed([query]);
+  const [q] = await embeddings.embed([query], 'query');
   const f = store.filters(opts);
   const rows = openDb()
     .prepare(`SELECT id, embedding FROM memories WHERE embedding IS NOT NULL AND embedding_model = ? AND ${f.sql}`)
-    .all(embeddings.settings().model, ...f.args);
+    .all(embeddings.settings().vectorKey, ...f.args);
   return rows
     .map((r) => ({ id: r.id, sim: cosine(q, toVector(r.embedding)) }))
     .sort((a, b) => b.sim - a.sim)

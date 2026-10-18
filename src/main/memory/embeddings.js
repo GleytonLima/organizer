@@ -38,6 +38,29 @@ async function postJson(url, body, apiKey) {
   return res.json();
 }
 
+// Prefixos das famílias que treinaram com eles (sem, a qualidade cai muito). Mesma tabela do
+// servidor (bo-memory-server/internal/semantic/config.go). O arquivo de configuração pode
+// sobrescrever (queryPrefix/docPrefix; "none" desliga).
+const PREFIXES = [
+  { match: 'nomic-embed', query: 'search_query: ', doc: 'search_document: ' },
+  { match: 'e5', query: 'query: ', doc: 'passage: ' },
+];
+
+function noTrailingSlash(url) {
+  let u = url;
+  while (u.endsWith('/')) u = u.slice(0, -1);
+  return u;
+}
+
+function prefixes(model, s) {
+  const d = PREFIXES.find((p) => String(model).toLowerCase().includes(p.match)) || { query: '', doc: '' };
+  const pick = (v, fallback) => {
+    if (v == null || v === '') return fallback;
+    return v === 'none' ? '' : v;
+  };
+  return { queryPrefix: pick(s.queryPrefix, d.query), docPrefix: pick(s.docPrefix, d.doc) };
+}
+
 // ---------- configuração ----------
 function rawSettings() {
   return { provider: 'off', url: '', model: '', apiKeyEnc: null, ...readJson(SETTINGS_FILE(), {}) };
@@ -56,13 +79,16 @@ function decryptKey(enc) {
 function settings() {
   const s = rawSettings();
   const defaults = PROVIDERS[s.provider]?.defaults || {};
-  return { provider: s.provider, url: (s.url || defaults.url || '').replace(/\/+$/, ''), model: s.model || defaults.model || '', apiKey: decryptKey(s.apiKeyEnc) };
+  const model = s.model || defaults.model || '';
+  const p = prefixes(model, s);
+  // vectorKey: identidade dos vetores — trocar o modelo ou o prefixo dos documentos reindexa
+  return { provider: s.provider, url: noTrailingSlash(s.url || defaults.url || ''), model, apiKey: decryptKey(s.apiKeyEnc), ...p, vectorKey: p.docPrefix ? `${model} | ${p.docPrefix}` : model };
 }
 
 /** Configuração visível na interface (nunca devolve a chave). */
 function publicSettings() {
   const s = settings();
-  return { provider: s.provider, url: s.url, model: s.model, hasKey: !!s.apiKey, providers: Object.keys(PROVIDERS) };
+  return { provider: s.provider, url: s.url, model: s.model, queryPrefix: s.queryPrefix, docPrefix: s.docPrefix, hasKey: !!s.apiKey, providers: Object.keys(PROVIDERS) };
 }
 
 function saveSettings({ provider, url, model, apiKey }) {
@@ -81,8 +107,11 @@ function saveSettings({ provider, url, model, apiKey }) {
 
 const enabled = () => settings().provider !== 'off';
 
-async function embed(texts) {
+/** `kind`: 'doc' (memória indexada) ou 'query' (busca) — escolhe o prefixo. */
+async function embed(texts, kind = 'doc') {
   const s = settings();
+  const prefix = kind === 'query' ? s.queryPrefix : s.docPrefix;
+  if (prefix) texts = texts.map((t) => prefix + t);
   const provider = PROVIDERS[s.provider];
   if (!provider) throw new Error('Embeddings desligados.');
   const vectors = await provider.embed(texts, s);
@@ -98,7 +127,7 @@ let running = null;
 function embedPending() {
   if (!enabled() || running) return running;
   running = (async () => {
-    const model = settings().model;
+    const model = settings().vectorKey;
     const db = openDb();
     let done = 0;
     for (;;) {

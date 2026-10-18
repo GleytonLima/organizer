@@ -3,6 +3,7 @@
 // antes e depois; o piso abaixo só sobe (não deixe a busca piorar sem querer).
 const { suite, seed } = require('./harness');
 const { loadEval, score } = require('./lib/search-eval');
+const { startFakeEmbed } = require('./lib/fake-embed');
 
 // medido em 2026-10-18: 0,92/1/0,96 → stopwords 1/1/1 (o conjunto saturou: é piso, não teto)
 const FLOOR = { hit1: 1, hit5: 1, mrr: 1 };
@@ -28,6 +29,18 @@ suite('avaliação da busca', { seed: () => seed.state([]) }, async (t) => {
   const s = score(ranked);
   process.stdout.write(`  busca por texto: hit@1 ${s.hit1} · hit@5 ${s.hit5} · MRR ${s.mrr} (${s.n} perguntas)\n`);
   for (const m of s.misses) process.stdout.write(`    · ${m}\n`);
+  // híbrida com provedor falso: prefixos do nomic na indexação e na consulta
+  const embeddings = require('../src/main/memory/embeddings');
+  const fake = await startFakeEmbed();
+  embeddings.saveSettings({ provider: 'openai', url: fake.url, model: 'text-embedding-nomic-embed-text-v1.5' });
+  const indexed = await embeddings.embedPending();
+  t.check(indexed === data.memories.length && fake.inputs.every((x) => x.startsWith('search_document: ')), 'indexa todas, com o prefixo de documento do nomic', `${indexed} · ${fake.inputs[0]}`);
+  const hybrid = await search('banco de dados', { limit: 5 });
+  t.equal([hybrid.mode, fake.inputs, keyOf[hybrid.items[0]?.id]], ['híbrida', ['search_query: banco de dados'], 'db'], 'consulta com o prefixo de busca; "banco de dados" traz a decisão do PostgreSQL');
+  t.equal(await embeddings.embedPending(), 0, 'nada mudou: nada a reindexar');
+  embeddings.saveSettings({ provider: 'off' });
+  fake.stop();
+
   const { authority, rerank } = require('../src/main/memory/authority');
   const f = (m) => Math.round(authority(m) * 100) / 100;
   t.equal([f({ kind: 'decision' }), f({ kind: 'howto' }), f({ kind: 'note' }), f({ kind: 'progress' }), f({ kind: 'decision', review: {} }), f({ kind: 'decision', supersededBy: 'x' }), f({ kind: 'idea', status: 'converted' })],
