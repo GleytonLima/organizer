@@ -17,8 +17,9 @@ const { registerAcpIpc, stopAllAgents } = require('./acp');
 const { registerMetricsIpc, closeMetrics } = require('./metrics');
 const { registerFeedbackIpc } = require('./metrics/feedback');
 
-// Pasta de dados alternativa (testes, ou um segundo perfil isolado): BO_USER_DATA=<pasta>.
-if (process.env.BO_USER_DATA) app.setPath('userData', process.env.BO_USER_DATA);
+// Pasta de dados: %APPDATA%\Brain Organizer (migra a antiga "Bash Organizer"); BO_USER_DATA=<pasta>
+// para testes ou um segundo perfil isolado. Antes da trava de instância única, que depende dela.
+app.setPath('userData', require('./data-folder').dataFolder(app.getPath('appData')).dir);
 
 // Uma única instância: duas janelas gravando o mesmo state.json se sobrescreveriam.
 if (!app.requestSingleInstanceLock()) {

@@ -22,7 +22,7 @@ const isWatching = (terminalId) => document.hasFocus() && visibleTerminalIds().i
 export function pushNotification({ terminalId = null, taskId = null, label, body }) {
   if (terminalId && isWatching(terminalId)) return { delivered: false, reason: 'o usuário já está vendo este terminal' };
   const entry = findTerm(terminalId);
-  const title = entry ? `${termLabel(entry.t)} · ${entry.project.name}` : 'Bash Organizer';
+  const title = entry ? `${termLabel(entry.t)} · ${entry.project.name}` : 'Brain Organizer';
   const text = [label, body].filter(Boolean).join(': ') || 'Pediu sua atenção';
   const id = uid();
   items.unshift({ id, terminalId: entry ? terminalId : null, taskId, title, body: text, at: Date.now(), read: false });

@@ -1,6 +1,10 @@
-# Bash Organizer
+# Brain Organizer
 
-App desktop (Electron + xterm.js + node-pty) para organizar terminais Git Bash no Windows.
+**Beyond orchestration.** Você e seus agentes de IA no mesmo lugar, sem fritar a cabeça: terminais Git Bash
+organizados por projeto, um quadro de tarefas que os agentes usam (e onde eles esperam a sua resposta), a memória
+do projeto (decisões com o porquê) e, se quiser, o time e outras máquinas sincronizados. Abriu o app, viu onde parou.
+
+App desktop para Windows (Electron + xterm.js + node-pty). Até a v0.1 se chamava *Bash Organizer*.
 
 ```bash
 npm install
@@ -54,10 +58,10 @@ Para registrar no Claude Code, Devin etc., rode num terminal do app:
 bo mcp-config
 ```
 
-Rode o agente **dentro de um terminal do Bash Organizer** (ex.: o da pasta `devtools`): assim os terminais
+Rode o agente **dentro de um terminal do Brain Organizer** (ex.: o da pasta `devtools`): assim os terminais
 que ele abrir ficam associados ao grupo dele. `close_terminal` recusa fechar processo em execução sem `force`.
 
-A API escuta só em `127.0.0.1`, com token aleatório a cada início (em `%APPDATA%/Bash Organizer/api.json`).
+A API escuta só em `127.0.0.1`, com token aleatório a cada início (em `%APPDATA%/Brain Organizer/api.json`).
 
 ## Quadro de tarefas (mini kanban para agentes)
 
@@ -79,7 +83,7 @@ report, wait, done, waiting).
 
 ## Memória do projeto (decisões e notas)
 
-Persistente entre sessões, em `%APPDATA%/Bash Organizer/memory.db` (SQLite embutido, sem dependência nativa extra).
+Persistente entre sessões, em `%APPDATA%/Brain Organizer/memory.db` (SQLite embutido, sem dependência nativa extra).
 
 - **Decisões**: uma frase com o porquê (máx. 280 caracteres, sem quebra de linha) — um mini ADR.
   Uma decisão nova pode **substituir** outra; a antiga sai das vigentes e fica no histórico.
@@ -119,7 +123,9 @@ nada desta máquina.
 
 ## Onde os dados ficam
 
-`%APPDATA%/Bash Organizer/`: `state.json` (projetos, grupos, terminais, tarefas, comandos, tema),
+Quem vem do **Bash Organizer** (nome até a v0.1): na primeira abertura a pasta `%APPDATA%/Bash Organizer` é renomeada para a nova, com tudo dentro.
+
+`%APPDATA%/Brain Organizer/`: `state.json` (projetos, grupos, terminais, tarefas, comandos, tema),
 `memory.db` (memória), `memory-settings.json` (embeddings), `window.json`, `api.json` (porta/token da sessão).
 
 ## Avisos (notificações)
@@ -151,9 +157,9 @@ npm run dist
 ```
 
 Gera em `dist/`:
-- `Bash Organizer-Setup-<versão>.exe` — instalador **por usuário** (não pede admin), cria atalhos no Menu Iniciar e na
+- `Brain Organizer-Setup-<versão>.exe` — instalador **por usuário** (não pede admin), cria atalhos no Menu Iniciar e na
   área de trabalho. Prefira este: o atalho do Menu Iniciar é o que permite ao Windows mostrar os **toasts**.
-- `Bash Organizer-Portable-<versão>.exe` — um único `.exe`, sem instalação (os toasts podem não aparecer).
+- `Brain Organizer-Portable-<versão>.exe` — um único `.exe`, sem instalação (os toasts podem não aparecer).
 
 `npm run pack` gera só a pasta `dist/win-unpacked` (mais rápido, para testar). `npm run icon` regenera o ícone
 a partir de `build/icon.svg`.
@@ -162,7 +168,7 @@ Os executáveis **não são assinados**: o Windows mostra o aviso do SmartScreen
 Em máquinas corporativas com AppLocker/WDAC, um `.exe` não assinado pode ser bloqueado — nesse caso peça liberação à TI
 ou rode a partir do código (`npm install` + `npm start`).
 
-Para testar com dados isolados (sem mexer nos seus projetos): `BO_USER_DATA=<pasta> "Bash Organizer.exe"`.
+Para testar com dados isolados (sem mexer nos seus projetos): `BO_USER_DATA=<pasta> "Brain Organizer.exe"`.
 
 ## Atalhos
 
@@ -177,11 +183,11 @@ Para testar com dados isolados (sem mexer nos seus projetos): `BO_USER_DATA=<pas
 
 ## Como funciona
 
-Cada terminal roda `bash.exe --rcfile bash-init.sh -i`. O rcfile (gerado em `%APPDATA%/Bash Organizer`)
+Cada terminal roda `bash.exe --rcfile bash-init.sh -i`. O rcfile (gerado em `%APPDATA%/Brain Organizer`)
 carrega `/etc/profile` e o seu `~/.bash_profile`/`~/.bashrc` normalmente e adiciona ao `PROMPT_COMMAND` um hook
 que envia o diretório atual (OSC 7) e o início/fim de cada comando (OSC 6973) — veja `src/main/shell/bash-init.sh`.
 
 O Git Bash é procurado em `C:\Program Files\Git`; para outro local, defina `GIT_BASH_PATH`.
-Estado salvo em `%APPDATA%/Bash Organizer/state.json`. Só uma instância roda por vez.
+Estado salvo em `%APPDATA%/Brain Organizer/state.json`. Só uma instância roda por vez.
 
 Convenções de código e estrutura de pastas: veja [CLAUDE.md](CLAUDE.md).

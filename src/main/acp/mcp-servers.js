@@ -1,4 +1,4 @@
-// Servidores MCP extras do perfil de agente (além do Bash Organizer), passados no session/new.
+// Servidores MCP extras do perfil de agente (além do Brain Organizer), passados no session/new.
 // Formato: o JSON padrão do Claude Code / Claude Desktop (.mcp.json) — com ou sem o "mcpServers":
 //   { "mcpServers": {
 //       "playwright": { "command": "npx", "args": ["@playwright/mcp@0.0.83"] },

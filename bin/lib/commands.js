@@ -139,7 +139,7 @@ const COMMANDS = {
 };
 
 function helpText() {
-  const lines = ['bo — controla o Bash Organizer a partir do terminal', '', 'Uso: bo <comando> [opções]', ''];
+  const lines = ['bo — controla o Brain Organizer a partir do terminal', '', 'Uso: bo <comando> [opções]', ''];
   for (const c of Object.values(COMMANDS)) lines.push(`  bo ${c.usage}`, `      ${c.help}`);
   lines.push('', 'Terminal = id ou nome. --json em qualquer comando para saída em JSON.');
   return lines.join('\n');

@@ -7,7 +7,7 @@ import { openModal, field } from '../modal.js';
 import { confirmDanger } from '../confirm.js';
 
 const MCP_HINT =
-  'Além do Bash Organizer (que vem sempre). O mesmo JSON do Claude Code (.mcp.json): command/args/env, ou type "http"/"sse" com url/headers. ' +
+  'Além do Brain Organizer (que vem sempre). O mesmo JSON do Claude Code (.mcp.json): command/args/env, ou type "http"/"sse" com url/headers. ' +
   '${NOME} vem das variáveis de ambiente acima — deixe tokens lá, não no JSON.';
 
 const MCP_PLACEHOLDER = '{\n  "mcpServers": {\n    "playwright": { "command": "npx", "args": ["@playwright/mcp@0.0.83"] }\n  }\n}';

@@ -1,5 +1,5 @@
 // Uma sessão de agente via ACP: inicia o processo do agente (pelo perfil), abre — ou continua — a
-// sessão na pasta do terminal (com o MCP do Bash Organizer), envia prompts e repassa ao renderer:
+// sessão na pasta do terminal (com o MCP do Brain Organizer), envia prompts e repassa ao renderer:
 //   { type: 'state', state }                 iniciando | pronto | trabalhando | encerrado
 //   { type: 'session', sessionId, resumed }  sessão aberta (o renderer guarda o id para continuar)
 //   { type: 'capabilities', canResume, canList }
@@ -55,8 +55,8 @@ class AgentSession {
     this.rpc.onRequest('session/request_permission', (p) => this.gate.ask(p));
   }
 
-  /** MCP do Bash Organizer: só o que precisa para falar com a API como este terminal. */
-  /** O MCP do Bash Organizer e os extras do perfil (ex.: Playwright). */
+  /** MCP do Brain Organizer: só o que precisa para falar com a API como este terminal. */
+  /** O MCP do Brain Organizer e os extras do perfil (ex.: Playwright). */
   mcpServers() {
     const { BO_API_URL, BO_API_TOKEN } = organizerEnv(this.id);
     const bo = BO_API_URL ? [boMcpServer({ BO_API_URL, BO_API_TOKEN, BO_TERMINAL_ID: this.id })] : [];
@@ -71,7 +71,7 @@ class AgentSession {
       const init = await this.rpc.request('initialize', {
         protocolVersion: PROTOCOL_VERSION,
         clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'bash-organizer', title: 'Bash Organizer', version: app.getVersion() },
+        clientInfo: { name: 'bash-organizer', title: 'Brain Organizer', version: app.getVersion() },
       });
       this.caps = init?.agentCapabilities || {};
       this.emit({ type: 'capabilities', canResume: !!this.caps.loadSession, canList: !!this.caps.sessionCapabilities?.list });

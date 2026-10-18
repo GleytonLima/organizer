@@ -1,8 +1,8 @@
 {
-  "name": "git-bash-organizer",
-  "productName": "Bash Organizer",
+  "name": "brain-organizer",
+  "productName": "Brain Organizer",
   "version": "0.1.0",
-  "description": "Gerenciador desktop de terminais Git Bash",
+  "description": "Terminais, agentes de IA, tarefas e memória num lugar só — beyond orchestration",
   "main": "src/main/index.js",
   "author": "Gleyton",
   "license": "ISC",
@@ -30,7 +30,7 @@
   },
   "build": {
     "appId": "com.bashorganizer.app",
-    "productName": "Bash Organizer",
+    "productName": "Brain Organizer",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -71,7 +71,7 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Bash Organizer",
+      "shortcutName": "Brain Organizer",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "portable": {

@@ -18,6 +18,7 @@ const SUITES = [
   { name: 'machine' }, // trocar de máquina: projeto e layout no servidor (pulada sem o bo-memory-server)
   { name: 'tasks-sync' }, // quadro de tarefas do workspace (pulada sem o bo-memory-server)
   { name: 'settings' }, // Configurações → Servidor do time; SSO com o Keycloak de teste se estiver no ar
+  { name: 'data-folder' }, // troca de nome: a pasta de dados antiga migra sozinha
   { name: 'links' },
   { name: 'agent', runs: 2 },
   { name: 'insights' },

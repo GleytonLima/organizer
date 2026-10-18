@@ -1,4 +1,6 @@
-# Bash Organizer — convenções
+# Brain Organizer — convenções
+
+> Até a v0.1 o app se chamava **Bash Organizer**. Ficaram com o nome antigo, de propósito: o `appId` `com.bashorganizer.app` (o instalador atualiza o app no lugar e os toasts mantêm o atalho), o servidor MCP `bash-organizer` (permissões `mcp__bash-organizer__*` já aprovadas no Claude Code) e `TERM_PROGRAM=bash-organizer`. A pasta antiga de dados migra sozinha (`src/main/data-folder.js`).
 
 ## Código
 - **Nada de arquivos gigantes.** Mire em < 200 linhas por arquivo; passou de ~250, divida por responsabilidade.
@@ -77,6 +79,6 @@ Interface com input real (cliques, teclado, arrastar): `npm run test:ui` — Pla
 (asarUnpack): executáveis e scripts precisam existir em disco. Caminhos para eles: troque `app.asar` por `app.asar.unpacked`.
 
 ## Dogfooding
-O histórico deste projeto (tarefas, decisões em uma frase, notas) está no próprio app, projeto "Bash Organizer".
+O histórico deste projeto (tarefas, decisões em uma frase, notas) está no próprio app, projeto "Brain Organizer".
 Ao decidir algo, registre: `bo mem decide "<frase com o porquê>"`; consulte antes: `bo mem search <termos>` / `bo mem decisions`.
 Tarefas: `bo task add|move|done`. Dentro da pasta do repo o projeto é deduzido sozinho.

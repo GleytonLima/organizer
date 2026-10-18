@@ -31,7 +31,7 @@ async function probe(rawUrl) {
   const health = await getJson(`${url}/healthz`);
   const config = await getJson(`${url}/auth/config`);
   if (!health.data?.ok || typeof config.data?.sso !== 'boolean') {
-    throw new Error('Esse endereço respondeu, mas não é um servidor de memória do Bash Organizer.');
+    throw new Error('Esse endereço respondeu, mas não é um servidor de memória do Brain Organizer.');
   }
   return { url, sso: config.data.sso, provider: config.data.provider || 'SSO', personalTokens: config.data.personalTokens !== false };
 }
@@ -51,7 +51,7 @@ function waitForCallback(server) {
       const code = u.searchParams.get('code');
       const ok = !!code;
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(ok ? page('Pronto', 'Você já pode voltar ao Bash Organizer.') : page('Não foi possível entrar', u.searchParams.get('error') || 'Tente de novo pelo app.'));
+      res.end(ok ? page('Pronto', 'Você já pode voltar ao Brain Organizer.') : page('Não foi possível entrar', u.searchParams.get('error') || 'Tente de novo pelo app.'));
       clearTimeout(timer);
       ok ? resolve(code) : reject(new Error(u.searchParams.get('error') || 'O servidor não concluiu o login.'));
     });

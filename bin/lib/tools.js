@@ -11,21 +11,21 @@ const terminalRef = {
 const TOOLS = [
   {
     name: 'list_terminals',
-    description: 'Lista projetos, grupos e terminais do Bash Organizer, com pasta, estado (running/idle/error/exited) e comando em execução.',
+    description: 'Lista projetos, grupos e terminais do Brain Organizer, com pasta, estado (running/idle/error/exited) e comando em execução.',
     inputSchema: { type: 'object', properties: {} },
     run: (request) => request('list'),
   },
   {
     name: 'create_project',
     description:
-      'Cria um projeto no Bash Organizer com suas pastas/repositórios (ex.: backend, frontend, infra, devtools). ' +
+      'Cria um projeto no Brain Organizer com suas pastas/repositórios (ex.: backend, frontend, infra, devtools). ' +
       'Idempotente: se já existe um projeto com esse nome, apenas acrescenta as pastas que faltarem.',
     inputSchema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
         repos: { type: 'array', items: { type: 'string' }, description: 'Caminhos das pastas (absolutos, ~/... ou /c/...).' },
-        syncKey: { type: 'string', description: 'Chave de sincronização da memória com o servidor do time (ex.: "bash-organizer"); "" desliga.' },
+        syncKey: { type: 'string', description: 'Chave de sincronização da memória com o servidor do time (ex.: "brain-organizer"); "" desliga.' },
       },
       required: ['name'],
     },
@@ -34,7 +34,7 @@ const TOOLS = [
   {
     name: 'open_terminal',
     description:
-      'Abre um novo terminal Git Bash no Bash Organizer. Sem "group", ele entra no mesmo grupo do terminal onde você está; ' +
+      'Abre um novo terminal Git Bash no Brain Organizer. Sem "group", ele entra no mesmo grupo do terminal onde você está; ' +
       'use "group" (ex.: "Serviços") para separar serviços de longa duração. O usuário vê o terminal no app.',
     inputSchema: {
       type: 'object',

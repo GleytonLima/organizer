@@ -15,7 +15,7 @@ const version = (() => {
 })();
 
 const INSTRUCTIONS = [
-  'Controla terminais Git Bash no app Bash Organizer, que o usuário está vendo.',
+  'Controla terminais Git Bash no app Brain Organizer, que o usuário está vendo.',
   'Terminais abertos sem "group" entram no mesmo grupo do terminal onde você roda, mantendo tudo associado.',
   'Para subir serviços de longa duração (backend, frontend), use open_terminal com "command" e um "group" como "Serviços",',
   'depois wait_for_output para confirmar que subiram. Não feche terminais do usuário sem ele pedir.',

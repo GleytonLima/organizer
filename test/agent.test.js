@@ -202,9 +202,9 @@ suite('agente via ACP', {
   await s2(`s.answer(1, 'reject')`);
   await t.waitFor(async () => (await s2('s.state')) === 'pronto');
 
-  // servidores MCP do perfil: chegam no session/new junto do Bash Organizer (npx via "cmd /c" no Windows)
+  // servidores MCP do perfil: chegam no session/new junto do Brain Organizer (npx via "cmd /c" no Windows)
   const servers = require('fs').readFileSync(MCP_LOG, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).at(-1);
-  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright', 'jira', 'remoto'], 'o agente recebe o MCP do Bash Organizer e os do perfil (o desligado fica de fora)');
+  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright', 'jira', 'remoto'], 'o agente recebe o MCP do Brain Organizer e os do perfil (o desligado fica de fora)');
   const pw = servers.find((x) => x.name === 'playwright');
   t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@0.0.83'] : ['npx', '@playwright/mcp@0.0.83'], 'comando do servidor MCP (npx pelo cmd no Windows)');
   t.equal(servers.find((x) => x.name === 'jira').env, [{ name: 'JIRA_TOKEN', value: 'segredo-123' }], 'env do servidor com ${VAR} vindo das variáveis do perfil');

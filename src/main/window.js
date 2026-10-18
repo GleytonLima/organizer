@@ -16,7 +16,7 @@ function createWindow() {
     minWidth: 640,
     minHeight: 400,
     backgroundColor: '#101113',
-    title: 'Bash Organizer',
+    title: 'Brain Organizer',
     ...(fs.existsSync(DEV_ICON) && { icon: DEV_ICON }),
     autoHideMenuBar: true,
     webPreferences: {

@@ -19,7 +19,7 @@ function mcpConfig() {
     'Avisos automáticos do Claude Code (em ~/.claude/settings.json):',
     JSON.stringify({ hooks: hooksConfig() }, null, 2),
     '',
-    'Dica: rode o agente dentro de um terminal do Bash Organizer para que os terminais',
+    'Dica: rode o agente dentro de um terminal do Brain Organizer para que os terminais',
     'que ele abrir entrem automaticamente no mesmo grupo e os avisos apontem para ele.',
   ].join('\n');
 }

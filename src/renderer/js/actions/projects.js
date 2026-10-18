@@ -16,7 +16,7 @@ const projectFields = (p) => [
   }),
   field.color('color', 'Cor', p.color),
   field.text('syncKey', 'Chave de sincronização', p.syncKey || '', {
-    placeholder: 'ex.: bash-organizer (vazio = memória só nesta máquina)',
+    placeholder: 'ex.: brain-organizer (vazio = memória só nesta máquina)',
     hint: 'Projetos com a mesma chave compartilham memórias pelo servidor de memória, entre máquinas e devs.',
     mono: true,
   }),

@@ -61,7 +61,7 @@ async function exportFeedback() {
   const stamp = new Date().toISOString().slice(0, 10);
   const r = await dialog.showSaveDialog(getWindow(), {
     title: 'Exportar feedback',
-    defaultPath: `feedback-bash-organizer-${stamp}.jsonl`,
+    defaultPath: `feedback-brain-organizer-${stamp}.jsonl`,
     filters: [{ name: 'JSON Lines', extensions: ['jsonl'] }],
   });
   if (r.canceled || !r.filePath) return null;

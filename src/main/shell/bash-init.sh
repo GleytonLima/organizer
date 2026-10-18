@@ -1,4 +1,4 @@
-# Bash Organizer — integração com o shell (copiado para %APPDATA% a cada início).
+# Brain Organizer — integração com o shell (copiado para %APPDATA% a cada início).
 # Reproduz o startup de um login shell do Git Bash e emite sequências que o app entende:
 #   OSC 6973;<nonce>;cwd;<C:/caminho>       diretório atual em formato Windows (a cada prompt)
 #   OSC 6973;<nonce>;start;<comando>        um comando começou a executar

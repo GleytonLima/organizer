@@ -1,19 +1,22 @@
-// Cliente da API local do Bash Organizer.
-// Descoberta: variáveis BO_API_URL/BO_API_TOKEN (terminais do app) ou %APPDATA%/Bash Organizer/api.json.
+// Cliente da API local do Brain Organizer.
+// Descoberta: variáveis BO_API_URL/BO_API_TOKEN (terminais do app) ou %APPDATA%/Brain Organizer/api.json
+// (ou a pasta antiga, "Bash Organizer", enquanto o app não migrou — ver src/main/data-folder.js).
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-const DISCOVERY_FILE = path.join(process.env.APPDATA || '', 'Bash Organizer', 'api.json');
+const DISCOVERY_FILES = ['Brain Organizer', 'Bash Organizer'].map((dir) => path.join(process.env.APPDATA || '', dir, 'api.json'));
 
 function endpoints() {
   const list = [];
   const { BO_API_URL: url, BO_API_TOKEN: token } = process.env;
   if (url && token) list.push({ url, token });
-  try {
-    const file = JSON.parse(fs.readFileSync(DISCOVERY_FILE, 'utf8'));
-    if (file.url !== url) list.push(file);
-  } catch {}
+  for (const f of DISCOVERY_FILES) {
+    try {
+      const file = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (!list.some((e) => e.url === file.url)) list.push(file);
+    } catch {}
+  }
   return list;
 }
 
@@ -58,7 +61,7 @@ const isConnError = (err) => ['ECONNREFUSED', 'ECONNRESET', 'EHOSTUNREACH'].incl
 async function request(method, params = {}) {
   const payload = { from: process.env.BO_TERMINAL_ID, fromCwd: process.cwd(), ...params };
   const targets = endpoints();
-  if (!targets.length) throw new Error('Bash Organizer não está aberto (api.json não encontrado).');
+  if (!targets.length) throw new Error('Brain Organizer não está aberto (api.json não encontrado).');
   let lastErr;
   for (const target of targets) {
     try {
@@ -70,7 +73,7 @@ async function request(method, params = {}) {
       lastErr = err;
     }
   }
-  throw new Error(`Não foi possível conectar ao Bash Organizer (${lastErr.code}). O app está aberto?`);
+  throw new Error(`Não foi possível conectar ao Brain Organizer (${lastErr.code}). O app está aberto?`);
 }
 
 module.exports = { request };

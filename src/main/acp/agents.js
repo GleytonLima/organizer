@@ -40,7 +40,7 @@ function agentCommand(profile = {}) {
   return { ...builtinClaude(), env: { ...builtinClaude().env, ...parseEnv(profile.env) } };
 }
 
-/** Servidor MCP do Bash Organizer para o agente (quadro, memória, terminais), via `bo mcp`. */
+/** Servidor MCP do Brain Organizer para o agente (quadro, memória, terminais), via `bo mcp`. */
 function boMcpServer(env) {
   const script = unpacked(path.resolve(__dirname, '..', '..', '..', 'bin', 'bo.js'));
   const vars = { ELECTRON_RUN_AS_NODE: '1', ...env };
