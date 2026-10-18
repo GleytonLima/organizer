@@ -83,6 +83,12 @@ const TASK_TOOLS = [
     run: (request, args) => request('task_complete', args),
   },
   {
+    name: 'delete_task',
+    description: 'Apaga uma tarefa (ex.: criada por engano). O usuário confirma no app; se recusar, dá erro.',
+    inputSchema: { type: 'object', properties: { task: taskRef }, required: ['task'] },
+    run: (request, args) => request('task_delete', args),
+  },
+  {
     name: 'suggest_memory',
     description:
       'Propõe uma memória DURÁVEL aprendida na tarefa — uma decisão em uma frase com o porquê, um "como fazer" ou uma nota que valha para ' +

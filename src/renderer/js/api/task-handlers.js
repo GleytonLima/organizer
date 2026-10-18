@@ -3,7 +3,7 @@ import { findTerm } from '../core/store.js';
 import { termLabel } from '../core/format.js';
 import { columnsOf, columnById, resolveColumn } from '../tasks/columns.js';
 import { allTasks, projectTasks, taskProject, resolveTaskRef, subtasksOf, parentOf } from '../tasks/queries.js';
-import { createTask, moveTask, reportTask, completeTask, setTaskParent } from '../actions/tasks.js';
+import { createTask, moveTask, reportTask, completeTask, setTaskParent, deleteTask } from '../actions/tasks.js';
 import { requestInput, suggestReply } from '../actions/task-waiting.js';
 import { callerOf, resolveProject } from './resolve.js';
 import { linkTaskMemories, unlinkTaskMemory, taskMemories } from '../actions/task-memories.js';
@@ -149,6 +149,13 @@ export const taskHandlers = {
     completeTask(task, { note: p.summary || '', terminalId });
     task.consolidationAskedAt = Date.now();
     return { ...taskInfo(task), next: consolidationRequest(task) };
+  },
+
+  /** Apaga a tarefa — sempre com a sua confirmação no app (vale para agentes e para o CLI). */
+  async task_delete(p) {
+    const { task } = context(p, { needTask: true });
+    if (!(await deleteTask(task))) throw new Error('O usuário não confirmou a exclusão.');
+    return { deleted: task.key };
   },
 
   /** O agente propõe uma memória (decision | howto | note); o usuário aceita ou descarta na gaveta. */

@@ -55,6 +55,7 @@ const ACTIONS = {
       return `${r.task}: sugestão ${r.suggestion.id} (${r.suggestion.kind}) — ${r.note}`;
     },
   },
+  delete: { usage: 'delete <tarefa>   (pede confirmação no app)', run: async ([task]) => `${(await request('task_delete', { task })).deleted} apagada.` },
   waiting: { usage: 'waiting', run: async () => (await request('task_waiting')).map(line).join('\n') || '(nada em espera)' },
 };
 

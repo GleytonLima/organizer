@@ -49,8 +49,9 @@ const ACTIONS = {
     run: async (pos, o) => line(await request('memory_note', { kind: 'howto', text: pos.join(' '), ...scopeOf(o), tags: o.tags, links: linksOf(o) })),
   },
   'idea-task': {
-    usage: 'idea-task <id>   (a ideia vira tarefa)',
-    run: async ([id]) => {
+    usage: 'idea-task <id> [--existing TAREFA]   (a ideia vira tarefa; --existing: já virou esta)',
+    run: async ([id], o) => {
+      if (o.existing) return line(await request('memory_update', { id, status: 'converted', task: o.existing }));
       const t = await request('memory_idea_to_task', { id });
       return `${t.key}  ${t.title}`;
     },

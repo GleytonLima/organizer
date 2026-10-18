@@ -47,6 +47,8 @@ export const memoryLinkHandlers = {
     if (p.text != null) data.text = p.text;
     if (p.tags != null) data.tags = p.tags;
     if (p.links) data.refs = p.links;
+    if (p.status) data.status = p.status; // ideia: open | converted | discarded; progresso: open | done
+    if (p.task) data.taskKey = p.task; // ideia que virou uma tarefa já existente
     const item = await api.memory.update(p.id, data);
     const { impact } = await api.memory.links(p.id);
     return changed({ ...brief(item), impact: impact.map(linked) });

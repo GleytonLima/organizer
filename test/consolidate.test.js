@@ -61,4 +61,23 @@ suite('consolidação da memória', {
   const done = await agent.tool('complete_task', { task: key, summary: 'cache pronto' });
   t.check(done.ok && /suggest_memory/.test(done.data.next), 'complete_task responde com o pedido de memórias duráveis', JSON.stringify(done.data?.next));
   await t.js(`(await import('./js/ui/tasks/selection.js')).closeTask()`);
+
+  // apagar pelo CLI pede confirmação no app (recusar mantém; confirmar apaga)
+  const extra = await t.js(`return (await import('./js/actions/tasks.js')).createTask(S.projectById('pA'), { title: 'Criada por engano' }).key`);
+  const exists = () => t.js(`return S.store.state.tasks.some((k) => k.key === ${JSON.stringify(extra)})`);
+  let pending = t.bo(['task', 'delete', extra], { terminal: 'a1' });
+  await t.waitFor(() => t.modal.open());
+  await t.modal.cancel();
+  t.check((await pending).code !== 0 && (await exists()), 'recusar a confirmação mantém a tarefa');
+  pending = t.bo(['task', 'delete', extra], { terminal: 'a1' });
+  await t.waitFor(() => t.modal.open());
+  await t.modal.submit();
+  t.includes((await pending).stdout, 'apagada', 'confirmar no app apaga a tarefa');
+  t.check(!(await exists()), 'e ela some do quadro');
+
+  // ideia que já virou uma tarefa existente: converted + a chave da tarefa
+  const idea = await agent.tool('remember_note', { kind: 'idea', text: 'Cache também nas buscas' });
+  const conv = await t.bo(['mem', 'idea-task', idea.data.id, '--existing', key], { terminal: 'a1' });
+  const [mem2] = await t.js(`return api.memory.many([${JSON.stringify(idea.data.id)}])`);
+  t.equal([conv.code, mem2?.status, mem2?.taskKey], [0, 'converted', key], 'bo mem idea-task --existing marca a ideia como convertida na tarefa');
 });

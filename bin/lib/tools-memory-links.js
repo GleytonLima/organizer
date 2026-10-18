@@ -38,11 +38,18 @@ const LINK_TOOLS = [
   {
     name: 'update_memory',
     description:
-      'Evolui uma memória: novo texto, tags e/ou vínculos. Devolve a cadeia de impacto (quem depende dela). Se o sentido mudou, ' +
+      'Evolui uma memória: novo texto, tags, vínculos e/ou estado (ex.: ideia que virou uma tarefa já existente: status converted + task). Devolve a cadeia de impacto (quem depende dela). Se o sentido mudou, ' +
       'pergunte ao usuário quais do impacto marcar com mark_for_review. Para trocar uma decisão por outra, prefira record_decision com "supersedes".',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' }, text: { type: 'string' }, tags: { type: 'string' }, links: linksParam },
+      properties: {
+        id: { type: 'string' },
+        text: { type: 'string' },
+        tags: { type: 'string' },
+        links: linksParam,
+        status: { type: 'string', description: 'Ideia: open | converted | discarded. Progresso: open | done.' },
+        task: { type: 'string', description: 'Com status "converted": a tarefa (chave) em que a ideia virou.' },
+      },
       required: ['id'],
     },
     run: (request, args) => request('memory_update', args),
