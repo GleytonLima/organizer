@@ -1,5 +1,5 @@
 // Estado da aba Memória (só da interface): consulta, filtro e resultados da última busca.
-import { notify } from '../../core/store.js';
+import { store, notify, commit } from '../../core/store.js';
 import { memoryContext } from '../../memory/context.js';
 
 const DEBOUNCE_MS = 200;
@@ -14,16 +14,27 @@ export const memoryView = {
 
 let timer = null;
 
-/** Busca de novo se projeto, consulta, filtro ou dados mudaram desde a última vez. */
+/** Visão da aba: 'project' (o projeto em foco e as pastas dele, sem as globais) | 'global'. */
+export const memoryScope = () => store.state.memoryScope || 'project';
+
+export function setMemoryScope(scope) {
+  store.state.memoryScope = scope;
+  commit();
+}
+
+/** Onde buscar: contextual (sem as globais) ou só as globais. O agente continua vendo as duas (API). */
+const where = (project) => (memoryScope() === 'global' ? { scope: 'global' } : { context: { ...memoryContext(project), withGlobal: false } });
+
+/** Busca de novo se projeto, visão, consulta, filtro ou dados mudaram desde a última vez. */
 export function ensureFresh(project) {
-  const context = memoryContext(project); // globais + projeto + pastas do projeto
-  const key = [project.id, context.folders.join(';'), memoryView.query, memoryView.kind, memoryView.version].join('|');
+  const context = memoryContext(project);
+  const key = [project.id, memoryScope(), context.folders.join(';'), memoryView.query, memoryView.kind, memoryView.version].join('|');
   if (key === memoryView.key) return;
   memoryView.key = key;
   clearTimeout(timer);
   timer = setTimeout(async () => {
     const review = memoryView.kind === 'review';
-    memoryView.result = await api.memory.search(memoryView.query, { context, kind: review ? undefined : memoryView.kind || undefined, needsReview: review, limit: 100 });
+    memoryView.result = await api.memory.search(memoryView.query, { ...where(project), kind: review ? undefined : memoryView.kind || undefined, needsReview: review, limit: 100 });
     notify();
   }, memoryView.query ? DEBOUNCE_MS : 0);
 }

@@ -80,4 +80,40 @@ suite('memória: escopos', {
   const cli = await t.bo(['mem', 'decide', 'Usamos LF nos scripts bash porque o Git Bash quebra com CRLF.', '--global'], { terminal: 'a1' });
   t.check(cli.code === 0, '`bo mem decide --global` funciona', cli.stderr);
   t.check((await texts(c, { scope: 'global' })).some((x) => x.includes('LF nos scripts')), 'decisão global do CLI aparece em outro projeto');
+
+  // Aba Memória: duas visões — deste projeto (contextual, sem as globais) e global.
+  const M = { M: './js/ui/memory/state.js', D: './js/ui/memory/dialogs.js' };
+  const list = () => t.js(`return document.querySelector('.mem-list')?.innerText || document.querySelector('.mem-empty')?.innerText || ''`);
+  const shot = async (name) => process.env.BO_TEST_SHOTS && (await t.wait(400), fs.writeFileSync(path.join(process.env.BO_TEST_SHOTS, `${name}.png`), (await t.wc.capturePage()).toPNG()));
+  const shows = (fn) => t.waitFor(async () => { const l = await list(); return fn(l) ? l : null; }, { timeout: 8000 });
+  await t.js(`Object.assign(S.store.state, { focusProjectId: 'pA', taskView: 'panel', sideTab: 'memory' }); S.commit()`);
+  t.equal(await t.js(`return document.querySelector('.mem-seg-btn.on')?.textContent`), 'Deste projeto', 'a aba abre em "Deste projeto"');
+  const own = await shows((l) => l.includes('filas no projeto A'));
+  t.check(own && own.includes('porta 8080') && !own.includes('Commits em português'), 'deste projeto: o projeto e as pastas dele, sem as globais', own);
+  await shot('memory-project');
+  await t.js(`M.setMemoryScope('global')`, M);
+  const globals = await shows((l) => l.includes('Commits em português'));
+  t.check(globals && globals.includes('LF nos scripts') && !globals.includes('filas no projeto A'), 'global: só as globais', globals);
+  t.equal(await t.js(`return S.store.state.memoryScope`), 'global', 'a visão escolhida fica guardada');
+  await shot('memory-global');
+
+  await t.js(`M.setMemoryScope('project'); M.setQuery('Commits')`, M);
+  const none = await shows((l) => l.includes('Nada encontrado neste projeto'));
+  t.check(!!none && (await t.js(`return [...document.querySelectorAll('.mem-empty .btn')].map((b) => b.textContent).join()`)) === 'Procurar nas globais', 'busca sem resultado oferece procurar nas globais', none);
+  await t.js(`document.querySelector('.mem-empty .btn').click()`);
+  t.check(await shows((l) => l.includes('Commits em português')), 'o atalho leva à visão Global com a mesma busca');
+  await t.js(`M.setQuery('')`, M);
+
+  // Tornar global / trazer para o projeto (o agente de outro projeto passa a ver, e deixa de ver).
+  const id = (await a.tool('list_decisions')).data.find((d) => d.text === proj).id;
+  await t.js(`const p = S.store.state.projects.find((x) => x.id === 'pA'); await D.moveMemory(p, { id: ${JSON.stringify(id)} }, 'global')`, M);
+  t.check((await texts(b)).includes(proj), '"Tornar global": aparece também no projeto B');
+  await t.js(`const p = S.store.state.projects.find((x) => x.id === 'pA'); await D.moveMemory(p, { id: ${JSON.stringify(id)} }, 'project')`, M);
+  t.check(!(await texts(b)).includes(proj) && (await texts(a)).includes(proj), '"Trazer para este projeto": volta a ser só do A');
+
+  // Nova memória na visão Global já vem com "Global" escolhido.
+  await t.js(`const p = S.store.state.projects.find((x) => x.id === 'pA'); D.newMemoryDialog(p, 'decision', { where: 'global' }); return true`, M);
+  t.check(await t.waitFor(() => t.modal.open()), 'abre o diálogo de nova decisão');
+  t.equal(await t.js(`return document.querySelector('#modal [data-field="where"] select')?.value`), 'global', 'na visão Global, "Onde vale" já vem em Global');
+  await t.modal.cancel();
 });

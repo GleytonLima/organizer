@@ -8,7 +8,8 @@ import { ideaToTask, setIdeaStatus } from '../../actions/idea-task.js';
 import { iconButton } from '../components.js';
 import { icon } from '../icons.js';
 import { showMenu } from '../menu.js';
-import { newMemoryDialog, editMemoryDialog, deleteMemory } from './dialogs.js';
+import { newMemoryDialog, editMemoryDialog, deleteMemory, moveMemory } from './dialogs.js';
+import { memoryScope } from './state.js';
 import { resolveConflictDialog, resumeTask } from './sync-dialogs.js';
 import { linksDialog, reviewDialog } from './impact.js';
 import { progressBody } from './progress.js';
@@ -30,6 +31,9 @@ function itemMenu(e, project, m) {
     m.kind === 'progress' ? { label: 'Retomar tarefa…', action: () => resumeTask(project, m) } : { label: 'Editar…', action: edit },
     ...ideaActions(project, m),
     m.kind === 'decision' ? { label: 'Substituir por nova decisão…', action: () => newMemoryDialog(project, 'decision', { supersedes: m }) } : null,
+    m.scope === 'global'
+      ? { label: `Trazer para “${project.name}”`, action: () => moveMemory(project, m, 'project') }
+      : { label: 'Tornar global (todos os projetos)', action: () => moveMemory(project, m, 'global') },
     { label: 'Vínculos e impacto…', action: () => linksDialog(m) },
     { label: 'Copiar texto', action: () => api.clipboardWrite(m.text) },
     { sep: true },
@@ -52,7 +56,7 @@ function openItem(project, m) {
 }
 
 export function memoryItem(project, m) {
-  const where = scopeLabel(project, m); // "global" / "pasta backend"; projeto = sem rótulo
+  const where = memoryScope() === 'global' ? null : scopeLabel(project, m); // "pasta backend"; projeto = sem rótulo; na visão Global, todas são
   const status = m.status ? STATUS_LABEL[m.status] : null;
   const meta = [m.scope === 'project' ? m.repo : null, m.kind === 'progress' ? null : m.taskKey, status, m.source, timeAgo(m.updatedAt)].filter(Boolean).join(' · ');
   return el(

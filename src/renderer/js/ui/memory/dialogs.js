@@ -17,9 +17,9 @@ const whereOptions = (project, item) => {
   if (item?.scope === 'folder' && !folders.some((f) => f.value === `folder:${item.folder}`)) {
     folders.push({ value: `folder:${item.folder}`, label: `Pasta ${folderLabel(project, item.folder)}` });
   }
-  return [{ value: 'project', label: `Projeto ${project.name}` }, ...folders, { value: 'global', label: 'Global (todos os projetos)' }];
+  return [{ value: 'project', label: `Projeto ${project.name}` }, ...folders, { value: 'global', label: 'Global — vale em todos os projetos' }];
 };
-const whereOf = (item) => (!item ? 'project' : item.scope === 'folder' ? `folder:${item.folder}` : item.scope || 'project');
+const whereOf = (item, fallback = 'project') => (!item ? fallback : item.scope === 'folder' ? `folder:${item.folder}` : item.scope || 'project');
 const parseWhere = (where) => (where.startsWith('folder:') ? { scope: 'folder', folder: where.slice(7) } : { scope: where });
 
 /** Executa a gravação; em erro, mostra a mensagem. Devolve o item gravado (ou null). */
@@ -34,25 +34,28 @@ async function save(run) {
   }
 }
 
-function memoryFields(project, kind, item, links) {
+function memoryFields(project, kind, item, links, where = 'project') {
   const k = kindOf(kind);
   return [
     k.single
       ? field.text('text', k.label, item?.text || '', { hint: k.hint, max: k.max })
       : field.textarea('text', k.label, item?.text || '', { rows: 5, hint: k.hint, max: k.max }),
-    field.select('where', 'Onde vale', whereOf(item), { options: whereOptions(project, item) }),
+    field.select('where', 'Onde vale', whereOf(item, where), { options: whereOptions(project, item) }),
     field.text('tags', 'Tags', item?.tags?.join(', ') || '', { placeholder: 'banco, infra' }),
     linksField(project, links, { selfGid: item?.gid }),
   ];
 }
 
-/** Nova memória do tipo `kind`; com `supersedes`, a nova decisão substitui a anterior (e herda os vínculos). */
-export async function newMemoryDialog(project, kind, { supersedes = null } = {}) {
+/**
+ * Nova memória do tipo `kind`; com `supersedes`, a nova decisão substitui a anterior (e herda os vínculos).
+ * `where`: escopo já escolhido no diálogo ('project' por padrão; 'global' na visão Global da aba).
+ */
+export async function newMemoryDialog(project, kind, { supersedes = null, where = 'project' } = {}) {
   const links = supersedes ? await linksOf(supersedes) : [];
   const v = await openModal({
     title: supersedes ? 'Substituir decisão' : kindOf(kind).newTitle,
     message: supersedes ? `Substitui: “${supersedes.text}”` : null,
-    fields: memoryFields(project, kind, supersedes && { ...supersedes, text: '', gid: null }, links),
+    fields: memoryFields(project, kind, supersedes && { ...supersedes, text: '', gid: null }, links, where),
     submit: 'Salvar',
     wide: true,
   });
@@ -81,6 +84,9 @@ export async function editMemoryDialog(project, item) {
   );
   if (saved && saved.text !== item.text) await offerImpact(saved, `Mudou: ${saved.text}`);
 }
+
+/** Muda só onde a memória vale: global (todos os projetos) ou este projeto. */
+export const moveMemory = (project, item, scope) => save(() => api.memory.update(item.id, scope === 'global' ? { scope: 'global' } : { scope: 'project', projectId: project.id }));
 
 export async function deleteMemory(item) {
   const ok = await confirmDanger({ title: `Excluir ${kindOf(item.kind).label.toLowerCase()}?`, message: item.text });

@@ -86,6 +86,7 @@ export function migrate(saved, home) {
     insights: s.insights || { period: '30d', scope: 'project', prices: null }, // painel Insights (metrics/insights.js)
     agentProfiles: s.agentProfiles?.length ? s.agentProfiles : DEFAULT_AGENT_PROFILES(), // agentes ACP (agents/profiles.js)
     sideTab: s.sideTab || 'tasks', // aba do painel lateral: 'tasks' | 'memory'
+    memoryScope: s.memoryScope === 'global' ? 'global' : 'project', // aba Memória: deste projeto (projeto + pastas) | global
     homeSeenAt: s.homeSeenAt || null, // quando você saiu da Home pela última vez (base do "enquanto você esteve fora")
     focusMode: !!s.focusMode, // modo foco: só avisos urgentes viram toast (notify/center.js)
   };

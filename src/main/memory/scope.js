@@ -24,11 +24,12 @@ function normalizeScope({ scope = 'project', projectId = null, folder = null }) 
 /**
  * Cláusula SQL do contexto de leitura: tudo o que vale para um projeto —
  * globais + as do projeto + as das pastas dele. Sem contexto: todas.
+ * `withGlobal: false` deixa as globais de fora (a visão "Deste projeto" da aba Memória).
  */
 function contextClause(context, col) {
   if (!context) return null;
   const folders = (context.folders || []).map(folderKey).filter(Boolean);
-  const parts = [`${col('scope')} = 'global'`];
+  const parts = context.withGlobal === false ? [] : [`${col('scope')} = 'global'`];
   const args = [];
   if (context.projectId) {
     parts.push(`(${col('scope')} = 'project' AND ${col('project_id')} = ?)`);
@@ -38,7 +39,7 @@ function contextClause(context, col) {
     parts.push(`(${col('scope')} = 'folder' AND ${col('folder_key')} IN (${folders.map(() => '?').join(', ')}))`);
     args.push(...folders);
   }
-  return { sql: `(${parts.join(' OR ')})`, args };
+  return { sql: parts.length ? `(${parts.join(' OR ')})` : '0 = 1', args };
 }
 
 module.exports = { SCOPES, folderKey, normalizeScope, contextClause };
