@@ -22,4 +22,6 @@ export function stampOrigin(task, terminalId) {
   if (g?.repo) task.repo = g.repo;
 }
 
-export const notifyAbout = (task, body) => pushNotification({ terminalId: task.terminalId, taskId: task.id, label: task.key, body });
+/** `urgent`: atravessa o modo foco (ex.: um agente esperando a sua resposta). */
+export const notifyAbout = (task, body, { urgent = false } = {}) =>
+  pushNotification({ terminalId: task.terminalId, taskId: task.id, label: task.key, body, urgent });

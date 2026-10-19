@@ -1,7 +1,8 @@
 // Central de notificações: lista recente, não lidas por terminal e entrega do toast.
 // Regras: se você já está vendo o terminal (janela em foco + terminal visível), nada é criado;
 // com a janela em foco, só a marcação na interface; sem foco, também o toast do Windows.
-import { findTerm, notify, visibleTerminalIds } from '../core/store.js';
+// Modo foco: só o urgente (um agente esperando você) vira toast; o resto fica no sino e na Home.
+import { store, findTerm, notify, visibleTerminalIds } from '../core/store.js';
 import { uid } from '../core/model.js';
 import { termLabel } from '../core/format.js';
 
@@ -17,9 +18,9 @@ const isWatching = (terminalId) => document.hasFocus() && visibleTerminalIds().i
 
 /**
  * Cria uma notificação. `label` (opcional) prefixa a mensagem, ex.: "Claude: terminei".
- * `taskId`: aviso de uma tarefa — clicar abre a tarefa (senão, o terminal).
+ * `taskId`: aviso de uma tarefa — clicar abre a tarefa (senão, o terminal). `urgent`: passa pelo modo foco.
  */
-export function pushNotification({ terminalId = null, taskId = null, label, body }) {
+export function pushNotification({ terminalId = null, taskId = null, label, body, urgent = false }) {
   if (terminalId && isWatching(terminalId)) return { delivered: false, reason: 'o usuário já está vendo este terminal' };
   const entry = findTerm(terminalId);
   const title = entry ? `${termLabel(entry.t)} · ${entry.project.name}` : 'Brain Organizer';
@@ -27,7 +28,7 @@ export function pushNotification({ terminalId = null, taskId = null, label, body
   const id = uid();
   items.unshift({ id, terminalId: entry ? terminalId : null, taskId, title, body: text, at: Date.now(), read: false });
   items.length = Math.min(items.length, MAX);
-  const toast = !document.hasFocus();
+  const toast = !document.hasFocus() && (urgent || !store.state.focusMode);
   if (toast) api.showToast({ id, title, body: text });
   notify();
   return { delivered: true, toast };

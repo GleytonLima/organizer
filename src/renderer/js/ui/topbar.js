@@ -13,6 +13,7 @@ import { notificationsButton } from './notifications.js';
 import { tasksButton, memoryButton } from './tasks/index.js';
 import { insightsButton } from './insights/view.js';
 import { settingsButton } from './settings/view.js';
+import { homeButton } from './home/view.js';
 
 const LAYOUTS = [
   { id: 'left', icon: 'layoutLeft', title: 'Painel à esquerda' },
@@ -110,6 +111,7 @@ export function renderTopbar() {
   mount(
     $('#topbar'),
     tabs ? [tabsArea(), split] : [split || activeTitle(), el('div', { class: 'spacer' })], // a área de abas já ocupa o espaço livre
+    homeButton(),
     tasksButton(),
     memoryButton(),
     insightsButton(),

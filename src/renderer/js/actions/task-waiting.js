@@ -12,7 +12,7 @@ export function requestInput(task, question, { terminalId } = {}) {
   task.needsInput = { question: question.trim(), at: Date.now(), suggestion: null };
   logTask(task, 'agente', 'input', `Em espera: ${question.trim()}`);
   commit();
-  notifyAbout(task, `Em espera — ${question.trim()}`);
+  notifyAbout(task, `Em espera — ${question.trim()}`, { urgent: true }); // passa pelo modo foco
   return task;
 }
 

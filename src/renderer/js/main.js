@@ -15,6 +15,7 @@ import { initNotifyCenter } from './notify/center.js';
 import { initTasksUi } from './ui/tasks/index.js';
 import { openTaskFromNotice } from './ui/tasks/selection.js';
 import { initMemorySync } from './memory/sync.js';
+import { homeOnStart } from './actions/home.js';
 import { initTasksSync } from './tasks/sync.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
@@ -41,6 +42,7 @@ async function init() {
   window.addEventListener('beforeunload', persistNow);
 
   restoreSession();
+  homeOnStart(); // algo esperando você ou novidades desde a última vez: começa pela Home
   renderAll();
   initApi(); // depois de restaurar: pedidos já encontram os terminais
   startGitPolling();
