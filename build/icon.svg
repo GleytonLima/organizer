@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Ícone do Brain Organizer: prompt >_ sobre grafite, com um ponto de aviso -->
+  <!-- Ícone do Brain Organizer: dois lados de um cérebro (abstrato) em ordem, sobre grafite;
+       os traços verdes são o que já está organizado, o ponto azul é "algo esperando você". -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#24262b"/>
@@ -8,7 +9,8 @@
   </defs>
   <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bg)"/>
   <rect x="24.5" y="24.5" width="463" height="463" rx="111.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
-  <path d="M146 186 L226 256 L146 326" fill="none" stroke="#e4e4e7" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M262 334 H366" fill="none" stroke="#e4e4e7" stroke-width="40" stroke-linecap="round"/>
-  <circle cx="372" cy="150" r="30" fill="#7aa2f7"/>
+  <path d="M234 162 C172 162 140 203 140 256 C140 309 172 350 234 350 Z" fill="none" stroke="#e4e4e7" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M278 162 C340 162 372 203 372 256 C372 309 340 350 278 350 Z" fill="none" stroke="#9b9ca3" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M306 228 H338 M306 284 H326" fill="none" stroke="#8cc79f" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="392" cy="132" r="28" fill="#7aa2f7"/>
 </svg>
