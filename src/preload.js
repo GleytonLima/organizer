@@ -108,8 +108,8 @@ contextBridge.exposeInMainWorld('api', {
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),
     install: (step) => ipcRenderer.invoke('setup:install', step),
-    preview: () => ipcRenderer.invoke('setup:preview'),
-    integrate: () => ipcRenderer.invoke('setup:integrate'),
+    preview: (agent) => ipcRenderer.invoke('setup:preview', agent),
+    connect: (agent) => ipcRenderer.invoke('setup:connect', agent),
     scan: (dir) => ipcRenderer.invoke('setup:scan', dir),
     onLog: (cb) => ipcRenderer.on('setup:log', (_e, step, line) => cb(step, line)),
   },

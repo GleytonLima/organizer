@@ -17,11 +17,13 @@ Na primeira abertura (ou em **Configurações → Geral → Primeiros passos**) 
 o que falta, cada item com um botão:
 
 1. **Git Bash**: se não achar, instala o Git for Windows pelo `winget` (ou leva ao download).
-2. **Claude Code**: instala pelo instalador oficial e abre o login num terminal; a tela percebe quando você entrou.
-3. **Conectar o Claude Code ao Brain Organizer**: registra o servidor MCP `bash-organizer` (`claude mcp add -s user`)
-   e os hooks de aviso no `~/.claude/settings.json`, mostrando antes o que será gravado (o resto do arquivo fica
-   igual; uma cópia vai para `settings.json.brain-organizer.bak`).
-4. **Primeiro projeto a partir de uma pasta**: arraste a pasta (ou "Abrir pasta…"). O app acha os repositórios (a
+2. **Agentes de IA** (pelo menos um), cada um com o próximo botão: **Instalar** (instalador oficial), **Entrar**
+   (o login abre num terminal; a tela percebe quando você entrou) e **Conectar**, que mostra antes o que será gravado:
+   - **Claude Code**: servidor MCP `bash-organizer` (`claude mcp add -s user`) e os hooks de aviso no
+     `~/.claude/settings.json` (o resto do arquivo fica igual; uma cópia vai para `settings.json.brain-organizer.bak`).
+   - **Devin** (Cognition): o instalador roda num terminal do app (termina pedindo o login); Conectar registra o MCP
+     (`devin mcp add -s user`) e cria o perfil de agente "Devin" (`devin acp`) — ou atualiza o que você já tinha.
+3. **Primeiro projeto a partir de uma pasta**: arraste a pasta (ou "Abrir pasta…"). O app acha os repositórios (a
    pasta ou as subpastas com `.git`) e os comandos prováveis (scripts do `package.json` com o gerenciador certo,
    `docker compose up`); você marca o que vira terminal e o projeto abre montado, um grupo por repositório e um
    terminal de agente. Também em **Novo projeto → A partir de uma pasta…**.

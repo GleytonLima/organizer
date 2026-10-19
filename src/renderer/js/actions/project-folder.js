@@ -8,6 +8,7 @@ import { cleanError } from '../core/errors.js';
 import { openModal, field } from '../ui/modal.js';
 import { addProject, openProject } from './projects.js';
 import { activate, ensureProjectOpen } from './terminals.js';
+import { agentProfileFor } from '../agents/profiles.js';
 
 const TITLE = 'Projeto a partir de uma pasta';
 const same = (a, b) => String(a).toLowerCase().replace(/[\\/]+$/, '') === String(b).toLowerCase().replace(/[\\/]+$/, '');
@@ -17,10 +18,19 @@ function check(label, checked, { cmd = false, hint = '' } = {}) {
   return { box, node: el('label', { class: 'folder-check' }, box, el('span', { class: cmd ? 'folder-cmd' : '', text: label }), hint ? el('span', { class: 'folder-note', text: hint }) : null) };
 }
 
+/** O agente do terminal de agente: o primeiro pronto nos Primeiros passos (instalado, logado, com perfil). */
+function pickAgent(setup) {
+  for (const a of setup.agents || []) {
+    const profile = a.id === 'claude' ? agentProfileFor('claude') : a.connected && agentProfileFor(a.id);
+    if (a.installed && a.loggedIn && profile) return { profileId: profile.id, label: profile.label };
+  }
+  return null;
+}
+
 /** Conteúdo do diálogo: cada repositório com os comandos marcáveis; no fim, o terminal de agente. */
-function review(scan, agentDefault) {
+function review(scan, agentPick) {
   const picks = scan.repos.map((r) => r.commands.map((c) => ({ ...c, ...check(c.cmd, c.checked, { cmd: true }) })));
-  const agent = check('Terminal de agente (Claude Code)', agentDefault, { hint: agentDefault ? '' : 'instale o Claude Code nos Primeiros passos' });
+  const agent = check(agentPick ? `Terminal de agente (${agentPick.label})` : 'Terminal de agente', !!agentPick, { hint: agentPick ? '' : 'conecte um agente nos Primeiros passos' });
   const node = el(
     'div',
     { class: 'folder-review' },
@@ -40,14 +50,14 @@ function review(scan, agentDefault) {
 }
 
 /** Grupos do projeto: um por repositório (com os comandos marcados) e o do agente. */
-function buildGroups(scan, picked, withAgent, cwd) {
+function buildGroups(scan, picked, agent, cwd) {
   const groups = scan.repos.map((r, i) =>
     makeGroup({
       name: scan.repos.length > 1 ? r.name : 'Terminais',
       terminals: picked[i].length ? picked[i].map((c) => makeTerminal({ name: c.name, cwd: r.path, startup: c.cmd })) : [makeTerminal({ name: r.name, cwd: r.path })],
     }),
   );
-  if (withAgent) groups.push(makeGroup({ name: 'Agente', terminals: [makeTerminal({ kind: 'agent', agent: 'claude', name: 'Claude Code (ACP)', cwd })] }));
+  if (agent) groups.push(makeGroup({ name: 'Agente', terminals: [makeTerminal({ kind: 'agent', agent: agent.profileId, name: `${agent.label} (ACP)`, cwd })] }));
   return groups;
 }
 
@@ -68,7 +78,8 @@ export async function projectFromFolder(dir) {
     if (open) openProject(existing);
     return open ? existing : null;
   }
-  const { node, collect } = review(scan, !!setup.claude?.installed);
+  const agentPick = pickAgent(setup);
+  const { node, collect } = review(scan, agentPick);
   const v = await openModal({
     title: TITLE,
     message: 'Marque o que vira terminal. Os comandos rodam quando o terminal abre.',
@@ -80,7 +91,7 @@ export async function projectFromFolder(dir) {
   });
   if (!v) return null;
   const project = addProject({ name: v.name, repos: scan.repos.map((r) => ({ name: r.name, path: r.path })) });
-  project.groups = buildGroups(scan, v.picked, v.agent, project.cwd);
+  project.groups = buildGroups(scan, v.picked, v.agent ? agentPick || { profileId: 'claude', label: 'Claude Code' } : null, project.cwd);
   store.state.taskView = 'off';
   ensureProjectOpen(project); // sobe todos os terminais: os comandos marcados já começam
   activate(project.groups[0].terminals[0].id);

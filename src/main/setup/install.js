@@ -1,19 +1,20 @@
-// Instalações da primeira abertura, sempre a pedido (botão): o Git for Windows pelo winget e o Claude
-// Code pelo instalador oficial. A saída vai linha a linha para a tela ('setup:log').
+// Instalações em segundo plano, sempre a pedido (botão): o Git for Windows pelo winget e os agentes com
+// instalador não interativo (ver agents/). A saída vai linha a linha para a tela ('setup:log').
 // BO_SETUP_INSTALL troca os comandos (testes): JSON { git: [cmd, ...args], claude: [...] }.
-const os = require('os');
-const path = require('path');
 const { spawn } = require('child_process');
 const { childEnv } = require('../env');
 const { sendToWindow } = require('../window');
 const { refreshGitBash } = require('../bash');
+const { AGENTS } = require('./agents');
 
-const COMMANDS = {
-  git: ['winget', 'install', '--id', 'Git.Git', '-e', '--source', 'winget', '--accept-package-agreements', '--accept-source-agreements'],
-  claude: ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'irm https://claude.ai/install.ps1 | iex'],
-};
+const GIT = ['winget', 'install', '--id', 'Git.Git', '-e', '--source', 'winget', '--accept-package-agreements', '--accept-source-agreements'];
 
-const commandFor = (step) => (process.env.BO_SETUP_INSTALL ? JSON.parse(process.env.BO_SETUP_INSTALL)[step] : COMMANDS[step]);
+function plan(step) {
+  if (step === 'git') return { command: GIT, after: refreshGitBash };
+  const agent = AGENTS.find((a) => a.id === step && a.install);
+  if (!agent) return null;
+  return { command: agent.install.command, after: () => agent.install.addPath && addToPath(agent.install.addPath) };
+}
 
 /** Pasta nova no PATH do app (e dos terminais abertos daqui em diante), sem esperar reiniciar. */
 function addToPath(dir) {
@@ -23,11 +24,12 @@ function addToPath(dir) {
 
 let running = null;
 
-/** Instala `step` ('git' | 'claude'). Resolve { ok, code }; a saída chega por 'setup:log'. */
+/** Instala `step` ('git' ou o id de um agente). Resolve { ok, code }; a saída chega por 'setup:log'. */
 function install(step) {
-  if (!COMMANDS[step]) return Promise.reject(new Error(`Instalação desconhecida: ${step}`));
+  const p = plan(step);
+  if (!p) return Promise.reject(new Error(`Instalação desconhecida: ${step}`));
   if (running) return Promise.reject(new Error('Já há uma instalação em andamento.'));
-  const [cmd, ...args] = commandFor(step);
+  const [cmd, ...args] = process.env.BO_SETUP_INSTALL ? JSON.parse(process.env.BO_SETUP_INSTALL)[step] : p.command;
   running = step;
   const log = (line) => line.trim() && sendToWindow('setup:log', step, line.replace(/\r/g, '').trimEnd());
   return new Promise((resolve) => {
@@ -37,8 +39,7 @@ function install(step) {
     pipe(child.stderr);
     const done = (code) => {
       running = null;
-      if (step === 'git') refreshGitBash();
-      if (step === 'claude') addToPath(path.join(os.homedir(), '.local', 'bin'));
+      p.after();
       resolve({ ok: code === 0, code });
     };
     child.on('error', (err) => (log(err.message), done(1)));
