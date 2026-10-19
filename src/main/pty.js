@@ -7,6 +7,7 @@ const { bashPath, rcFile, windowsToMsys } = require('./bash');
 const { sendToWindow } = require('./window');
 const { apiInfo, terminalToken } = require('./api/server');
 const { childEnv } = require('./env');
+const { cloudEnv } = require('./cloud/env');
 
 const ptys = new Map();
 
@@ -27,7 +28,7 @@ function organizerEnv(id) {
 
 const nonces = new Map(); // id → nonce das sequências OSC 6973 (ver bash-init.sh)
 
-function spawn({ id, cwd, cols, rows, nonce }) {
+function spawn({ id, cwd, cols, rows, nonce, cloud }) {
   if (!bashPath()) return { ok: false, error: 'Git Bash não encontrado. Instale pelos Primeiros passos (Configurações) ou defina GIT_BASH_PATH.' };
   if (ptys.has(id)) return { ok: true, nonce: nonces.get(id) }; // renderer recarregado: o shell é o mesmo
   const dir = cwd && fs.existsSync(cwd) ? cwd : app.getPath('home');
@@ -42,6 +43,7 @@ function spawn({ id, cwd, cols, rows, nonce }) {
       TERM_PROGRAM: 'bash-organizer',
       COLORTERM: 'truecolor',
       ...organizerEnv(id),
+      ...cloudEnv(cloud), // perfil AWS e região do projeto
       BO_OSC_NONCE: nonce || '', // o bash-init guarda numa variável do shell e tira do ambiente
     }),
   });

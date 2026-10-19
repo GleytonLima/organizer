@@ -24,7 +24,9 @@ export function onPrompt(terminalId, text) {
 export function onPermission(terminalId, item) {
   const task = currentTaskOf(terminalId);
   if (!task) return;
-  requestInput(task, `Pede permissão: ${item.title}`, { terminalId });
+  const aws = findTerm(terminalId)?.project.aws;
+  const prod = aws?.prod ? ` [produção · AWS ${aws.profile}]` : ''; // projeto em produção: o pedido vem marcado
+  requestInput(task, `Pede permissão${prod}: ${item.title}`, { terminalId });
   task.needsInput.choices = item.options.map((o) => ({ id: o.optionId, label: o.name, kind: o.kind }));
   task.needsInput.permission = { terminalId, requestId: item.requestId };
   commit();

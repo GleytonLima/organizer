@@ -68,6 +68,18 @@ bo remind Conferir o deploy --em 30min --task LO-11
 bo reminders                  # os que tocaram e os próximos (done <id> / snooze <id> <quando>)
 ```
 
+## AWS do projeto
+
+Clique com o botão direito no projeto → **AWS…** e escolha o **perfil** (os da sua `~/.aws`; só os nomes são lidos),
+a **região** e o **ambiente**:
+
+- Terminais e agentes do projeto abertos daqui em diante já nascem com `AWS_PROFILE` e `AWS_REGION`: nada de
+  rodar um comando na conta errada por ter esquecido o `--profile`.
+- A barra de status mostra o perfil e a **conta** (`aws sts get-caller-identity`, conferida a cada 5 min). Sessão SSO
+  vencida aparece como **sessão expirou · Entrar**, e o clique abre um terminal com `aws sso login --profile …`.
+- **Produção**: o perfil fica em destaque discreto na barra, e os pedidos de permissão do agente nesse projeto chegam
+  marcados com `[produção · AWS <perfil>]`.
+
 ## Agentes de IA e CLI `bo`
 
 Todo terminal aberto pelo app tem o comando `bo` no PATH e sabe quem ele é (`BO_TERMINAL_ID`).

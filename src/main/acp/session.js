@@ -15,6 +15,7 @@ const { RpcPeer } = require('./rpc');
 const { agentCommand, boMcpServer, parseEnv } = require('./agents');
 const { organizerEnv } = require('../pty');
 const { childEnv } = require('../env');
+const { cloudEnv } = require('../cloud/env');
 const { PermissionGate } = require('./permissions');
 const { promptBlocks } = require('./prompt-blocks');
 const { parseMcpServers } = require('./mcp-servers');
@@ -23,11 +24,12 @@ const PROTOCOL_VERSION = 1;
 
 class AgentSession {
   /** opts: { profile, cwd, resume } — `resume`: id de uma sessão anterior para continuar. */
-  constructor(id, { profile = {}, cwd, resume = null }, emit) {
+  constructor(id, { profile = {}, cwd, resume = null, cloud = null }, emit) {
     this.id = id;
     this.profile = profile;
     this.resume = resume;
     this.cwd = cwd && fs.existsSync(cwd) ? cwd : app.getPath('home');
+    this.cloud = cloud; // perfil AWS e região do projeto
     this.emit = emit;
     this.gate = new PermissionGate(emit);
     this.stderr = '';
@@ -40,7 +42,7 @@ class AgentSession {
 
   spawn() {
     const cmd = agentCommand(this.profile);
-    const env = childEnv({ ...cmd.env, ...organizerEnv(this.id) });
+    const env = childEnv({ ...cmd.env, ...organizerEnv(this.id), ...cloudEnv(this.cloud) });
     this.proc = spawn(cmd.command, cmd.args, { cwd: this.cwd, env, shell: cmd.shell, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     this.proc.stderr.on('data', (d) => (this.stderr = (this.stderr + d).slice(-4000)));
     this.proc.on('error', (err) => this.emit({ type: 'error', message: `Não foi possível executar o agente: ${err.message}` }));

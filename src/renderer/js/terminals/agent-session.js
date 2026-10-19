@@ -5,6 +5,7 @@
 import { el } from '../core/dom.js';
 import { notify, persist } from '../core/store.js';
 import { profileById } from '../agents/profiles.js';
+import { terminalCloud } from '../cloud/aws.js';
 import { renderAgentView } from '../ui/agent/view.js';
 import { onPrompt, onPermission, onPermissionAnswered, onTurnEnd } from '../actions/agent-tasks.js';
 import { recordEvent, usageOf } from '../metrics/record.js';
@@ -108,7 +109,7 @@ export function createAgentSession(t, { container, onFocus }) {
       s.config = null;
       s.commands = [];
       if (!resume) t.acpSessionId = null;
-      s.ready = api.acp.start(t.id, { profile: { ...profileById(t.agent) }, cwd: t.cwd, resume });
+      s.ready = api.acp.start(t.id, { profile: { ...profileById(t.agent) }, cwd: t.cwd, resume, cloud: terminalCloud(t.id) });
       s.render();
     },
     dispose() {

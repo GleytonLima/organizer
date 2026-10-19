@@ -114,6 +114,12 @@ contextBridge.exposeInMainWorld('api', {
     onLog: (cb) => ipcRenderer.on('setup:log', (_e, step, line) => cb(step, line)),
   },
 
+  // Nuvem (AWS CLI): perfis configurados e a conta do perfil agora.
+  cloud: {
+    awsProfiles: () => ipcRenderer.invoke('cloud:awsProfiles'),
+    awsIdentity: (profile, opts) => ipcRenderer.invoke('cloud:awsIdentity', profile, opts),
+  },
+
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
   onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, id) => cb(id)),
 

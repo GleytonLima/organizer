@@ -18,6 +18,7 @@ import { THEMES } from '../themes/themes.js';
 import { setTheme } from '../themes/apply.js';
 import { openInEditor } from './editor.js';
 import { showMenu } from './menu.js';
+import { awsDialog } from './cloud/aws.js';
 
 const SEP = { sep: true };
 
@@ -64,6 +65,7 @@ export function projectMenu(e, project) {
     ...agentItems(project.groups[0]),
     { label: 'Novo grupo…', action: () => createGroup(project) },
     { label: 'Editar…', action: () => editProject(project) },
+    { label: 'AWS…', action: () => awsDialog(project) },
     project.open
       ? { label: 'Fechar projeto', action: () => closeProject(project) }
       : { label: 'Abrir projeto', action: () => openProject(project) },

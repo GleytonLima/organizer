@@ -17,6 +17,7 @@ const { registerAcpIpc, stopAllAgents } = require('./acp');
 const { registerMetricsIpc, closeMetrics } = require('./metrics');
 const { registerFeedbackIpc } = require('./metrics/feedback');
 const { registerSetupIpc } = require('./setup');
+const { registerCloudIpc } = require('./cloud');
 
 // Pasta de dados: %APPDATA%\Brain Organizer (migra a antiga "Bash Organizer"); BO_USER_DATA=<pasta>
 // para testes ou um segundo perfil isolado. Antes da trava de instância única, que depende dela.
@@ -41,6 +42,7 @@ if (!app.requestSingleInstanceLock()) {
   registerMetricsIpc();
   registerFeedbackIpc();
   registerSetupIpc();
+  registerCloudIpc();
 
   app.whenReady().then(async () => {
     writeRcFile();
