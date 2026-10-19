@@ -11,10 +11,12 @@ import { serverSection, refreshServer } from './server.js';
 import { embeddingsDialog } from '../memory/embeddings-dialog.js';
 import { agentsDialog } from '../agent/profiles-dialog.js';
 import { openWelcome } from '../../actions/setup.js';
+import { cloudSection, refreshCloud } from './cloud.js';
 
 const SECTIONS = [
   { id: 'general', label: 'Geral', icon: 'theme' },
   { id: 'server', label: 'Servidor do time', icon: 'cloud' },
+  { id: 'cloud', label: 'Nuvem (AWS)', icon: 'key' },
   { id: 'memory', label: 'Memória e busca', icon: 'memory' },
   { id: 'agents', label: 'Agentes', icon: 'agent' },
 ];
@@ -26,6 +28,7 @@ const isOn = () => store.state.taskView === 'settings';
 export function openSettings(id = section) {
   section = id;
   if (id === 'server') refreshServer();
+  if (id === 'cloud') refreshCloud();
   setTaskView('settings');
 }
 
@@ -64,6 +67,7 @@ const linkSection = (title, text, button, action) => [
 
 function body() {
   if (section === 'server') return serverSection();
+  if (section === 'cloud') return cloudSection();
   if (section === 'memory') return linkSection('Memória e busca', 'A memória fica nesta máquina (memory.db). A busca por similaridade é opcional: use um Ollama local ou uma API compatível com OpenAI.', 'Configurar busca por similaridade…', embeddingsDialog);
   if (section === 'agents') return linkSection('Agentes', 'Perfis de agente (ACP): comando, variáveis, modo padrão e servidores MCP extras.', 'Editar perfis de agente…', agentsDialog);
   return generalSection();

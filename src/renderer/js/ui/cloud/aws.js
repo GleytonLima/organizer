@@ -7,11 +7,12 @@ import { showMenu } from '../menu.js';
 import { icon } from '../icons.js';
 import { awsView, checkAws, awsProfiles } from '../../cloud/aws.js';
 import { setProjectAws, awsLogin } from '../../actions/project-cloud.js';
+import { isProdProfile, profileLabel } from '../../cloud/catalog.js';
 
 export async function awsDialog(project) {
   const { cli, profiles } = await awsProfiles();
   const cur = project.aws || {};
-  const options = [{ value: '', label: 'Nenhum (o padrão da sua máquina)' }, ...[...new Set([...profiles, cur.profile].filter(Boolean))].map((p) => ({ value: p, label: p }))];
+  const options = [{ value: '', label: 'Nenhum (o padrão da sua máquina)' }, ...[...new Set([...profiles, cur.profile].filter(Boolean))].map((p) => ({ value: p, label: profileLabel(p) === p ? p : `${p} — ${profileLabel(p)}` }))];
   const v = await openModal({
     title: `AWS de “${project.name}”`,
     message: cli
@@ -31,11 +32,13 @@ export async function awsDialog(project) {
 
 /** { kind, text, title } do perfil do projeto em foco. */
 function awsState(project) {
-  const { profile, prod } = project.aws;
+  const { profile } = project.aws;
+  const prod = project.aws.prod || isProdProfile(profile); // o ambiente do catálogo também vale
   const id = awsView.identities[profile];
   const env = prod ? 'produção · ' : '';
-  if (!id || id.state === 'checking') return { kind: 'busy', text: `${env}AWS ${profile}`, title: 'Conferindo a conta…' };
-  if (id.state === 'ok') return { kind: prod ? 'warn' : 'ok', text: `${env}AWS ${profile} · ${id.account}`, title: id.arn };
+  const name = profileLabel(profile);
+  if (!id || id.state === 'checking') return { kind: 'busy', text: `${env}AWS ${name}`, title: 'Conferindo a conta…' };
+  if (id.state === 'ok') return { kind: prod ? 'warn' : 'ok', text: `${env}AWS ${name} · ${id.account}`, title: `${profile} · ${id.arn}` };
   if (id.state === 'expired') return { kind: 'warn', text: `AWS ${profile} · sessão expirou · Entrar`, title: 'A sessão SSO venceu. Clique para entrar de novo (aws sso login).' };
   if (id.state === 'missing') return { kind: 'offline', text: 'AWS · CLI não encontrada', title: 'Instale a AWS CLI v2 para conferir a conta.' };
   return { kind: 'warn', text: `${env}AWS ${profile} · erro`, title: id.message || '' };

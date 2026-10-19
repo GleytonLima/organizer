@@ -63,7 +63,7 @@ const OPTION_LABEL = { allow_once: 'Permitir', allow_always: 'Permitir sempre', 
 /** Item de pedido de permissão, ligado à ferramenta que o pediu (toolCallId). */
 export function permissionItem(ev) {
   const options = (ev.options || []).map((o) => ({ ...o, name: OPTION_LABEL[o.kind] || o.name, detail: o.name }));
-  return { type: 'permission', requestId: ev.requestId, toolCallId: ev.toolCall?.toolCallId ?? null, title: ev.toolCall?.title || 'Ação do agente', options, answer: undefined };
+  return { type: 'permission', requestId: ev.requestId, toolCallId: ev.toolCall?.toolCallId ?? null, title: ev.toolCall?.title || 'Ação do agente', command: String(ev.toolCall?.rawInput?.command || ''), options, answer: undefined };
 }
 
 /** Há um pedido de permissão sem resposta? */

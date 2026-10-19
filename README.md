@@ -80,6 +80,19 @@ a **região** e o **ambiente**:
 - **Produção**: o perfil fica em destaque discreto na barra, e os pedidos de permissão do agente nesse projeto chegam
   marcados com `[produção · AWS <perfil>]`.
 
+### Catálogo de contas (a IA entende "a conta de hom da Loja")
+
+Em **Configurações → Nuvem (AWS)**, cada perfil da sua `~/.aws` aparece com a conta, a região, se usa SSO e se a sessão
+está válida. Você completa o que só você sabe: **apelido** ("Loja — homologação"), **sistema** ("Loja") e **ambiente**
+(dev, hom, prod).
+
+- A IA consulta esse catálogo pelo MCP (`list_aws_profiles`, `aws_identity`): você diz "olhe os logs da Loja em hom" e ela
+  acha o perfil, sempre passando `--profile` (várias contas na mesma conversa, sem depender do perfil do terminal).
+  Em produção, ela confirma antes de alterar algo; sessão vencida, ela pede que você entre (botão **Entrar**).
+- Pedido de permissão do agente com `--profile` (ou `AWS_PROFILE=`) de um perfil de **produção** chega marcado
+  `[produção · <apelido>]`, venha de qual projeto vier.
+- Pela linha de comando: `bo aws` (o catálogo) e `bo aws whoami <perfil>`.
+
 ## Agentes de IA e CLI `bo`
 
 Todo terminal aberto pelo app tem o comando `bo` no PATH e sabe quem ele é (`BO_TERMINAL_ID`).

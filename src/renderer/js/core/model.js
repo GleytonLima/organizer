@@ -90,5 +90,6 @@ export function migrate(saved, home) {
     homeSeenAt: s.homeSeenAt || null, // quando você saiu da Home pela última vez (base do "enquanto você esteve fora")
     focusMode: !!s.focusMode, // modo foco: só avisos urgentes viram toast (notify/center.js)
     reminders: Array.isArray(s.reminders) ? s.reminders : [], // lembretes (actions/reminders.js)
+    awsCatalog: s.awsCatalog && typeof s.awsCatalog === 'object' ? s.awsCatalog : {}, // perfil AWS → { alias, system, env } (cloud/catalog.js)
   };
 }

@@ -197,3 +197,41 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+/* Configurações → Nuvem (AWS): um cartão por perfil */
+.aws-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0 14px;
+}
+.aws-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.aws-row.prod {
+  border-color: color-mix(in srgb, var(--warn) 40%, var(--border));
+}
+.aws-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.aws-profile {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+.aws-row-fields {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 1fr;
+  gap: 8px;
+}
+.aws-check {
+  align-self: flex-start;
+}

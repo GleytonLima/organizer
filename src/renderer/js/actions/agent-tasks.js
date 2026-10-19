@@ -4,6 +4,7 @@
 //   resposta (no terminal ou na tarefa) → a espera termina
 //   fim do turno → relato na tarefa com o fim da resposta do agente
 import { commit, findTerm } from '../core/store.js';
+import { prodProfileIn, profileLabel, isProdProfile } from '../cloud/catalog.js';
 import { currentTaskOf } from '../tasks/queries.js';
 import { createTask, reportTask } from './tasks.js';
 import { turnSummary } from '../tasks/report-text.js';
@@ -24,8 +25,10 @@ export function onPrompt(terminalId, text) {
 export function onPermission(terminalId, item) {
   const task = currentTaskOf(terminalId);
   if (!task) return;
+  // produção: pelo --profile do comando (catálogo) ou pelo projeto marcado como produção
   const aws = findTerm(terminalId)?.project.aws;
-  const prod = aws?.prod ? ` [produção · AWS ${aws.profile}]` : ''; // projeto em produção: o pedido vem marcado
+  const cited = prodProfileIn(`${item.title} ${item.command || ''}`);
+  const prod = cited ? ` [produção · ${profileLabel(cited)}]` : aws?.prod || isProdProfile(aws?.profile) ? ` [produção · AWS ${aws.profile}]` : '';
   requestInput(task, `Pede permissão${prod}: ${item.title}`, { terminalId });
   task.needsInput.choices = item.options.map((o) => ({ id: o.optionId, label: o.name, kind: o.kind }));
   task.needsInput.permission = { terminalId, requestId: item.requestId };

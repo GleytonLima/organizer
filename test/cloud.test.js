@@ -62,6 +62,38 @@ suite('cloud', {
     return S.store.state.tasks.find((x) => x.terminalId === 't1')?.needsInput?.question`, C);
   t.includes(question || '', '[produção · AWS dev]', 'pedido de permissão do agente em projeto de produção vem marcado');
 
+  // Catálogo: apelido, sistema e ambiente de cada perfil — é por ele que a IA acha "a conta de hom da Loja".
+  const K = { K: './js/actions/aws-catalog.js', P: './js/actions/agent-tasks.js' };
+  await t.js(`K.setAwsMeta('dev', { alias: 'Loja — homologação', system: 'Loja', env: 'hom' });
+    K.setAwsMeta('prod-sso', { alias: 'Pagamentos — produção', system: 'Pagamentos', env: 'prod' });
+    C.setProjectAws(S.store.state.projects[0], { profile: 'dev' })`, { ...K, ...C });
+  const listed = (await agent.tool('list_aws_profiles', {})).data;
+  const dev = listed?.profiles.find((x) => x.profile === 'dev');
+  const pay = listed?.profiles.find((x) => x.profile === 'prod-sso');
+  t.check(dev && dev.alias === 'Loja — homologação' && dev.system === 'Loja' && dev.env === 'hom' && dev.account === '111122223333' && dev.session === 'ok', 'list_aws_profiles: apelido, sistema, ambiente, conta e sessão', JSON.stringify(dev));
+  t.check(pay && pay.env === 'prod' && pay.session === 'expired' && pay.sso, 'perfil de produção com sessão SSO vencida aparece como tal', JSON.stringify(pay));
+  t.equal(listed?.projectDefault, 'dev', 'diz qual é o perfil padrão do projeto de quem pergunta');
+  t.equal((await agent.tool('aws_identity', { profile: 'dev' })).data?.account, '111122223333', 'aws_identity confere a conta agora');
+  const cliList = await t.bo(['aws'], { terminal: 't1' });
+  t.check(/Loja — homologação/.test(cliList.stdout) && /PROD/.test(cliList.stdout), '`bo aws` lista o catálogo', cliList.stdout + cliList.stderr);
+  t.check(await shows('AWS Loja — homologação · 111122223333'), 'a barra de status usa o apelido do catálogo', await pill());
+
+  // Produção pelo comando: em projeto de dev, um comando com --profile de produção chega marcado.
+  const prodAsk = await t.js(`P.onPermission('t1', { title: 'Bash', command: 'aws s3 rm s3://faturas --recursive --profile prod-sso', requestId: 'r2', options: [{ optionId: 'ok', name: 'Permitir', kind: 'allow_once' }] });
+    return S.store.state.tasks.find((x) => x.terminalId === 't1')?.needsInput?.question`, K);
+  t.includes(prodAsk || '', '[produção · Pagamentos — produção]', 'comando com --profile de produção chega marcado, mesmo em projeto de dev');
+
+  // Configurações → Nuvem: um cartão por perfil, com o apelido editável.
+  await t.js(`const V = await import('./js/ui/settings/view.js'); V.openSettings('cloud')`);
+  const rows = await t.waitFor(async () => {
+    const n = await t.js(`return document.querySelectorAll('.aws-row').length`);
+    return n === 3 ? n : null;
+  });
+  t.equal(rows, 3, 'Configurações → Nuvem mostra um cartão por perfil');
+  await t.js(`const i = document.querySelector('.aws-row[data-profile="default"] input'); i.value = 'Conta pessoal'; i.dispatchEvent(new Event('change'))`);
+  t.equal(await t.js(`return S.store.state.awsCatalog.default?.alias`), 'Conta pessoal', 'editar o apelido grava no catálogo');
+  await shot('aws-catalog');
+
   // O que vem do renderer vira ambiente de processo: perfil inválido é recusado.
   const bad = await t.js(`try { await api.cloud.awsIdentity('dev; rm -rf /'); return 'aceitou'; } catch (e) { return e.message; }`);
   t.includes(bad, 'Perfil AWS inválido', 'perfil com caracteres estranhos é recusado');

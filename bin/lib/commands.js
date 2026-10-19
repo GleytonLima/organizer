@@ -116,6 +116,11 @@ const COMMANDS = {
       print(opts, r, (p) => `${p.name}: ${p.repos.map((x) => x.name).join(', ') || '(sem pastas)'}${p.syncKey ? `  (sync: ${p.syncKey})` : ''}`);
     },
   },
+  aws: {
+    usage: 'aws [whoami <perfil>] [--no-check]',
+    help: 'Contas AWS do catálogo (perfil, ambiente, apelido, conta, sessão); whoami confere um perfil agora.',
+    run: (args) => require('./commands-aws').aws(args),
+  },
   remind: {
     usage: 'remind <texto...> --em 30min | --quando "amanhã 9h" [--task BO-3]',
     help: 'Lembrete para você: toast na hora e um cartão na Home até concluir.',

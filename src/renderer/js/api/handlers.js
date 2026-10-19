@@ -10,6 +10,7 @@ import { taskHandlers } from './task-handlers.js';
 import { addProject, addFoldersToProject, setSyncKey } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
 import { reminderHandlers } from './reminder-handlers.js';
+import { awsHandlers } from './aws-handlers.js';
 import { requestStartup, approveCrossTerminal } from './approvals.js';
 
 function terminalInfo({ project, group, t }) {
@@ -44,6 +45,7 @@ export const handlers = {
   ...taskHandlers,
   ...memoryHandlers,
   ...reminderHandlers,
+  ...awsHandlers,
 
   /** Projetos, grupos e terminais; `caller` é o terminal que pediu. */
   list(p) {

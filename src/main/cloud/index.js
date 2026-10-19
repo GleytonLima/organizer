@@ -4,7 +4,7 @@ const aws = require('./aws');
 const { PROFILE } = require('./env');
 
 function registerCloudIpc() {
-  ipcMain.handle('cloud:awsProfiles', () => ({ cli: aws.hasCli(), profiles: aws.profiles() }));
+  ipcMain.handle('cloud:awsProfiles', () => ({ cli: aws.hasCli(), profiles: aws.profiles(), details: aws.profileDetails() }));
   ipcMain.handle('cloud:awsIdentity', (_e, profile, opts) => {
     if (!PROFILE.test(String(profile || ''))) throw new Error('Perfil AWS inválido.');
     return aws.identity(String(profile), { fresh: !!opts?.fresh });

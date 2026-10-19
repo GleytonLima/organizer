@@ -12,30 +12,52 @@ const configFile = () => process.env.AWS_CONFIG_FILE || path.join(os.homedir(), 
 const credentialsFile = () => process.env.AWS_SHARED_CREDENTIALS_FILE || path.join(os.homedir(), '.aws', 'credentials');
 const bin = () => findBin(['aws.exe', 'aws.cmd'], [path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Amazon', 'AWSCLIV2')], process.env.BO_AWS_BIN);
 
-function sections(file, prefix) {
+/** Seções de um arquivo INI da AWS: { nome → { chave: valor } } (só o que está escrito; nada é executado). */
+function ini(file) {
+  let text;
   try {
-    return [...fs.readFileSync(file, 'utf8').matchAll(/^\s*\[([^\]]+)\]/gm)].map((m) => m[1].trim()).filter((s) => !/^sso-session\s/.test(s)).map((s) => s.replace(prefix, '').trim());
+    text = fs.readFileSync(file, 'utf8');
   } catch {
-    return [];
+    return {};
   }
+  const out = {};
+  let cur = null;
+  for (const line of text.split(/\r?\n/)) {
+    const head = /^\s*\[([^\]]+)\]/.exec(line);
+    if (head) cur = out[head[1].trim()] = {};
+    else if (cur) {
+      const kv = /^\s*([\w.-]+)\s*=\s*(.*?)\s*$/.exec(line);
+      if (kv) cur[kv[1]] = kv[2];
+    }
+  }
+  return out;
 }
 
-/** Nomes dos perfis configurados (config + credentials), sem repetir. */
-const profiles = () => [...new Set([...sections(configFile(), /^profile\s+/), ...sections(credentialsFile(), /^$/)])].sort();
+// do config, só o que ajuda a reconhecer a conta; do credentials, só os nomes das seções (nenhum valor sai daqui)
+const SAFE = ['region', 'sso_account_id', 'sso_role_name', 'sso_start_url', 'sso_session'];
+
+/** Perfis configurados (config + credentials), com região, SSO e a conta quando o config diz. */
+function profileDetails() {
+  const config = ini(configFile());
+  const names = new Set(Object.keys(ini(credentialsFile())));
+  const details = {};
+  for (const [section, values] of Object.entries(config)) {
+    if (/^sso-session\s/.test(section)) continue;
+    const name = section.replace(/^profile\s+/, '').trim();
+    names.add(name);
+    details[name] = Object.fromEntries(SAFE.filter((k) => values[k]).map((k) => [k, values[k]]));
+  }
+  return [...names].sort().map((profile) => {
+    const d = details[profile] || {};
+    return { profile, region: d.region || '', sso: !!(d.sso_start_url || d.sso_session), account: d.sso_account_id || '', role: d.sso_role_name || '' };
+  });
+}
+
+/** Nomes dos perfis configurados, sem repetir. */
+const profiles = () => profileDetails().map((p) => p.profile);
 
 /** Tem SSO (para oferecer `aws sso login` quando vence)? */
-function usesSso(profile) {
-  try {
-    const text = fs.readFileSync(configFile(), 'utf8');
-    const head = profile === 'default' ? /^\s*\[default\]/m : new RegExp(`^\\s*\\[profile\\s+${profile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'm');
-    const start = text.search(head);
-    if (start < 0) return false;
-    const body = text.slice(start).split(/\n\s*\[/)[0];
-    return /^\s*sso_(start_url|session)\s*=/m.test(body);
-  } catch {
-    return false;
-  }
-}
+const usesSso = (profile) => !!profileDetails().find((p) => p.profile === profile)?.sso;
 
 const EXPIRED = /expired|ExpiredToken|Token has expired|refresh failed|sso session|UnauthorizedSSOToken|InvalidClientTokenId/i;
 const cache = new Map(); // perfil → { at, result }
@@ -61,4 +83,4 @@ async function identity(profile, { fresh = false } = {}) {
 /** Linha para entrar de novo num terminal do app. */
 const loginCommand = (profile) => `aws sso login --profile ${profile}`;
 
-module.exports = { profiles, identity, loginCommand, hasCli: () => !!bin() };
+module.exports = { profiles, profileDetails, identity, loginCommand, hasCli: () => !!bin() };
