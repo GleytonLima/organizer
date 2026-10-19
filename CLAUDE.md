@@ -11,6 +11,7 @@
 ## Design
 - Elegante e minimalista, bem arredondado (tokens `--r-*` em `styles/base.css`).
 - Cores vêm do tema (`js/themes/themes.js`); nada de cor fixa em CSS fora dos tokens.
+- Fonte: Plus Jakarta Sans embutida (`src/renderer/fonts/`, OFL; a web tem a mesma em `styles/fonts/`) — nada vindo da internet. Terminais seguem monoespaçados.
 - Sem destaques berrantes nem cards com barra colorida à esquerda: cor de terminal/workspace é só uma bolinha.
 
 ## Modelo
