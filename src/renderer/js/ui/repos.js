@@ -9,6 +9,7 @@ import { gitDetail, iconButton } from './components.js';
 import { showMenu } from './menu.js';
 import { openInEditor } from './editor.js';
 import { playwrightOf, runPlaywright } from '../playwright/runner.js';
+import { icon } from './icons.js';
 
 /** Pasta com playwright.config.*: rodar os testes num terminal próprio e abrir o último relatório. */
 function playwrightItems(project, repo) {
@@ -48,7 +49,9 @@ export function repoStrip() {
   return el(
     'div',
     { class: 'repo-strip', title: 'Pastas/repositórios do projeto' },
-    repos.length ? repos.map((r) => chip(project, r)) : el('span', { class: 'repo-hint', text: 'Adicione as pastas dos repositórios deste projeto →' }),
-    iconButton('plus', 'Adicionar pastas ao projeto', () => addProjectFolders(project), 'repo-add'),
+    // sem repositórios: um botão que diz a ação; com eles, os chips e o + discreto
+    repos.length
+      ? [repos.map((r) => chip(project, r)), iconButton('plus', 'Adicionar repositório', () => addProjectFolders(project), 'repo-add')]
+      : el('button', { type: 'button', class: 'repo-add-btn', onclick: () => addProjectFolders(project) }, icon('plus'), 'Adicionar repositório'),
   );
 }

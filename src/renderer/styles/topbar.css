@@ -211,10 +211,28 @@
 .repo-strip {
   align-items: center;
 }
-.repo-hint {
-  font-size: 12px;
-  color: var(--faint);
+.repo-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px 0 9px;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 12.5px;
   white-space: nowrap;
+  cursor: pointer;
+}
+.repo-add-btn:hover {
+  color: var(--text);
+  border-color: var(--dim);
+}
+.repo-add-btn .icon {
+  width: 14px;
+  height: 14px;
 }
 .repo-add.icon-btn {
   width: 26px;

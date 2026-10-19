@@ -80,6 +80,8 @@ suite('welcome', {
   await clickIn('devin', 'Entrar');
   t.check(await t.waitFor(async () => (await view()) === 'off'), 'Entrar leva a um terminal');
   t.includes(await t.js(`return S.activeEntry()?.t.startup || ''`), 'auth login', 'com o login do Devin');
+  t.equal(await t.js(`return document.querySelector('.repo-add-btn')?.textContent`), 'Adicionar repositório', 'projeto sem repositório: um botão "Adicionar repositório" no lugar do texto');
+  await shot('repo-add');
   fs.writeFileSync(path.join(devinDir, 'credentials.toml'), 'token = "x"');
   t.check(await t.waitFor(async () => (await view()) === 'welcome', { timeout: 12000 }), 'logado, os Primeiros passos voltam sozinhos');
   t.check(await shows('falta ligá-lo ao app', row('devin')), 'Devin logado, falta conectar', await row('devin')());
