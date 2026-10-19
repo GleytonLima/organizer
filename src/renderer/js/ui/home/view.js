@@ -7,6 +7,7 @@ import { waitingItems, resumeItems, awaySummary, isEmptySummary } from '../../ho
 import { closeHome, openHome, isHomeOpen, replyWithSuggestions, setFocusMode } from '../../actions/home.js';
 import { iconButton } from '../components.js';
 import { waitingCard, resumeCard } from './cards.js';
+import { doneCheck } from '../check.js';
 
 const drafts = {}; // respostas em edição, por tarefa (sobrevivem aos re-renders)
 const selected = new Set(); // esperas marcadas para responder em lote
@@ -45,7 +46,16 @@ function header(waiting) {
     iconButton('close', 'Voltar aos terminais', closeHome));
 }
 
+// o check se desenha quando a Home passa a ficar vazia; re-renderizar no meio não recomeça a animação
+let calmSince = 0;
+function calm() {
+  calmSince ||= Date.now();
+  return el('div', { class: 'home-calm done' }, doneCheck({ since: calmSince }),
+    el('div', {}, el('div', { class: 'home-calm-title', text: 'Nada esperando você' }), el('div', { class: 'home-calm-sub', text: 'Os agentes seguem trabalhando.' })));
+}
+
 function waitingSection(items) {
+  if (items.length) calmSince = 0;
   const picked = items.filter(({ task }) => selected.has(task.id));
   const batch = picked.length
     ? el('div', { class: 'home-batch' }, el('span', { text: `${plural(picked.length, 'marcada', 'marcadas')}` }), el('span', { class: 'spacer' }),
@@ -54,7 +64,7 @@ function waitingSection(items) {
     : null;
   return el('section', { class: 'home-section' },
     el('h3', { class: 'home-h', text: 'Aguardando você' }),
-    items.length ? [batch, items.map((it) => waitingCard(it, drafts, selected, notify))] : el('div', { class: 'home-calm', text: 'Nada esperando você ✓  Os agentes seguem trabalhando.' }));
+    items.length ? [batch, items.map((it) => waitingCard(it, drafts, selected, notify))] : calm());
 }
 
 function resumeSection(items) {

@@ -1,0 +1,53 @@
+/* ---------- Check de "concluído" (ui/check.js): círculo que se fecha, v que se desenha, leve pulso ---------- */
+.done-check {
+  flex: none;
+  color: var(--accent);
+  overflow: visible;
+}
+.done-check circle,
+.done-check path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.done-check circle {
+  stroke-width: 1.6;
+}
+.done-check path {
+  stroke-width: 2.2;
+}
+.done-check.draw circle {
+  stroke-dasharray: 76;
+  stroke-dashoffset: 76;
+  transform: rotate(-90deg); /* começa no topo */
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: done-check-draw 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.done-check.draw path {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  animation: done-check-draw 0.3s 0.42s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.done-check.draw {
+  animation: done-check-pop 0.32s 0.7s ease-out;
+}
+@keyframes done-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes done-check-pop {
+  50% {
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .done-check.draw,
+  .done-check.draw circle,
+  .done-check.draw path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

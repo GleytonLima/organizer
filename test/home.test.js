@@ -56,6 +56,14 @@ suite('home', {
     [...document.querySelectorAll('.home-card.wait .btn.primary')].find((b) => b.innerText.includes('Enviar')).click()`);
   t.check(await t.waitFor(async () => (await t.lines('ag2', 20)).includes('Cartões, como no app mobile')), 'a resposta escrita chega no terminal certo');
   t.includes(await t.waitFor(async () => ((await text()).includes('Nada esperando você.') ? text() : null)), 'Nada esperando você', 'sem pendências, a Home diz isso com calma');
+  t.equal(await t.js(`return document.querySelector('.home-calm .done-check')?.getAttribute('class')`), 'done-check draw', 'com um check (círculo + v) que se desenha');
+  if (process.env.BO_TEST_SHOTS) {
+    await t.wait(1300);
+    require('fs').writeFileSync(require('path').join(process.env.BO_TEST_SHOTS, 'home-calm.png'), (await t.wc.capturePage()).toPNG());
+  }
+  await t.wait(1300);
+  await t.js(`S.notify(); await new Promise((r) => setTimeout(r, 50))`);
+  t.equal(await t.js(`return document.querySelector('.home-calm .done-check')?.getAttribute('class')`), 'done-check', 'desenhado uma vez, fica parado nas atualizações seguintes');
 
   // Modo foco: o que não é urgente não vira aviso do Windows; o urgente vira.
   await t.js(`document.querySelector('.home-focus input').click()`);

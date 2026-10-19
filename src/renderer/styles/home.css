@@ -53,6 +53,23 @@
   font-size: 13.5px;
   text-align: center;
 }
+.home-calm.done {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  text-align: left;
+}
+.home-calm-title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.home-calm-sub {
+  margin-top: 2px;
+  color: var(--dim);
+  font-size: 13px;
+}
 .home-card {
   display: flex;
   flex-direction: column;
