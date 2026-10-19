@@ -7,7 +7,7 @@ do projeto (decisões com o porquê) e, se quiser, o time e outras máquinas sin
 App desktop para Windows (Electron + xterm.js + node-pty). Até a v0.1 se chamava *Bash Organizer*.
 
 **Vídeo de apresentação (56 s):** [docs/brain-organizer.mp4](docs/brain-organizer.mp4) — da bagunça de terminais
-iguais aos Primeiros passos, à Home, aos Insights e ao time. Feito com Remotion (projeto `bo-promo`, separado).
+iguais aos Primeiros passos, à Home, aos Insights e ao time. Feito com Remotion (projeto `bo-promo`, separado), com trilha e efeitos sonoros compostos por código.
 
 ```bash
 npm install
