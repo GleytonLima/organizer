@@ -6,6 +6,7 @@ import { showMenu } from '../menu.js';
 import { openTask } from './selection.js';
 import { saveProgressDialog } from '../memory/progress.js';
 import { parentDialog } from './detail-subtasks.js';
+import { newReminderDialog } from '../reminders/dialog.js';
 
 export function taskMenu(e, task) {
   const moves = columnsOf(taskProject(task))
@@ -15,6 +16,7 @@ export function taskMenu(e, task) {
     { label: 'Abrir', action: () => openTask(task.id) },
     { label: 'Salvar progresso…', action: () => saveProgressDialog(taskProject(task), task) },
     { label: 'Tornar subtarefa de…', action: () => parentDialog(task) },
+    { label: 'Lembrar…', action: () => newReminderDialog({ task }) },
     ...(moves.length ? [{ sep: true }, ...moves] : []),
     { sep: true },
     { label: 'Excluir', danger: true, action: () => deleteTask(task) },

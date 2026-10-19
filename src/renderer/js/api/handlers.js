@@ -9,6 +9,7 @@ import { pushNotification } from '../notify/center.js';
 import { taskHandlers } from './task-handlers.js';
 import { addProject, addFoldersToProject, setSyncKey } from '../actions/projects.js';
 import { memoryHandlers } from './memory-handlers.js';
+import { reminderHandlers } from './reminder-handlers.js';
 import { requestStartup, approveCrossTerminal } from './approvals.js';
 
 function terminalInfo({ project, group, t }) {
@@ -42,6 +43,7 @@ const describeProject = (project) => ({
 export const handlers = {
   ...taskHandlers,
   ...memoryHandlers,
+  ...reminderHandlers,
 
   /** Projetos, grupos e terminais; `caller` é o terminal que pediu. */
   list(p) {

@@ -5,6 +5,7 @@ import { setTaskView } from './tasks.js';
 import { replyToTask } from './task-waiting.js';
 import { activate } from './terminals.js';
 import { waitingItems, awaySummary, isEmptySummary } from '../home/data.js';
+import { dueReminders } from './reminders.js';
 
 export const isHomeOpen = () => store.state.taskView === 'home';
 
@@ -18,7 +19,7 @@ export function closeHome() {
 
 /** Ao abrir o app: a Home aparece se houver algo esperando você ou novidades desde a última vez. */
 export function homeOnStart() {
-  if (waitingItems().length || !isEmptySummary(awaySummary(store.state.homeSeenAt))) openHome();
+  if (waitingItems().length || dueReminders().length || !isEmptySummary(awaySummary(store.state.homeSeenAt))) openHome();
 }
 
 /** Responde cada tarefa com a própria sugestão (as sem sugestão ficam). Devolve quantas respondeu. */

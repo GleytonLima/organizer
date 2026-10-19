@@ -2,6 +2,7 @@
 const { waitForOutput } = require('./wait');
 const { TASK_TOOLS } = require('./tools-tasks');
 const { MEMORY_TOOLS } = require('./tools-memory');
+const { REMINDER_TOOLS } = require('./tools-reminders');
 
 const terminalRef = {
   type: 'string',
@@ -123,4 +124,4 @@ const TOOLS = [
   },
 ];
 
-module.exports = { TOOLS: [...TOOLS, ...TASK_TOOLS, ...MEMORY_TOOLS] };
+module.exports = { TOOLS: [...TOOLS, ...TASK_TOOLS, ...MEMORY_TOOLS, ...REMINDER_TOOLS] };

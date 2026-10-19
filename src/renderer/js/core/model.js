@@ -89,5 +89,6 @@ export function migrate(saved, home) {
     memoryScope: s.memoryScope === 'global' ? 'global' : 'project', // aba Memória: deste projeto (projeto + pastas) | global
     homeSeenAt: s.homeSeenAt || null, // quando você saiu da Home pela última vez (base do "enquanto você esteve fora")
     focusMode: !!s.focusMode, // modo foco: só avisos urgentes viram toast (notify/center.js)
+    reminders: Array.isArray(s.reminders) ? s.reminders : [], // lembretes (actions/reminders.js)
   };
 }

@@ -116,6 +116,16 @@ const COMMANDS = {
       print(opts, r, (p) => `${p.name}: ${p.repos.map((x) => x.name).join(', ') || '(sem pastas)'}${p.syncKey ? `  (sync: ${p.syncKey})` : ''}`);
     },
   },
+  remind: {
+    usage: 'remind <texto...> --em 30min | --quando "amanhã 9h" [--task BO-3]',
+    help: 'Lembrete para você: toast na hora e um cartão na Home até concluir.',
+    run: (args) => require('./commands-reminder').remind(args),
+  },
+  reminders: {
+    usage: 'reminders [done <id> | snooze <id> <quando...>]',
+    help: 'Lista os lembretes (os que tocaram e os próximos); conclui ou adia um.',
+    run: (args) => require('./commands-reminder').reminders(args),
+  },
   task: {
     usage: 'task <list|columns|add|move|report|wait|done|waiting> …',
     help: 'Quadro de tarefas do projeto (bo task, sem argumentos, mostra a ajuda).',

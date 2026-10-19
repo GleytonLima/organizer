@@ -50,6 +50,24 @@ o que falta, cada item com um botão:
   repo e a branch em que está. Agentes abrem terminais pelo nome: `open_terminal({ repo: "backend" })` / `bo open --repo backend`.
 - Arrastar terminais para reordenar ou mover entre grupos.
 
+## Lembretes
+
+"Me lembre de revisar o PR do Pix amanhã às 9h": pelo botão **Novo lembrete** da Home, pelo menu de uma tarefa
+(**Lembrar…**), pelo `bo remind` ou pelo próprio agente (ferramenta MCP `remind_me`, ex.: "conferir o deploy em 30 min").
+
+- **Quando**, em português: `em 30 min`, `em 2h`, `amanhã 9h`, `sexta 14h`, `18h` (hoje, ou amanhã se já passou),
+  `20/10 10:00`; dia sem hora vale 9h. Para agentes, também ISO (`2026-10-20T09:00`).
+- **Na hora**: aviso do Windows (passa pelo modo foco, porque foi você quem pediu) e um cartão em "Aguardando você"
+  na Home, com **Concluir** e **Adiar** (10 min, 1 hora, amanhã 9h). Ligado a uma tarefa, o cartão leva até ela.
+- **Próximos lembretes** ficam listados na Home, com um × para cancelar. Com o app fechado, os que venceram tocam
+  ao abrir.
+
+```bash
+bo remind Revisar o PR do Pix --quando "amanhã 9h"
+bo remind Conferir o deploy --em 30min --task LO-11
+bo reminders                  # os que tocaram e os próximos (done <id> / snooze <id> <quando>)
+```
+
 ## Agentes de IA e CLI `bo`
 
 Todo terminal aberto pelo app tem o comando `bo` no PATH e sabe quem ele é (`BO_TERMINAL_ID`).

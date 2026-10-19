@@ -8,13 +8,16 @@ import { closeHome, openHome, isHomeOpen, replyWithSuggestions, setFocusMode } f
 import { iconButton } from '../components.js';
 import { waitingCard, resumeCard, openInPanel } from './cards.js';
 import { doneCheck } from '../check.js';
+import { dueReminders, upcomingReminders } from '../../actions/reminders.js';
+import { reminderCard, upcomingSection } from './reminders.js';
+import { newReminderDialog } from '../reminders/dialog.js';
 
 const drafts = {}; // respostas em edição, por tarefa (sobrevivem aos re-renders)
 const selected = new Set(); // esperas marcadas para responder em lote
 const away = { since: null, decisions: [] }; // decisões novas desde a última visita (memória, assíncrono)
 
 export const homeButton = () => {
-  const waiting = waitingItems().length;
+  const waiting = waitingItems().length + dueReminders().length;
   return iconButton('home', waiting ? `Início — ${waiting} esperando você` : 'Início', () => (isHomeOpen() ? closeHome() : openHome()),
     `tasks-btn${isHomeOpen() ? ' on' : ''}${waiting ? ' has-waiting' : ''}`);
 };
@@ -41,7 +44,8 @@ function header(waiting) {
   return el('header', { class: 'home-head' },
     el('div', {}, el('h2', { class: 'home-hello', text: greeting() }), el('p', { class: 'home-line', text: line })),
     el('span', { class: 'spacer' }),
-    el('label', { class: 'home-focus', title: 'Com o modo foco, só um agente esperando você vira aviso do Windows; o resto fica aqui.' },
+    el('button', { type: 'button', class: 'btn ghost small', onclick: () => newReminderDialog(), text: 'Novo lembrete' }),
+    el('label', { class: 'home-focus', title: 'Com o modo foco, só um agente esperando você vira aviso do Windows (e os seus lembretes); o resto fica aqui.' },
       el('input', { type: 'checkbox', checked: store.state.focusMode, onchange: (e) => setFocusMode(e.target.checked) }), 'Modo foco'),
     iconButton('close', 'Voltar aos terminais', closeHome));
 }
@@ -54,8 +58,8 @@ function calm() {
     el('div', {}, el('div', { class: 'home-calm-title', text: 'Nada esperando você' }), el('div', { class: 'home-calm-sub', text: 'Os agentes seguem trabalhando.' })));
 }
 
-function waitingSection(items) {
-  if (items.length) calmSince = 0;
+function waitingSection(items, due) {
+  if (items.length || due.length) calmSince = 0;
   const picked = items.filter(({ task }) => selected.has(task.id));
   const batch = picked.length
     ? el('div', { class: 'home-batch' }, el('span', { text: `${plural(picked.length, 'marcada', 'marcadas')}` }), el('span', { class: 'spacer' }),
@@ -64,7 +68,7 @@ function waitingSection(items) {
     : null;
   return el('section', { class: 'home-section' },
     el('h3', { class: 'home-h', text: 'Aguardando você' }),
-    items.length ? [batch, items.map((it) => waitingCard(it, drafts, selected, notify))] : calm());
+    items.length || due.length ? [due.map(reminderCard), batch, items.map((it) => waitingCard(it, drafts, selected, notify))] : calm());
 }
 
 function resumeSection(items) {
@@ -101,5 +105,6 @@ export function renderHome(node) {
   loadDecisions(since);
   const waiting = waitingItems();
   for (const id of selected) if (!waiting.some(({ task }) => task.id === id)) selected.delete(id);
-  remount(node, el('div', { class: 'home' }, header(waiting.length), waitingSection(waiting), resumeSection(resumeItems()), awaySection(awaySummary(since) || { done: [], created: [], reports: 0, people: [] })));
+  const due = dueReminders();
+  remount(node, el('div', { class: 'home' }, header(waiting.length + due.length), waitingSection(waiting, due), upcomingSection(upcomingReminders()), resumeSection(resumeItems()), awaySection(awaySummary(since) || { done: [], created: [], reports: 0, people: [] })));
 }

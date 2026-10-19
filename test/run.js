@@ -20,6 +20,7 @@ const SUITES = [
   { name: 'settings' }, // Configurações → Servidor do time; SSO com o Keycloak de teste se estiver no ar
   { name: 'data-folder' }, // troca de nome: a pasta de dados antiga migra sozinha
   { name: 'home' }, // Home: aguardando você, continue de onde parou, enquanto você esteve fora, modo foco
+  { name: 'reminders', runs: 2 }, // lembretes: quando em português, agente/CLI, Home, disparo, adiar/concluir, persistência
   { name: 'welcome' }, // Primeiros passos: verificar, instalar, conectar o Claude Code, projeto a partir de uma pasta
   { name: 'links' },
   { name: 'agent', runs: 2 },

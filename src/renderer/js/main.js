@@ -17,6 +17,7 @@ import { initMemorySync } from './memory/sync.js';
 import { homeOnStart } from './actions/home.js';
 import { initTasksSync } from './tasks/sync.js';
 import { initSetup, openWelcome } from './actions/setup.js';
+import { startReminders } from './actions/reminders.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -44,6 +45,7 @@ async function init() {
   window.addEventListener('beforeunload', persistNow);
 
   restoreSession();
+  startReminders(); // os que venceram com o app fechado tocam agora (antes de decidir pela Home)
   homeOnStart(); // algo esperando você ou novidades desde a última vez: começa pela Home
   renderAll();
   initApi(); // depois de restaurar: pedidos já encontram os terminais

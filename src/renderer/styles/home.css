@@ -79,6 +79,45 @@
   border-radius: var(--r-lg);
   background: var(--surface);
 }
+.home-card.reminder {
+  border-color: color-mix(in srgb, var(--notify) 40%, var(--border));
+}
+.home-card.reminder .home-where .icon {
+  width: 14px;
+  height: 14px;
+}
+/* próximos lembretes: hora · texto · × (aparece no hover, sem empurrar o texto) */
+.home-upcoming {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-upcoming li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 4px 6px 0;
+  font-size: 13.5px;
+}
+.home-upcoming-when {
+  flex: none;
+  min-width: 92px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.home-upcoming-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-upcoming li:not(:hover) > .reveal {
+  opacity: 0;
+}
 .home-card.wait {
   border-color: color-mix(in srgb, var(--notify) 40%, var(--border));
 }
@@ -144,6 +183,7 @@
   gap: 4px;
 }
 .home-meta .link,
+.home-actions .link,
 .home-away .link {
   border: none;
   background: none;
@@ -181,6 +221,7 @@
   gap: 4px 10px;
   align-items: baseline;
 }
+.home-actions .link,
 .home-away .link {
   padding: 0;
   color: var(--dim);
