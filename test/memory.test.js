@@ -20,6 +20,8 @@ suite('memória', {
 });
 
 async function firstRun(t, agent) {
+  // o repo padrão vem da pasta que o bash informa: espera o terminal subir (sob carga, ele demora)
+  await t.shellReady('be');
   const d1 = await agent.tool('record_decision', { text: POSTGRES, tags: 'banco' });
   t.check(d1.ok && d1.data.id, 'decisão válida é registrada', d1.error);
   t.equal(d1.data?.repo, 'backend', 'repo padrão vem da pasta do terminal');
