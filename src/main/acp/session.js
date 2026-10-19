@@ -71,7 +71,7 @@ class AgentSession {
       const init = await this.rpc.request('initialize', {
         protocolVersion: PROTOCOL_VERSION,
         clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
-        clientInfo: { name: 'bash-organizer', title: 'Brain Organizer', version: app.getVersion() },
+        clientInfo: { name: 'brain-organizer', title: 'Brain Organizer', version: app.getVersion() },
       });
       this.caps = init?.agentCapabilities || {};
       this.emit({ type: 'capabilities', canResume: !!this.caps.loadSession, canList: !!this.caps.sessionCapabilities?.list });

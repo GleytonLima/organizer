@@ -2,7 +2,7 @@
 import { el } from '../core/dom.js';
 import { store } from '../core/store.js';
 import { termLabel } from '../core/format.js';
-import { activate, newTerminal, closeTerminal, editTerminal, moveTerminal } from '../actions/terminals.js';
+import { activate, showTerminal, newTerminal, closeTerminal, editTerminal, moveTerminal } from '../actions/terminals.js';
 import { toggleGroup } from '../actions/groups.js';
 import { iconButton, tintedIcon, terminalMeta, unreadDot } from './components.js';
 import { terminalMenu, groupMenu } from './context-menus.js';
@@ -16,7 +16,7 @@ function terminalItem(project, group, t) {
     {
       class: `term-item${active ? ' active' : ''}`,
       title: t.cwd,
-      onclick: () => activate(t.id),
+      onclick: () => showTerminal(t.id),
       ondblclick: () => editTerminal(t.id),
       oncontextmenu: (e) => terminalMenu(e, t.id),
       ...draggable('terminal', t.id),

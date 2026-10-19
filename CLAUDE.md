@@ -1,6 +1,6 @@
 # Brain Organizer — convenções
 
-> Até a v0.1 o app se chamava **Bash Organizer**. Ficaram com o nome antigo, de propósito: o `appId` `com.bashorganizer.app` (o instalador atualiza o app no lugar e os toasts mantêm o atalho), o servidor MCP `bash-organizer` (permissões `mcp__bash-organizer__*` já aprovadas no Claude Code) e `TERM_PROGRAM=bash-organizer`. A pasta antiga de dados migra sozinha (`src/main/data-folder.js`).
+> Até a v0.1 o app se chamava **Bash Organizer**. Ficaram com o nome antigo, de propósito: o `appId` `com.bashorganizer.app` (o instalador atualiza o app no lugar e os toasts mantêm o atalho), e `TERM_PROGRAM=bash-organizer`. O servidor MCP agora é `brain-organizer`; o Conectar dos Primeiros passos remove o registro antigo `bash-organizer`. A pasta antiga de dados migra sozinha (`src/main/data-folder.js`).
 
 ## Código
 - **Nada de arquivos gigantes.** Mire em < 200 linhas por arquivo; passou de ~250, divida por responsabilidade.

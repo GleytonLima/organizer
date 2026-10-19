@@ -48,11 +48,6 @@
   font-size: 13px;
   font-weight: 600;
 }
-.wl-step.done .wl-mark {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--on-accent);
-}
 .wl-body {
   flex: 1;
   min-width: 0;

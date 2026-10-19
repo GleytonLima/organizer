@@ -47,7 +47,10 @@ function runBin(bin, args, { timeout = 30000 } = {}) {
 const unpacked = (p) => p.replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
 const BIN_DIR = unpacked(path.resolve(__dirname, '..', '..', '..', 'bin'));
 
-/** Servidor MCP do app para registrar num agente: o runtime do app rodando `bo.js mcp`. */
-const boMcp = () => ({ name: 'bash-organizer', command: process.execPath, args: [path.join(BIN_DIR, 'bo.js'), 'mcp'], env: { ELECTRON_RUN_AS_NODE: '1' } });
+/** Nome do servidor MCP até a v0.1 (Bash Organizer): Conectar remove o registro antigo. */
+const LEGACY_MCP = 'bash-organizer';
 
-module.exports = { readJsonSafe, findBin, runBin, quote, boMcp, BIN_DIR };
+/** Servidor MCP do app para registrar num agente: o runtime do app rodando `bo.js mcp`. */
+const boMcp = () => ({ name: 'brain-organizer', command: process.execPath, args: [path.join(BIN_DIR, 'bo.js'), 'mcp'], env: { ELECTRON_RUN_AS_NODE: '1' } });
+
+module.exports = { LEGACY_MCP, readJsonSafe, findBin, runBin, quote, boMcp, BIN_DIR };

@@ -2,11 +2,11 @@
 // Responde duas perguntas — "o que precisa de mim?" e "onde eu parei?" — e resume o que aconteceu
 // enquanto você esteve fora. Feita para o "AI brain fry": uma tela só, calma, no lugar de dez avisos.
 import { el, remount } from '../../core/dom.js';
-import { store, notify } from '../../core/store.js';
+import { store, notify, commit } from '../../core/store.js';
 import { waitingItems, resumeItems, awaySummary, isEmptySummary } from '../../home/data.js';
 import { closeHome, openHome, isHomeOpen, replyWithSuggestions, setFocusMode } from '../../actions/home.js';
 import { iconButton } from '../components.js';
-import { waitingCard, resumeCard } from './cards.js';
+import { waitingCard, resumeCard, openInPanel } from './cards.js';
 import { doneCheck } from '../check.js';
 
 const drafts = {}; // respostas em edição, por tarefa (sobrevivem aos re-renders)
@@ -72,19 +72,28 @@ function resumeSection(items) {
   return el('section', { class: 'home-section' }, el('h3', { class: 'home-h', text: 'Continue de onde parou' }), el('div', { class: 'home-grid' }, items.map(resumeCard)));
 }
 
+// cada tarefa citada abre a tarefa; as decisões levam à aba Memória
+const taskLinks = (list) => [...list.slice(0, 3).map((t) => el('button', { type: 'button', class: 'link', onclick: () => openInPanel(t), text: t.title })), list.length > 3 ? el('span', { class: 'hint', text: `e mais ${list.length - 3}` }) : null];
+
+function openMemory() {
+  store.state.sideTab = 'memory';
+  store.state.taskView = 'panel';
+  store.state.homeSeenAt = Date.now();
+  commit();
+}
+
 function awaySection(summary) {
   const d = away.decisions;
   if (isEmptySummary(summary) && !d.length) return null;
-  const titles = (list) => list.slice(0, 3).map((t) => t.title).join(' · ') + (list.length > 3 ? ' …' : '');
   const rows = [
-    summary.done.length ? [plural(summary.done.length, 'tarefa concluída', 'tarefas concluídas'), titles(summary.done)] : null,
-    summary.created.length ? [plural(summary.created.length, 'tarefa nova', 'tarefas novas'), titles(summary.created)] : null,
-    summary.reports ? [plural(summary.reports, 'relato dos agentes', 'relatos dos agentes'), ''] : null,
-    d.length ? [plural(d.length, 'decisão nova na memória', 'decisões novas na memória'), d.slice(0, 2).map((m) => m.text).join(' · ')] : null,
-    summary.people.length ? ['Do time', summary.people.join(', ')] : null,
+    summary.done.length ? [plural(summary.done.length, 'tarefa concluída', 'tarefas concluídas'), taskLinks(summary.done)] : null,
+    summary.created.length ? [plural(summary.created.length, 'tarefa nova', 'tarefas novas'), taskLinks(summary.created)] : null,
+    summary.reported?.length ? [plural(summary.reports, 'relato dos agentes', 'relatos dos agentes'), taskLinks(summary.reported)] : null,
+    d.length ? [plural(d.length, 'decisão nova na memória', 'decisões novas na memória'), el('button', { type: 'button', class: 'link', onclick: openMemory, text: 'Ver na memória' })] : null,
+    summary.people.length ? ['Do time', el('span', { class: 'hint', text: summary.people.join(', ') })] : null,
   ].filter(Boolean);
   return el('section', { class: 'home-section' }, el('h3', { class: 'home-h', text: 'Enquanto você esteve fora' }),
-    el('ul', { class: 'home-away' }, rows.map(([a, b]) => el('li', {}, el('strong', { text: a }), b ? el('span', { class: 'hint', text: b }) : null))));
+    el('ul', { class: 'home-away' }, rows.map(([a, b]) => el('li', {}, el('strong', { text: a }), b))));
 }
 
 export function renderHome(node) {

@@ -1,8 +1,8 @@
 // Passo "Agentes de IA" dos Primeiros passos: uma linha por agente (Claude Code, Devin…), cada uma com o
 // próximo botão — Instalar, Entrar ou Conectar — até ficar pronta.
 import { el } from '../../core/dom.js';
-import { icon } from '../icons.js';
-import { setup, installAgent, loginAgent, connectAgent, agentConnected, agentReady } from '../../actions/setup.js';
+import { setup, installAgent, loginAgent, connectAgent, agentConnected, agentReady, doneSince } from '../../actions/setup.js';
+import { doneCheck } from '../check.js';
 
 const button = (text, onclick, primary = true) => el('button', { type: 'button', class: `btn${primary ? ' primary' : ''}`, disabled: !!setup.busy, onclick, text });
 const note = (text) => el('span', { class: 'folder-note', text });
@@ -22,7 +22,7 @@ function next(a) {
       action: setup.busy === `connect-${a.id}` ? note('Conectando…') : button('Conectar', () => connectAgent(a)),
     };
   }
-  return { text: `${version} · pronto: usa seus terminais, tarefas e memória`, action: icon('check', 'wl-ok') };
+  return { text: `${version} · pronto: usa seus terminais, tarefas e memória`, action: doneCheck({ size: 22, since: doneSince(`agent-${a.id}`, true) }) };
 }
 
 function agentRow(a) {

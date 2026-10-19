@@ -204,7 +204,7 @@ suite('agente via ACP', {
 
   // servidores MCP do perfil: chegam no session/new junto do Brain Organizer (npx via "cmd /c" no Windows)
   const servers = require('fs').readFileSync(MCP_LOG, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).at(-1);
-  t.equal(servers.map((x) => x.name), ['bash-organizer', 'playwright', 'jira', 'remoto'], 'o agente recebe o MCP do Brain Organizer e os do perfil (o desligado fica de fora)');
+  t.equal(servers.map((x) => x.name), ['brain-organizer', 'playwright', 'jira', 'remoto'], 'o agente recebe o MCP do Brain Organizer e os do perfil (o desligado fica de fora)');
   const pw = servers.find((x) => x.name === 'playwright');
   t.equal([pw.command, ...pw.args], process.platform === 'win32' ? ['cmd', '/c', 'npx', '@playwright/mcp@0.0.83'] : ['npx', '@playwright/mcp@0.0.83'], 'comando do servidor MCP (npx pelo cmd no Windows)');
   t.equal(servers.find((x) => x.name === 'jira').env, [{ name: 'JIRA_TOKEN', value: 'segredo-123' }], 'env do servidor com ${VAR} vindo das variáveis do perfil');
@@ -233,14 +233,14 @@ suite('agente via ACP', {
   await t.waitFor(async () => !(await t.modal.open()));
   await t.modal.cancel().catch(() => {}); // lista de perfis
   const ui = await t.js(`const C = await import('./js/agents/mcp-config.js');
-    const errs = ['{ "bash-organizer": { "command": "x" } }', '{ "a": 1 }', '{ "r": { "type": "http" } }', '[]', 'sem dois pontos'].map((x) => { try { C.checkMcp(x); return null; } catch (e) { return e.message; } });
+    const errs = ['{ "brain-organizer": { "command": "x" } }', '{ "a": 1 }', '{ "r": { "type": "http" } }', '[]', 'sem dois pontos'].map((x) => { try { C.checkMcp(x); return null; } catch (e) { return e.message; } });
     return { errs, again: C.withPlaywright(C.withPlaywright('')), raw: C.mcpForEditor('{ quebrado') };`);
   t.check(ui.errs.every(Boolean), 'validação recusa nome reservado, servidor não-objeto, http sem url, lista e linha sem nome', JSON.stringify(ui.errs));
   t.equal([Object.keys(JSON.parse(ui.again).mcpServers), ui.raw], [['playwright'], '{ quebrado'], 'Playwright não duplica; JSON inválido aparece como está para corrigir');
 
   // unidade, no processo principal: montagem dos servidores e JSON canônico do sync
   const { parseMcpServers } = require('../src/main/acp/mcp-servers');
-  const fails = ['{x', '{"a b":{"command":"x"}}', '{"a":{}}', '{"a":{"type":"ws","url":"u"}}', '{"r":{"type":"sse"}}', '{"bash-organizer":{"command":"x"}}', '[]', '{"a":1}', 'sem dois pontos']
+  const fails = ['{x', '{"a b":{"command":"x"}}', '{"a":{}}', '{"a":{"type":"ws","url":"u"}}', '{"r":{"type":"sse"}}', '{"brain-organizer":{"command":"x"}}', '[]', '{"a":1}', 'sem dois pontos']
     .map((x) => { try { parseMcpServers(x); return null; } catch (e) { return e.message; } });
   t.check(fails.every(Boolean), 'servidores MCP inválidos são recusados com mensagem', JSON.stringify(fails));
   t.equal(parseMcpServers(`pw: C:/tools/pw.exe "com espaço" 'outro'\n# comentário`)[0].args, ['com espaço', 'outro'], 'formato antigo: argumentos entre aspas e comentários');

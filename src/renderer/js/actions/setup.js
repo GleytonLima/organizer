@@ -18,6 +18,13 @@ export const setup = { status: null, busy: null, log: [], error: null };
 
 export const isWelcomeOpen = () => store.state.taskView === 'welcome';
 
+const readyAt = {};
+/** Desde quando `key` está pronto (para o check se desenhar uma vez só); null se não está. */
+export function doneSince(key, done) {
+  if (!done) return (delete readyAt[key], null);
+  return (readyAt[key] ||= Date.now());
+}
+
 /** Conectado: MCP (e hooks) no agente e, se ele roda por ACP, o perfil no app. */
 export const agentConnected = (a) => a.connected && (!a.acp || !!agentProfileFor(a.id));
 export const agentReady = (a) => a.installed && a.loggedIn && agentConnected(a);

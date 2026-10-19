@@ -19,6 +19,7 @@
   --r-lg: 14px;
   --r-xl: 18px;
 
+  letter-spacing: 0.005em; /* a Jakarta é justa em tamanhos pequenos */
   font-family: 'Plus Jakarta Sans', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif; /* fonts/fonts.css */
   font-size: 13px;
   color: var(--text);

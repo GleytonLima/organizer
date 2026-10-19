@@ -6,12 +6,12 @@ function mcpConfig() {
   const script = path.resolve(__dirname, '..', 'bo.js');
   const json = {
     mcpServers: {
-      'bash-organizer': { command: runtime, args: [script, 'mcp'], env: { ELECTRON_RUN_AS_NODE: '1' } },
+      'brain-organizer': { command: runtime, args: [script, 'mcp'], env: { ELECTRON_RUN_AS_NODE: '1' } },
     },
   };
   return [
     'Claude Code (todas as pastas):',
-    `  claude mcp add -s user -e ELECTRON_RUN_AS_NODE=1 bash-organizer -- "${runtime}" "${script}" mcp`,
+    `  claude mcp add -s user -e ELECTRON_RUN_AS_NODE=1 brain-organizer -- "${runtime}" "${script}" mcp`,
     '',
     'Outros agentes (Devin, Cursor…), no arquivo de configuração MCP:',
     JSON.stringify(json, null, 2),

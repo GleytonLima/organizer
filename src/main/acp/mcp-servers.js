@@ -80,7 +80,7 @@ function parseMcpServers(text, vars = {}) {
   const servers = Object.entries(map)
     .filter(([, cfg]) => !cfg?.disabled)
     .map(([name, cfg]) => toAcp(name, cfg, vars));
-  if (servers.some((s) => s.name === 'bash-organizer')) throw new Error('Servidor MCP “bash-organizer” já vem sempre: use outro nome.');
+  if (servers.some((s) => s.name === 'brain-organizer')) throw new Error('Servidor MCP “brain-organizer” já vem sempre: use outro nome.');
   return servers;
 }
 

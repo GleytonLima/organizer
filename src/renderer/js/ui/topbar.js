@@ -3,7 +3,7 @@ import { $, el, mount } from '../core/dom.js';
 import { store, commit, activeEntry, currentProject, currentGroup, projectById, projectTerminals } from '../core/store.js';
 import { termLabel } from '../core/format.js';
 import { fitVisible, processStatus } from '../terminals/sessions.js';
-import { activate, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
+import { activate, showTerminal, newTerminal, closeTerminal, editTerminal } from '../actions/terminals.js';
 import { createProject, openProject } from '../actions/projects.js';
 import { gitFor, dirtyCount } from '../git/git.js';
 import { iconButton, dot, processBadge, unreadDot } from './components.js';
@@ -44,7 +44,7 @@ function projectSelect(project) {
     if (e.target.value === '__new') return createProject();
     const target = projectById(e.target.value);
     const first = projectTerminals(target)[0];
-    if (target.open && first) activate(first.id);
+    if (target.open && first) showTerminal(first.id);
     else openProject(target);
   };
   return el(
@@ -63,7 +63,7 @@ function tab(project, t) {
     {
       class: `tab${t.id === store.state.activeId ? ' active' : ''}`,
       title: t.cwd + (g?.branch ? `\n${g.branch}` : ''),
-      onclick: () => activate(t.id),
+      onclick: () => showTerminal(t.id),
       ondblclick: () => editTerminal(t.id),
       oncontextmenu: (e) => terminalMenu(e, t.id),
       onauxclick: (e) => e.button === 1 && closeTerminal(t.id),

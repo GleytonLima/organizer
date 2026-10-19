@@ -6,6 +6,7 @@
 import { commit, findTerm } from '../core/store.js';
 import { currentTaskOf } from '../tasks/queries.js';
 import { createTask, reportTask } from './tasks.js';
+import { turnSummary } from '../tasks/report-text.js';
 import { requestInput } from './task-waiting.js';
 import { logTask, notifyAbout } from '../tasks/history.js';
 
@@ -43,8 +44,8 @@ export function onPermissionAnswered(terminalId, item) {
 export function onTurnEnd(terminalId, lastMessage, stopReason) {
   const task = currentTaskOf(terminalId);
   if (!task) return;
-  const tail = lastMessage.trim().slice(-400);
-  if (tail) reportTask(task, tail, { by: 'agente', terminalId });
+  const summary = turnSummary(lastMessage); // último parágrafo, sem markdown, sem cortar palavra
+  if (summary) reportTask(task, summary, { by: 'agente', terminalId });
   if (stopReason === 'end_turn') notifyAbout(task, `${task.key}: o agente terminou`);
 }
 

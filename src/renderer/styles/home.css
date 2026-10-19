@@ -124,7 +124,7 @@
   margin: 0;
   color: var(--dim);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.55;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -133,6 +133,10 @@
 .home-meta {
   color: var(--faint);
   font-size: 12px;
+}
+.home-card.resume .home-meta {
+  margin-top: auto; /* rodapé alinhado entre cartões de alturas diferentes */
+  padding-top: 6px;
 }
 .home-meta > span {
   display: inline-flex;
@@ -173,8 +177,19 @@
 }
 .home-away li {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   align-items: baseline;
+}
+.home-away .link {
+  padding: 0;
+  color: var(--dim);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+}
+.home-away .link:hover {
+  color: var(--text);
 }
 /* botão Início: bolinha discreta quando algo espera você */
 .icon-btn.tasks-btn.has-waiting::after {

@@ -4,7 +4,7 @@
 // BO_DEVIN_HOME troca a pasta de configuração (padrão %APPDATA%\devin); BO_DEVIN_BIN, o executável.
 const fs = require('fs');
 const path = require('path');
-const { readJsonSafe, findBin, runBin, boMcp } = require('../run');
+const { LEGACY_MCP, readJsonSafe, findBin, runBin, boMcp } = require('../run');
 
 const home = () => process.env.BO_DEVIN_HOME || path.join(process.env.APPDATA || '', 'devin');
 const installDir = () => path.join(process.env.LOCALAPPDATA || '', 'devin', 'cli', 'bin');
@@ -16,7 +16,7 @@ async function status() {
     installed: !!b,
     version: b ? (await runBin(b, ['--version'], { timeout: 15000 })).out.split(/\r?\n/)[0] : null,
     loggedIn: fs.existsSync(path.join(home(), 'credentials.toml')),
-    connected: !!readJsonSafe(path.join(home(), 'mcp_config.json'))?.mcpServers?.['bash-organizer'],
+    connected: !!readJsonSafe(path.join(home(), 'mcp_config.json'))?.mcpServers?.['brain-organizer'],
     // o perfil ACP usa o caminho completo: o PATH do app não vê uma instalação feita depois de ele abrir
     acp: b ? { command: b[0], args: [...b.slice(1), 'acp'] } : null,
   };
@@ -36,7 +36,7 @@ function preview() {
 async function connect() {
   const b = bin();
   const mcp = boMcp();
-  await runBin(b, ['mcp', 'remove', mcp.name, '-s', 'user']); // pode não existir ainda
+  for (const name of [mcp.name, LEGACY_MCP]) await runBin(b, ['mcp', 'remove', name, '-s', 'user']); // pode não existir; o antigo sai
   const add = await runBin(b, ['mcp', 'add', mcp.name, '-s', 'user', '-e', 'ELECTRON_RUN_AS_NODE=1', '--', mcp.command, ...mcp.args]);
   if (add.code) throw new Error(`O Devin não registrou o servidor MCP: ${add.out || `saída ${add.code}`}`);
   return { profile: { id: 'devin', label: 'Devin', ...(await status()).acp } };

@@ -44,7 +44,7 @@ function agentCommand(profile = {}) {
 function boMcpServer(env) {
   const script = unpacked(path.resolve(__dirname, '..', '..', '..', 'bin', 'bo.js'));
   const vars = { ELECTRON_RUN_AS_NODE: '1', ...env };
-  return { name: 'bash-organizer', command: process.execPath, args: [script, 'mcp'], env: Object.entries(vars).map(([name, value]) => ({ name, value: String(value) })) };
+  return { name: 'brain-organizer', command: process.execPath, args: [script, 'mcp'], env: Object.entries(vars).map(([name, value]) => ({ name, value: String(value) })) };
 }
 
 module.exports = { agentCommand, boMcpServer, parseEnv };

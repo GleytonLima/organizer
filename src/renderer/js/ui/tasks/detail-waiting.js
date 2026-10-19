@@ -69,7 +69,7 @@ export function waitingBox(task, draft) {
       { class: 'td-waiting-actions' },
       el('span', { class: 'spacer' }),
       el('button', { type: 'button', class: 'btn ghost', onclick: () => dismissWaiting(task), text: 'Encerrar espera' }),
-      el('button', { type: 'button', class: 'btn primary', onclick: send }, icon('send'), origin ? 'Enviar ao terminal' : 'Registrar resposta'),
+      el('button', { type: 'button', class: 'btn primary', onclick: send, text: origin ? 'Enviar ao terminal' : 'Registrar resposta' }),
     ),
   );
 }

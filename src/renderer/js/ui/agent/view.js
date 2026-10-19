@@ -77,7 +77,7 @@ function build(s) {
       submit();
     },
   });
-  const sendBtn = el('button', { class: 'btn primary', onclick: () => submit() }, icon('send'), 'Enviar');
+  const sendBtn = el('button', { class: 'btn primary', onclick: () => submit(), text: 'Enviar' });
   const stopBtn = el('button', { class: 'btn', onclick: () => s.cancel(), text: 'Interromper' });
   const files = attachmentsBox({ onError: (text) => (s.items.push({ type: 'error', text }), s.render()) });
   function submit() {

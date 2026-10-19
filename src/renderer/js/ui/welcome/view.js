@@ -4,8 +4,8 @@
 import { el, mount } from '../../core/dom.js';
 import { store } from '../../core/store.js';
 import { iconButton } from '../components.js';
-import { icon } from '../icons.js';
-import { setup, installStep, closeWelcome, machineReady } from '../../actions/setup.js';
+import { setup, installStep, closeWelcome, machineReady, doneSince } from '../../actions/setup.js';
+import { doneCheck } from '../check.js';
 import { agentsStep } from './agents.js';
 import { projectFromFolder } from '../../actions/project-folder.js';
 
@@ -20,7 +20,7 @@ function step(n, { title, done, text, actions = [], extra = null }) {
   return el(
     'section',
     { class: `wl-step${done ? ' done' : ''}` },
-    el('span', { class: 'wl-mark' }, done ? icon('check') : el('span', { text: String(n) })),
+    done ? doneCheck({ size: 28, since: doneSince(`step-${n}`, true) }) : (doneSince(`step-${n}`, false), el('span', { class: 'wl-mark' }, el('span', { text: String(n) }))),
     el('div', { class: 'wl-body' }, el('div', { class: 'wl-title', text: title }), el('p', { class: 'wl-text', text }), extra),
     el('div', { class: 'wl-actions' }, actions),
   );

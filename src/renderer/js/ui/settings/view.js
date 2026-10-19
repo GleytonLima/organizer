@@ -38,7 +38,7 @@ const row = (title, hint, control) =>
 function generalSection() {
   return [
     el('h3', { class: 'set-title', text: 'Geral' }),
-    row('Primeiros passos', 'Git Bash, Claude Code, a integração entre os dois e um projeto a partir de uma pasta.', el('button', { type: 'button', class: 'btn', onclick: openWelcome, text: 'Abrir' })),
+    row('Primeiros passos', 'Git Bash, os agentes de IA (Claude Code, Devin) e um projeto a partir de uma pasta.', el('button', { type: 'button', class: 'btn', onclick: openWelcome, text: 'Abrir' })),
     row(
       'Tema',
       'Cores do app e dos terminais.',

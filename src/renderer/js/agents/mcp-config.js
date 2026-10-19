@@ -43,7 +43,7 @@ export function mcpMap(text) {
 export function checkMcp(text) {
   for (const [name, cfg] of Object.entries(mcpMap(text))) {
     if (!NAME.test(name)) throw new Error(`Servidor MCP “${name}”: use letras, números, . _ ou -.`);
-    if (name === 'bash-organizer') throw new Error('Servidor MCP “bash-organizer” já vem sempre: use outro nome.');
+    if (name === 'brain-organizer') throw new Error('Servidor MCP “brain-organizer” já vem sempre: use outro nome.');
     if (!cfg || typeof cfg !== 'object') throw new Error(`Servidor MCP “${name}”: esperado um objeto.`);
     const remote = cfg.type === 'http' || cfg.type === 'sse' || (!cfg.type && cfg.url);
     if (remote ? !cfg.url : !cfg.command) throw new Error(`Servidor MCP “${name}”: falta "${remote ? 'url' : 'command'}".`);

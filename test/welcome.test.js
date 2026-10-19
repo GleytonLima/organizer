@@ -26,6 +26,8 @@ const PROFILE = (id, label, command, args, builtin = false) => ({ id, label, bui
 suite('welcome', {
   seed: (d) => {
     fs.writeFileSync(SETTINGS, JSON.stringify({ model: 'opus', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'echo meu-hook' }] }] } }));
+    // registro da v0.1, com o nome antigo: Conectar troca pelo novo
+    fs.writeFileSync(path.join(claudeDir, '.claude.json'), JSON.stringify({ mcpServers: { 'bash-organizer': { command: 'antigo' } } }));
     const [home] = seed.makeFolders(d, ['geral'], { git: false });
     // um perfil do Devin criado à mão: conectar atualiza este, sem duplicar
     const agentProfiles = [PROFILE('claude', 'Claude Code', '', '', true), PROFILE('x1', 'Meu Devin', 'C:\\ferramentas\\devin.exe', 'acp')];
@@ -58,10 +60,12 @@ suite('welcome', {
   await clickIn('claude', 'Conectar');
   t.check(await t.waitFor(() => t.modal.open()), 'Conectar mostra antes o que será gravado');
   const preview = await t.modal.text();
-  t.check(preview.includes('bash-organizer') && preview.includes('settings.json') && preview.includes('.brain-organizer.bak'), 'a prévia diz o MCP, o arquivo dos hooks e a cópia', preview);
+  t.check(preview.includes('brain-organizer') && preview.includes('settings.json') && preview.includes('.brain-organizer.bak'), 'a prévia diz o MCP, o arquivo dos hooks e a cópia', preview);
   await t.modal.submit();
   t.check(await shows('pronto', row('claude')), 'Claude conectado: a linha fica pronta', await row('claude')());
-  const mcp = readJson(path.join(claudeDir, '.claude.json')).mcpServers?.['bash-organizer'];
+  const servers = readJson(path.join(claudeDir, '.claude.json')).mcpServers || {};
+  t.check(!servers['bash-organizer'], 'o registro antigo (bash-organizer) sai', JSON.stringify(Object.keys(servers)));
+  const mcp = servers['brain-organizer'];
   t.check(mcp && /bo\.js$/.test(mcp.args[0]) && mcp.args[1] === 'mcp' && mcp.env.ELECTRON_RUN_AS_NODE === '1', 'servidor MCP registrado pelo `claude mcp add` (escopo do usuário)', JSON.stringify(mcp));
   const settings = readJson(SETTINGS);
   t.equal(settings.model, 'opus', 'o resto do settings.json fica como estava');
@@ -84,7 +88,7 @@ suite('welcome', {
   t.includes((await t.modal.text()).toLowerCase(), 'perfil de agente', 'a prévia inclui o perfil ACP');
   await t.modal.submit();
   t.check(await shows('pronto', row('devin')), 'Devin conectado: a linha fica pronta', await text());
-  t.check(!!readJson(path.join(devinDir, 'mcp_config.json')).mcpServers?.['bash-organizer'], 'servidor MCP registrado pelo `devin mcp add`');
+  t.check(!!readJson(path.join(devinDir, 'mcp_config.json')).mcpServers?.['brain-organizer'], 'servidor MCP registrado pelo `devin mcp add`');
   const profiles = await t.js(`return S.store.state.agentProfiles.map((p) => [p.id, p.command, p.args])`);
   t.equal(profiles.length, 2, 'o perfil do Devin que você criou foi atualizado, sem duplicar');
   t.check(profiles[1][0] === 'x1' && profiles[1][1] === 'node' && profiles[1][2].endsWith('acp'), 'perfil aponta para o executável encontrado, com `acp`', JSON.stringify(profiles));

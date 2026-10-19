@@ -30,6 +30,18 @@ export function activate(id) {
   });
 }
 
+// telas que ocupam a área principal (os terminais ficam por baixo)
+const FULL_VIEWS = ['home', 'board', 'insights', 'settings', 'welcome'];
+
+/** Clique num terminal (barra lateral, abas): sai da Home/quadro/Configurações e mostra o terminal. */
+export function showTerminal(id) {
+  if (FULL_VIEWS.includes(store.state.taskView)) {
+    if (store.state.taskView === 'home') store.state.homeSeenAt = Date.now(); // como ao fechar a Home
+    store.state.taskView = 'off';
+  }
+  activate(id);
+}
+
 /** Adiciona um terminal ao grupo e sobe a sessão; com `focus`, também o ativa. */
 export function addTerminal(group, fields, { focus = true } = {}) {
   const owner = findGroup(group.id);

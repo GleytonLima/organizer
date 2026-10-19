@@ -38,7 +38,7 @@ export function resumeItems(limit = 4) {
  */
 export function awaySummary(since) {
   if (!since) return null;
-  const out = { done: [], created: [], reports: 0, people: new Set() };
+  const out = { done: [], created: [], reported: [], reports: 0, people: new Set() };
   for (const task of store.state.tasks) {
     const project = projectOf(task);
     if (!project) continue;
@@ -46,12 +46,13 @@ export function awaySummary(since) {
       if (h.at <= since || h.by === 'você') continue;
       if (h.by !== 'agente') out.people.add(h.by);
       if (h.type === 'created') out.created.push(task);
-      else if (h.type === 'report') out.reports++;
+      else if (h.type === 'report') (out.reports++, out.reported.push(task));
       else if (h.type === 'moved' && h.to && isDoneColumn(project, h.to)) out.done.push(task);
     }
   }
   out.done = [...new Set(out.done)];
   out.created = [...new Set(out.created)];
+  out.reported = [...new Set(out.reported)];
   out.people = [...out.people];
   return out;
 }

@@ -9,11 +9,12 @@ import { setTaskView } from '../../actions/tasks.js';
 import { openTask } from '../tasks/selection.js';
 import { dot } from '../components.js';
 import { icon } from '../icons.js';
+import { reportPreview } from '../../tasks/report-text.js';
 
 const ALLOW = new Set(['allow_once', 'allow_always']);
 
 /** Abre a tarefa na gaveta (painel de tarefas), saindo da Home. */
-function openInPanel(task) {
+export function openInPanel(task) {
   setTaskView('panel');
   openTask(task.id);
 }
@@ -53,7 +54,7 @@ export function waitingCard({ task, project, origin }, drafts, selected, refresh
         el('span', { class: 'hint', text: origin ? `Vai para o terminal “${termLabel(origin.t)}”` : 'Terminal fechado: fica só no histórico' }),
         el('span', { class: 'spacer' }),
         el('button', { type: 'button', class: 'btn ghost', onclick: () => openInPanel(task), text: 'Abrir tarefa' }),
-        el('button', { type: 'button', class: 'btn primary', onclick: send }, icon('send'), 'Enviar')),
+        el('button', { type: 'button', class: 'btn primary', onclick: send, text: 'Enviar' })),
     ];
   return el('article', { class: `home-card wait${selected.has(task.id) ? ' picked' : ''}` },
     el('header', { class: 'home-card-head' }, pick, where(project, task), el('span', { class: 'spacer' }), el('span', { class: 'hint', text: `esperando há ${timeAgo(w.at)}` })),
@@ -68,10 +69,10 @@ export function resumeCard({ task, project, origin, report }) {
   return el('article', { class: 'home-card resume', onclick: go, title: origin ? 'Continuar no terminal' : 'Abrir a tarefa' },
     el('header', { class: 'home-card-head' }, where(project, task), el('span', { class: 'spacer' }), el('span', { class: 'hint', text: timeAgo(task.updatedAt) })),
     el('div', { class: 'home-title', text: task.title }),
-    report ? el('p', { class: 'home-report', text: report }) : null,
+    report ? el('p', { class: 'home-report', text: reportPreview(report) }) : null,
     el('footer', { class: 'home-meta' },
       origin ? el('span', {}, icon('terminal'), termLabel(origin.t)) : null,
       task.branch ? el('span', {}, icon('branch'), task.branch) : null,
       el('span', { class: 'spacer' }),
-      el('button', { type: 'button', class: 'link', onclick: stop(go), text: origin ? 'Continuar →' : 'Abrir →' })));
+      el('button', { type: 'button', class: 'btn small', onclick: stop(go), text: origin ? 'Continuar' : 'Abrir tarefa' })));
 }

@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { writeJsonAtomic } = require('../../files');
-const { readJsonSafe, findBin, runBin, boMcp, BIN_DIR } = require('../run');
+const { LEGACY_MCP, readJsonSafe, findBin, runBin, boMcp, BIN_DIR } = require('../run');
 
 const configDir = () => process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 const globalConfigFile = () => (process.env.CLAUDE_CONFIG_DIR ? path.join(process.env.CLAUDE_CONFIG_DIR, '.claude.json') : path.join(os.homedir(), '.claude.json'));
@@ -27,7 +27,7 @@ async function status() {
     installed: !!b,
     version: b ? (await runBin(b, ['--version'], { timeout: 15000 })).out.split(/\r?\n/)[0] : null,
     loggedIn: !!(fs.existsSync(path.join(configDir(), '.credentials.json')) || global.oauthAccount || process.env.ANTHROPIC_API_KEY),
-    connected: !!global.mcpServers?.['bash-organizer'] && hasOurHook(settings, 'Stop') && hasOurHook(settings, 'Notification'),
+    connected: !!global.mcpServers?.['brain-organizer'] && hasOurHook(settings, 'Stop') && hasOurHook(settings, 'Notification'),
   };
 }
 
@@ -61,7 +61,7 @@ function writeHooks() {
 async function connect() {
   const b = bin();
   const mcp = boMcp();
-  await runBin(b, ['mcp', 'remove', mcp.name, '-s', 'user']); // pode não existir ainda
+  for (const name of [mcp.name, LEGACY_MCP]) await runBin(b, ['mcp', 'remove', name, '-s', 'user']); // pode não existir; o antigo sai
   const add = await runBin(b, ['mcp', 'add', mcp.name, '-s', 'user', '-e', 'ELECTRON_RUN_AS_NODE=1', '--', mcp.command, ...mcp.args]);
   if (add.code) throw new Error(`O Claude Code não registrou o servidor MCP: ${add.out || `saída ${add.code}`}`);
   writeHooks();

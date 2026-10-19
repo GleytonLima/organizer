@@ -51,7 +51,7 @@ function handle(msg) {
       return reply(id, {
         protocolVersion: params.protocolVersion || '2025-06-18',
         capabilities: { tools: {} },
-        serverInfo: { name: 'bash-organizer', version },
+        serverInfo: { name: 'brain-organizer', version },
         instructions: INSTRUCTIONS,
       });
     case 'ping':
