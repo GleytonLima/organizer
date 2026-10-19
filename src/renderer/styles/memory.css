@@ -188,8 +188,9 @@
   text-align: center;
   padding-top: 4px;
 }
+/* os três pontinhos só aparecem no hover, mas o espaço fica reservado: o texto não pula */
 .mem-item:not(:hover) > .reveal {
-  display: none;
+  opacity: 0;
 }
 .mem-meta {
   display: flex;
