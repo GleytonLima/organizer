@@ -1,6 +1,6 @@
 // Diálogo modal genérico. Resolve com:
 //   - os valores dos campos (ou true, se não houver campos) ao confirmar;
-//   - `extra.value` ao clicar na ação secundária (ex.: "Excluir");
+//   - `extra.value` ao clicar na ação secundária (ex.: "Excluir"; `extra` pode ser uma lista);
 //   - null ao cancelar.
 // `content`: nós extras abaixo dos campos (ex.: histórico). `collect()`: valores próprios do conteúdo.
 import { $, el, mount } from '../core/dom.js';
@@ -35,7 +35,7 @@ export function openModal({ title, message, fields = [], content = null, collect
       el(
         'div',
         { class: 'modal-actions' },
-        extra ? el('button', { type: 'button', class: `btn ghost${extra.danger ? ' danger-text' : ''}`, onclick: () => done(extra.value), text: extra.label }) : null,
+        [extra].flat().filter(Boolean).map((x) => el('button', { type: 'button', class: `btn ghost${x.danger ? ' danger-text' : ''}`, onclick: () => done(x.value), text: x.label })),
         el('span', { class: 'spacer' }),
         el('button', { type: 'button', class: 'btn ghost', onclick: () => done(null), text: 'Cancelar' }),
         el('button', { type: 'submit', class: `btn ${danger ? 'danger' : 'primary'}`, text: submit }),

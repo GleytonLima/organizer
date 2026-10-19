@@ -8,7 +8,6 @@ import { initLayout } from './terminals/layout.js';
 import { activate, newTerminal } from './actions/terminals.js';
 import { startGitPolling } from './git/git.js';
 import { initMenu } from './ui/menu.js';
-import { openModal } from './ui/modal.js';
 import { initRender, renderAll } from './ui/render.js';
 import { initApi } from './api/index.js';
 import { initNotifyCenter } from './notify/center.js';
@@ -17,6 +16,7 @@ import { openTaskFromNotice } from './ui/tasks/selection.js';
 import { initMemorySync } from './memory/sync.js';
 import { homeOnStart } from './actions/home.js';
 import { initTasksSync } from './tasks/sync.js';
+import { initSetup, openWelcome } from './actions/setup.js';
 
 /** Recria os terminais dos projetos abertos e volta ao último ativo. */
 function restoreSession() {
@@ -28,7 +28,8 @@ function restoreSession() {
 
 async function init() {
   store.info = await api.ptyInfo();
-  loadState(await api.loadState());
+  const saved = await api.loadState();
+  loadState(saved);
   applyTheme(store.state.theme);
 
   initSessions($('#terminals'), { onFocus: (id) => id !== store.state.activeId && activate(id) });
@@ -38,6 +39,7 @@ async function init() {
   initNotifyCenter({ openTerminal: activate, openTask: openTaskFromNotice });
   initTasksUi();
   initRender();
+  initSetup();
   $('#btn-empty-new').addEventListener('click', () => newTerminal());
   window.addEventListener('beforeunload', persistNow);
 
@@ -49,12 +51,8 @@ async function init() {
   initMemorySync();
   initTasksSync(); // quadro do workspace (projetos com syncKey)
 
-  if (!store.info.bash) {
-    openModal({
-      title: 'Git Bash não encontrado',
-      message: 'Instale o Git for Windows ou defina GIT_BASH_PATH apontando para o bash.exe.',
-    });
-  }
+  // primeira abertura (sem state.json), Git Bash faltando ou fechou o app com a tela aberta: Primeiros passos
+  if (!saved || !store.info.bash || store.state.taskView === 'welcome') openWelcome();
 }
 
 init();

@@ -10,6 +10,7 @@ import { icon } from '../icons.js';
 import { serverSection, refreshServer } from './server.js';
 import { embeddingsDialog } from '../memory/embeddings-dialog.js';
 import { agentsDialog } from '../agent/profiles-dialog.js';
+import { openWelcome } from '../../actions/setup.js';
 
 const SECTIONS = [
   { id: 'general', label: 'Geral', icon: 'theme' },
@@ -37,6 +38,7 @@ const row = (title, hint, control) =>
 function generalSection() {
   return [
     el('h3', { class: 'set-title', text: 'Geral' }),
+    row('Primeiros passos', 'Git Bash, Claude Code, a integração entre os dois e um projeto a partir de uma pasta.', el('button', { type: 'button', class: 'btn', onclick: openWelcome, text: 'Abrir' })),
     row(
       'Tema',
       'Cores do app e dos terminais.',

@@ -3,7 +3,7 @@ const { app, ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const pty = require('node-pty');
-const { BASH, rcFile, windowsToMsys } = require('./bash');
+const { bashPath, rcFile, windowsToMsys } = require('./bash');
 const { sendToWindow } = require('./window');
 const { apiInfo, terminalToken } = require('./api/server');
 const { childEnv } = require('./env');
@@ -28,10 +28,10 @@ function organizerEnv(id) {
 const nonces = new Map(); // id → nonce das sequências OSC 6973 (ver bash-init.sh)
 
 function spawn({ id, cwd, cols, rows, nonce }) {
-  if (!BASH) return { ok: false, error: 'Git Bash não encontrado. Defina GIT_BASH_PATH.' };
+  if (!bashPath()) return { ok: false, error: 'Git Bash não encontrado. Instale pelos Primeiros passos (Configurações) ou defina GIT_BASH_PATH.' };
   if (ptys.has(id)) return { ok: true, nonce: nonces.get(id) }; // renderer recarregado: o shell é o mesmo
   const dir = cwd && fs.existsSync(cwd) ? cwd : app.getPath('home');
-  const proc = pty.spawn(BASH, ['--rcfile', rcFile().replace(/\\/g, '/'), '-i'], {
+  const proc = pty.spawn(bashPath(), ['--rcfile', rcFile().replace(/\\/g, '/'), '-i'], {
     name: 'xterm-256color',
     cols: cols || 80,
     rows: rows || 24,
@@ -83,7 +83,7 @@ function closeAll(timeout = 3000) {
 const hasPtys = () => ptys.size > 0;
 
 function registerPtyIpc() {
-  ipcMain.handle('pty:info', () => ({ bash: BASH, home: app.getPath('home') }));
+  ipcMain.handle('pty:info', () => ({ bash: bashPath(), home: app.getPath('home') }));
   ipcMain.handle('pty:create', (_e, opts) => spawn(opts));
   ipcMain.on('pty:write', (_e, id, data) => ptys.get(id)?.write(data));
   ipcMain.on('pty:kill', (_e, id) => kill(id));

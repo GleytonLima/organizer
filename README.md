@@ -11,6 +11,21 @@ npm install
 npm start
 ```
 
+## Primeiros passos
+
+Na primeira abertura (ou em **Configurações → Geral → Primeiros passos**) o app verifica esta máquina e resolve
+o que falta, cada item com um botão:
+
+1. **Git Bash**: se não achar, instala o Git for Windows pelo `winget` (ou leva ao download).
+2. **Claude Code**: instala pelo instalador oficial e abre o login num terminal; a tela percebe quando você entrou.
+3. **Conectar o Claude Code ao Brain Organizer**: registra o servidor MCP `bash-organizer` (`claude mcp add -s user`)
+   e os hooks de aviso no `~/.claude/settings.json`, mostrando antes o que será gravado (o resto do arquivo fica
+   igual; uma cópia vai para `settings.json.brain-organizer.bak`).
+4. **Primeiro projeto a partir de uma pasta**: arraste a pasta (ou "Abrir pasta…"). O app acha os repositórios (a
+   pasta ou as subpastas com `.git`) e os comandos prováveis (scripts do `package.json` com o gerenciador certo,
+   `docker compose up`); você marca o que vira terminal e o projeto abre montado, um grupo por repositório e um
+   terminal de agente. Também em **Novo projeto → A partir de uma pasta…**.
+
 ## Recursos
 
 - **Layout**: painel de terminais à esquerda, à direita ou em abas (botões no canto superior direito).
@@ -52,7 +67,7 @@ estar dentro de uma das pastas do projeto. Agentes também podem criar o projeto
 
 O mesmo script oferece um servidor MCP (`bo mcp`) com as ferramentas `create_project`, `open_terminal`, `list_terminals`,
 `send_input`, `read_output`, `wait_for_output`, `terminal_status`, `focus_terminal`, `close_terminal` e `notify_user`.
-Para registrar no Claude Code, Devin etc., rode num terminal do app:
+No Claude Code, o mais simples é o botão **Conectar** dos Primeiros passos. Para Devin, Cursor etc. (ou à mão), rode num terminal do app:
 
 ```bash
 bo mcp-config
@@ -138,7 +153,7 @@ O que gera aviso:
 - **comandos longos** (≥ 15 s) que terminam;
 - **`bo notify "mensagem" [--title T]`** e a ferramenta MCP **`notify_user`**.
 
-Para o Claude Code avisar sempre que termina uma resposta ou precisa de você, use os hooks mostrados por `bo mcp-config`.
+Para o Claude Code avisar sempre que termina uma resposta ou precisa de você: **Primeiros passos → Conectar** (ou os hooks mostrados por `bo mcp-config`).
 
 ## Testes
 
@@ -187,7 +202,7 @@ Cada terminal roda `bash.exe --rcfile bash-init.sh -i`. O rcfile (gerado em `%AP
 carrega `/etc/profile` e o seu `~/.bash_profile`/`~/.bashrc` normalmente e adiciona ao `PROMPT_COMMAND` um hook
 que envia o diretório atual (OSC 7) e o início/fim de cada comando (OSC 6973) — veja `src/main/shell/bash-init.sh`.
 
-O Git Bash é procurado em `C:\Program Files\Git`; para outro local, defina `GIT_BASH_PATH`.
+O Git Bash é procurado em `C:\Program Files\Git` (e no Git instalado por usuário); para outro local, defina `GIT_BASH_PATH`. Instalado pelos Primeiros passos, vale sem reiniciar o app.
 Estado salvo em `%APPDATA%/Brain Organizer/state.json`. Só uma instância roda por vez.
 
 Convenções de código e estrutura de pastas: veja [CLAUDE.md](CLAUDE.md).

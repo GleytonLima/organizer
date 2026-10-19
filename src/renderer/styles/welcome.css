@@ -1,0 +1,144 @@
+/* ---------- Primeiros passos: Git Bash · Claude Code · integração · primeiro projeto ---------- */
+.welcome {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px 8px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+.wl-hello {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+.wl-line {
+  margin: 4px 0 14px;
+  color: var(--dim);
+  font-size: 14px;
+}
+.wl-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  transition: border-color 0.12s;
+}
+.wl-step.drop {
+  border-style: dashed;
+  border-color: var(--dim);
+}
+.wl-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.wl-step.done .wl-mark {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.wl-body {
+  flex: 1;
+  min-width: 0;
+}
+.wl-title {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.wl-text {
+  margin: 3px 0 0;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.wl-step.done .wl-text {
+  color: var(--faint);
+}
+.wl-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wl-log {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--app);
+  border: 1px solid var(--border);
+  color: var(--faint);
+  font: 12px var(--mono, Consolas, monospace);
+  white-space: pre-wrap;
+}
+.wl-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+.wl-footer {
+  display: flex;
+  margin-top: 8px;
+}
+
+/* diálogos: projeto a partir de uma pasta e o que a integração grava */
+.folder-review {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+.folder-repo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.folder-repo-name {
+  font-weight: 600;
+}
+.folder-repo-path,
+.folder-note {
+  color: var(--faint);
+  font-size: 12px;
+}
+.folder-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.folder-check input {
+  accent-color: var(--accent);
+}
+.folder-cmd {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 12.5px;
+}
+.setup-preview .folder-note {
+  margin: 0;
+}
+.setup-preview pre {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--r);
+  background: var(--app);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

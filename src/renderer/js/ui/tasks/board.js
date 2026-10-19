@@ -12,6 +12,7 @@ import { periodButton } from './period-button.js';
 import { renderInsights } from '../insights/view.js';
 import { renderSettings } from '../settings/view.js';
 import { renderHome } from '../home/view.js';
+import { renderWelcome } from '../welcome/view.js';
 
 function column(project, { column: col, tasks }) {
   return el(
@@ -32,7 +33,7 @@ function column(project, { column: col, tasks }) {
 
 export function renderBoard() {
   const view = store.state.taskView;
-  const show = ['board', 'insights', 'settings', 'home'].includes(view); // Home, Insights e Configurações usam a mesma área
+  const show = ['board', 'insights', 'settings', 'home', 'welcome'].includes(view); // Home, Insights, Configurações e Primeiros passos usam a mesma área
   $('#main').classList.toggle('board-mode', show);
   const board = $('#board');
   board.classList.toggle('hidden', !show);
@@ -40,6 +41,7 @@ export function renderBoard() {
   if (view === 'insights') return renderInsights(board);
   if (view === 'settings') return renderSettings(board);
   if (view === 'home') return renderHome(board);
+  if (view === 'welcome') return renderWelcome(board);
   const project = boardProject();
   const waiting = waitingTasks(project).length;
   mount(

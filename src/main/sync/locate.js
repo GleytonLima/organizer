@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
-const { GIT } = require('../bash');
+const { gitPath } = require('../bash');
 const { remoteOf } = require('./remote');
 
 const isRepo = (dir) => {
@@ -55,7 +55,7 @@ function cloneRepo(url, dir) {
   }
   // "--" separa a URL de opções: uma URL vinda do servidor não vira argumento do git
   return new Promise((resolve, reject) => {
-    execFile(GIT, ['clone', '--', url, dir], { timeout: 600000, windowsHide: true }, (err, _out, stderr) =>
+    execFile(gitPath(), ['clone', '--', url, dir], { timeout: 600000, windowsHide: true }, (err, _out, stderr) =>
       err ? reject(new Error(`Não consegui clonar ${url}: ${String(stderr || err.message).trim().split('\n').pop()}`)) : resolve(dir),
     );
   });

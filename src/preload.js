@@ -104,6 +104,16 @@ contextBridge.exposeInMainWorld('api', {
     claimTask: (workspace, id) => ipcRenderer.invoke('sync:claimTask', workspace, id),
   },
 
+  // Primeira abertura: o que falta (Git Bash, Claude Code, integração), instalar e projeto de uma pasta.
+  setup: {
+    check: () => ipcRenderer.invoke('setup:check'),
+    install: (step) => ipcRenderer.invoke('setup:install', step),
+    preview: () => ipcRenderer.invoke('setup:preview'),
+    integrate: () => ipcRenderer.invoke('setup:integrate'),
+    scan: (dir) => ipcRenderer.invoke('setup:scan', dir),
+    onLog: (cb) => ipcRenderer.on('setup:log', (_e, step, line) => cb(step, line)),
+  },
+
   showToast: (payload) => ipcRenderer.invoke('notify:show', payload),
   onToastClicked: (cb) => ipcRenderer.on('notify:clicked', (_e, id) => cb(id)),
 
